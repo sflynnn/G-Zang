@@ -1,0 +1,52 @@
+# Dependencies
+node_modules
+.pnpm-store
+.pnpm
+
+# Build outputs
+dist
+build
+.turbo
+.next
+.nuxt
+output
+
+# Cache directories
+.cache
+.tmp
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Coverage
+coverage
+.nyc_output
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Database
+*.sqlite
+*.db
+
+# Certificates
+*.pem
+*.key
+
+# Generated files
+CHANGELOG.md

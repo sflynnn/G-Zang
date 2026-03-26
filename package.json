@@ -1,0 +1,35 @@
+{
+  "name": "g-zang-monorepo",
+  "version": "1.0.0",
+  "description": "G-Zang (归藏) 财务管理系统 - Monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:pc-main": "pnpm --filter pc-main dev",
+    "dev:pc-personal": "pnpm --filter pc-personal dev",
+    "dev:pc-business": "pnpm --filter pc-business dev",
+    "dev:pc-admin": "pnpm --filter pc-admin dev",
+    "dev:mobile": "pnpm --filter mobile dev:h5",
+    "dev:mobile:h5": "pnpm --filter mobile dev:h5",
+    "dev:mobile:mp-weixin": "pnpm --filter mobile dev:mp-weixin",
+    "dev:mobile:app": "pnpm --filter mobile dev:app",
+    "build": "pnpm --filter shared build && pnpm --parallel --filter \"*-app\" build",
+    "build:mobile": "pnpm --filter mobile build:h5",
+    "build:mobile:h5": "pnpm --filter mobile build:h5",
+    "build:mobile:mp-weixin": "pnpm --filter mobile build:mp-weixin",
+    "build:mobile:app": "pnpm --filter mobile build:app",
+    "clean": "pnpm --parallel clean",
+    "install:all": "pnpm install"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

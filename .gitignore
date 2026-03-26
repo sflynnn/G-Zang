@@ -1,0 +1,67 @@
+# Dependencies
+node_modules
+.pnpm-store
+.pnpm
+
+# Build outputs
+dist
+build
+.turbo
+.next
+.nuxt
+output
+
+# Cache directories
+.cache
+.tmp
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+*.env
+*.pem
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Test coverage
+coverage
+.nyc_output
+*.lcov
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database
+*.sqlite
+*.db
+
+# Certificates
+*.pem
+*.key
+
+# Generated files
+CHANGELOG.md
+*.gen.ts
+*.generated.ts
