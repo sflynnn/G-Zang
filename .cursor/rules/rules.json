@@ -1,0 +1,104 @@
+{
+  "version": "1.0.0",
+  "rules": [
+    {
+      "name": "通用规范",
+      "file": "mdc_rules.mdc",
+      "description": "G-Zang 通用开发规范",
+      "alwaysApply": false,
+      "filePathPatterns": [
+        "!apps/pc-admin/**",
+        "!apps/pc-main/**",
+        "!apps/pc-personal/**",
+        "!apps/pc-business/**",
+        "!apps/mobile/**",
+        "!server/**"
+      ]
+    },
+    {
+      "name": "管理端规范",
+      "file": "admin.mdc",
+      "description": "管理端开发规范",
+      "alwaysApply": false,
+      "filePathPatterns": [
+        "apps/pc-admin/**",
+        "**/admin/**"
+      ],
+      "framework": "Vue 3 + TypeScript"
+    },
+    {
+      "name": "PC主应用规范",
+      "file": "pc-main.mdc",
+      "description": "PC主应用微前端开发规范",
+      "alwaysApply": false,
+      "filePathPatterns": [
+        "apps/pc-main/**"
+      ],
+      "framework": "Vue 3 + TypeScript + qiankun"
+    },
+    {
+      "name": "PC个人记账规范",
+      "file": "pc-personal.mdc",
+      "description": "PC个人记账子应用开发规范",
+      "alwaysApply": false,
+      "filePathPatterns": [
+        "apps/pc-personal/**"
+      ],
+      "framework": "Vue 3 + TypeScript"
+    },
+    {
+      "name": "PC企业业务规范",
+      "file": "pc-business.mdc",
+      "description": "PC企业业务子应用开发规范",
+      "alwaysApply": false,
+      "filePathPatterns": [
+        "apps/pc-business/**"
+      ],
+      "framework": "Vue 3 + TypeScript"
+    },
+    {
+      "name": "移动端规范",
+      "file": "mobile.mdc",
+      "description": "移动端开发规范",
+      "alwaysApply": false,
+      "filePathPatterns": [
+        "apps/mobile/**"
+      ],
+      "framework": "uni-app + Vue 3 + TypeScript"
+    },
+    {
+      "name": "后端服务规范",
+      "file": "backend.mdc",
+      "description": "后端服务开发规范",
+      "alwaysApply": false,
+      "filePathPatterns": [
+        "server/**",
+        "**/*.java"
+      ],
+      "framework": "Spring Boot + Java"
+    }
+  ],
+  "autoApply": {
+    "enabled": true,
+    "priority": [
+      "backend.mdc",
+      "admin.mdc",
+      "pc-main.mdc",
+      "pc-personal.mdc",
+      "pc-business.mdc",
+      "mobile.mdc",
+      "mdc_rules.mdc"
+    ]
+  },
+  "project": {
+    "name": "G-Zang (归藏)",
+    "type": "Monorepo",
+    "architecture": "微前端 + 多租户",
+    "techStack": {
+      "frontend": "Vue 3 + TypeScript + Naive UI/Vant",
+      "backend": "Spring Boot + Java 17 + MySQL",
+      "microFrontend": "qiankun",
+      "mobile": "uni-app"
+    }
+  }
+}

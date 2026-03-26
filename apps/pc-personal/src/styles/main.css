@@ -1,0 +1,99 @@
+/* PC个人用户子应用样式 */
+.personal-app {
+  height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.app-header {
+  background-color: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.app-content {
+  background-color: #f5f5f5;
+  min-height: calc(100vh - 73px);
+}
+
+/* 卡片样式 */
+.n-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.n-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* 按钮样式 */
+.n-button {
+  border-radius: 6px;
+}
+
+/* 数据表格样式 */
+.n-data-table {
+  border-radius: 8px;
+}
+
+.n-data-table :deep(.n-data-table-wrapper) {
+  border-radius: 8px;
+}
+
+/* 表单样式 */
+.n-form-item {
+  margin-bottom: 24px;
+}
+
+.n-input,
+.n-select,
+.n-date-picker {
+  border-radius: 6px;
+}
+
+/* 统计卡片样式 */
+.statistic-card {
+  padding: 20px;
+}
+
+.statistic-card .n-statistic {
+  text-align: center;
+}
+
+.statistic-card .n-statistic-title {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.statistic-card .n-statistic-value {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .app-content {
+    padding: 16px;
+  }
+
+  .statistic-card {
+    padding: 16px;
+  }
+
+  .statistic-card .n-statistic-value {
+    font-size: 20px;
+  }
+}
+
+/* 加载动画 */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+/* 空状态样式 */
+.n-empty {
+  padding: 40px 0;
+}

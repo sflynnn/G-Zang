@@ -1,0 +1,134 @@
+/* G-Zang 移动端 CSS 变量定义 */
+
+// 主色调
+$primary-color: #1989fa;
+$primary-hover: #4da8ff;
+$primary-active: #0066cc;
+
+// 成功色
+$success-color: #07c160;
+$success-light: #e8f5e8;
+
+// 警告色
+$warning-color: #ff976a;
+$warning-light: #fff2e8;
+
+// 错误色
+$error-color: #ff4d4f;
+$error-light: #ffebe9;
+
+// 中性色
+$text-primary: #262626;
+$text-secondary: #595959;
+$text-disabled: #bfbfbf;
+$text-placeholder: #d9d9d9;
+
+// 边框色
+$border-color: #e5e5e5;
+$border-light: #f0f0f0;
+
+// 背景色
+$background-color: #f5f5f5;
+$background-light: #fafafa;
+$background-white: #ffffff;
+
+// 间距系统
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+$spacing-xxl: 48px;
+
+// 圆角
+$border-radius-sm: 4px;
+$border-radius-md: 8px;
+$border-radius-lg: 12px;
+$border-radius-xl: 16px;
+
+// 阴影
+$shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+$shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+$shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
+
+// 字体大小
+$font-size-xs: 12px;
+$font-size-sm: 14px;
+$font-size-md: 16px;
+$font-size-lg: 18px;
+$font-size-xl: 20px;
+$font-size-xxl: 24px;
+
+// 字体重量
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// CSS 变量导出
+:root {
+  // 主色调
+  --primary-color: #{$primary-color};
+  --primary-hover: #{$primary-hover};
+  --primary-active: #{$primary-active};
+
+  // 成功色
+  --success-color: #{$success-color};
+  --success-light: #{$success-light};
+
+  // 警告色
+  --warning-color: #{$warning-color};
+  --warning-light: #{$warning-light};
+
+  // 错误色
+  --error-color: #{$error-color};
+  --error-light: #{$error-light};
+
+  // 中性色
+  --text-primary: #{$text-primary};
+  --text-secondary: #{$text-secondary};
+  --text-disabled: #{$text-disabled};
+  --text-placeholder: #{$text-placeholder};
+
+  // 边框色
+  --border-color: #{$border-color};
+  --border-light: #{$border-light};
+
+  // 背景色
+  --background-color: #{$background-color};
+  --background-light: #{$background-light};
+  --background-white: #{$background-white};
+
+  // 间距系统
+  --spacing-xs: #{$spacing-xs};
+  --spacing-sm: #{$spacing-sm};
+  --spacing-md: #{$spacing-md};
+  --spacing-lg: #{$spacing-lg};
+  --spacing-xl: #{$spacing-xl};
+  --spacing-xxl: #{$spacing-xxl};
+
+  // 圆角
+  --border-radius-sm: #{$border-radius-sm};
+  --border-radius-md: #{$border-radius-md};
+  --border-radius-lg: #{$border-radius-lg};
+  --border-radius-xl: #{$border-radius-xl};
+
+  // 阴影
+  --shadow-sm: #{$shadow-sm};
+  --shadow-md: #{$shadow-md};
+  --shadow-lg: #{$shadow-lg};
+
+  // 字体大小
+  --font-size-xs: #{$font-size-xs};
+  --font-size-sm: #{$font-size-sm};
+  --font-size-md: #{$font-size-md};
+  --font-size-lg: #{$font-size-lg};
+  --font-size-xl: #{$font-size-xl};
+  --font-size-xxl: #{$font-size-xxl};
+
+  // 字体重量
+  --font-weight-normal: #{$font-weight-normal};
+  --font-weight-medium: #{$font-weight-medium};
+  --font-weight-semibold: #{$font-weight-semibold};
+  --font-weight-bold: #{$font-weight-bold};
+}

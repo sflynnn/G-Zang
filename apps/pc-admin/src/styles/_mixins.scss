@@ -1,0 +1,451 @@
+// ===========================================
+// G-Zang SCSS Mixins 库
+// ===========================================
+
+// 引入变量模块，确保在 mixins 中可用
+@use 'variables' as *;
+
+// ===== 响应式设计 Mixins =====
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == sm {
+    @media (min-width: $breakpoint-sm) {
+      @content;
+    }
+  } @else if $breakpoint == md {
+    @media (min-width: $breakpoint-md) {
+      @content;
+    }
+  } @else if $breakpoint == lg {
+    @media (min-width: $breakpoint-lg) {
+      @content;
+    }
+  } @else if $breakpoint == xl {
+    @media (min-width: $breakpoint-xl) {
+      @content;
+    }
+  }
+}
+
+// ===== 主题切换 Mixins =====
+@mixin theme-dark {
+  // 深色主题颜色调整
+  --color-background: #{$color-gray-900};
+  --color-surface: #{$color-gray-800};
+
+  --color-gray-50: #{$color-gray-800};
+  --color-gray-100: #{$color-gray-700};
+  --color-gray-200: #{$color-gray-600};
+  --color-gray-300: #{$color-gray-500};
+  --color-gray-400: #{$color-gray-400};
+  --color-gray-500: #{$color-gray-300};
+  --color-gray-600: #{$color-gray-200};
+  --color-gray-700: #{$color-gray-100};
+  --color-gray-800: #{$color-gray-50};
+  --color-gray-900: #{$color-gray-50};
+}
+
+// ===== 卡片组件 Mixins =====
+@mixin card-base {
+  background: var(--color-surface);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-admin);
+  border: 1px solid var(--color-gray-200);
+  transition: box-shadow var(--transition-normal);
+}
+
+@mixin card-hover {
+  &:hover {
+    box-shadow: var(--shadow-admin-lg);
+  }
+}
+
+@mixin card-dark {
+  border-color: var(--color-gray-700);
+  background: var(--color-surface);
+}
+
+// ===== 按钮组件 Mixins =====
+@mixin button-base {
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--border-radius-lg);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+@mixin button-variant($variant) {
+  @if $variant == primary {
+    background: var(--color-secondary);
+    color: white;
+    border-color: var(--color-secondary);
+
+    &:hover:not(:disabled) {
+      background: var(--color-secondary);
+      opacity: 0.9;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-lg);
+    }
+  } @else if $variant == secondary {
+    background: transparent;
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+
+    &:hover:not(:disabled) {
+      background: var(--color-primary);
+      color: white;
+    }
+  }
+}
+
+// ===== 表单组件 Mixins =====
+@mixin form-input-base {
+  width: 100%;
+  padding: var(--spacing-3);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius-lg);
+  font-size: var(--font-size-base);
+  transition: all var(--transition-fast);
+  background: var(--color-surface);
+  font-family: var(--font-family-sans);
+}
+
+@mixin form-input-focus {
+  outline: none;
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 3px rgba($color-secondary, 0.15);
+}
+
+@mixin form-input-dark {
+  background: var(--color-surface);
+  border-color: var(--color-gray-600);
+  color: var(--color-gray-100);
+}
+
+// ===== 表格组件 Mixins =====
+@mixin table-container {
+  background: var(--color-surface);
+  border-radius: var(--border-radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-admin);
+  border: 1px solid var(--color-gray-200);
+}
+
+@mixin table-base {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+@mixin table-cell {
+  padding: var(--spacing-3);
+  text-align: left;
+  border-bottom: 1px solid var(--color-gray-200);
+}
+
+@mixin table-header {
+  background: var(--color-gray-50);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-gray-700);
+}
+
+@mixin table-header-dark {
+  background: var(--color-gray-800);
+  color: var(--color-gray-200);
+}
+
+@mixin table-row-striped {
+  background: var(--color-gray-50);
+}
+
+@mixin table-row-hover {
+  &:hover {
+    background: var(--color-gray-100);
+  }
+}
+
+// ===== 状态标签 Mixins =====
+@mixin status-badge-base {
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
+@mixin status-badge-variant($variant) {
+  @if $variant == success {
+    background-color: rgba($color-success, 0.1);
+    color: var(--color-success);
+    border: 1px solid rgba($color-success, 0.2);
+  } @else if $variant == danger {
+    background-color: rgba($color-danger, 0.1);
+    color: var(--color-danger);
+    border: 1px solid rgba($color-danger, 0.2);
+  } @else if $variant == warning {
+    background-color: rgba($color-secondary, 0.1);
+    color: var(--color-secondary);
+    border: 1px solid rgba($color-secondary, 0.2);
+  }
+}
+
+// ===== 布局组件 Mixins =====
+@mixin sidebar-base {
+  background: var(--color-primary);
+  color: white;
+  width: 240px;
+  min-height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: $z-index-fixed;
+}
+
+@mixin sidebar-mobile {
+  transform: translateX(-100%);
+
+  &.open {
+    transform: translateX(0);
+  }
+}
+
+@mixin main-content-base {
+  margin-left: 240px;
+  background: var(--color-background);
+  min-height: 100vh;
+  padding: var(--spacing-6);
+}
+
+@mixin main-content-mobile {
+  margin-left: 0;
+}
+
+// ===== 登录页专用 Mixins =====
+@mixin login-right-section {
+  width: 100%;
+  padding: var(--spacing-8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+
+  @include respond-to(lg) {
+    width: 50%;
+  }
+}
+
+@mixin login-bg-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-gray-50) 50%, var(--color-background) 100%);
+}
+
+@mixin login-bg-gradient-dark {
+  background: linear-gradient(135deg, var(--color-gray-900) 0%, var(--color-gray-800) 50%, var(--color-background) 100%);
+}
+
+@mixin login-bg-gradient-light {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.6) 50%, rgba(255, 255, 255, 0.4) 100%);
+}
+
+@mixin login-bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba($color-background, 0.6);
+  backdrop-filter: blur(12px);
+}
+
+@mixin login-bg-overlay-dark {
+  position: absolute;
+  inset: 0;
+  background: rgba($color-gray-900, 0.72);
+  backdrop-filter: blur(12px);
+}
+
+@mixin login-bg-overlay-light {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(8px);
+}
+
+@mixin login-decoration-base {
+  position: absolute;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba($color-secondary, 0.2) 0%, transparent 100%);
+  filter: blur(32px);
+  animation: float-slow 20s ease-in-out infinite;
+}
+
+@mixin login-decoration-variant($index) {
+  @if $index == 1 {
+    top: 0;
+    right: 0;
+    width: 24rem;
+    height: 24rem;
+    transform: translate(50%, -50%);
+    animation-delay: -5s;
+  } @else if $index == 2 {
+    bottom: 0;
+    left: 0;
+    width: 20rem;
+    height: 20rem;
+    transform: translate(-50%, 50%);
+    animation-delay: -10s;
+    animation-direction: reverse;
+  }
+}
+
+@mixin login-form-wrapper {
+  width: 100%;
+  max-width: 28rem;
+  position: relative;
+  z-index: 10;
+  animation: slide-up 0.6s ease-out;
+}
+
+@mixin login-form-card {
+  background: rgba($color-surface, 0.7);
+  backdrop-filter: blur(8px);
+  border-radius: var(--border-radius-2xl);
+  box-shadow: var(--shadow-2xl);
+  border: 1px solid rgba($color-surface, 0.2);
+  padding: var(--spacing-8);
+}
+
+@mixin login-form-card-dark {
+  background: rgba($color-gray-800, 0.7);
+  border-color: rgba($color-gray-600, 0.3);
+}
+
+@mixin login-form-card-light {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+@mixin login-form-header {
+  text-align: center;
+  position: relative;
+  margin-bottom: var(--spacing-8);
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba($color-secondary, 0.3), transparent);
+  }
+
+  &::before {
+    top: 0;
+  }
+
+  &::after {
+    bottom: 0;
+  }
+}
+
+@mixin login-form-title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  font-family: var(--font-family-chinese);
+  position: relative;
+  z-index: 10;
+  margin: 0 0 var(--spacing-2) 0;
+}
+
+@mixin login-form-title-dark {
+  color: #FFFFFF;
+}
+
+@mixin login-form-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-600);
+  font-family: var(--font-family-sans);
+  margin: 0;
+}
+
+@mixin login-form-subtitle-dark {
+  color: var(--color-gray-400);
+}
+
+@mixin login-btn-primary {
+  width: 100%;
+  height: 48px;
+  background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary) 100%);
+  color: white;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-base);
+  border: none;
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-xl);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: var(--shadow-2xl);
+    background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary) 100%);
+    opacity: 0.95;
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0) scale(1);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+@mixin login-mobile {
+  padding: var(--spacing-4);
+}
+
+@mixin login-form-card-mobile {
+  padding: var(--spacing-6);
+}
+
+// ===== 动画 Keyframes =====
+@keyframes float-slow {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  33% {
+    transform: translate(10px, -10px) rotate(120deg);
+  }
+  66% {
+    transform: translate(-5px, 5px) rotate(240deg);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

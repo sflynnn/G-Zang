@@ -1,0 +1,169 @@
+// ===========================================
+// G-Zang PC-Personal SCSS Mixins 库
+// ===========================================
+
+// 引入变量模块以便在 mixins 中使用 $color-*
+@use 'variables' as *;
+
+// 基础mixins
+@mixin theme-dark {
+  --color-background: #{$color-gray-900};
+  --color-surface: #{$color-gray-800};
+  --color-gray-50: #{$color-gray-800};
+  --color-gray-100: #{$color-gray-700};
+  --color-gray-200: #{$color-gray-600};
+  --color-gray-300: #{$color-gray-500};
+  --color-gray-400: #{$color-gray-400};
+  --color-gray-500: #{$color-gray-300};
+  --color-gray-600: #{$color-gray-200};
+  --color-gray-700: #{$color-gray-100};
+  --color-gray-800: #{$color-gray-50};
+  --color-gray-900: #{$color-gray-50};
+}
+
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == sm {
+    @media (min-width: $breakpoint-sm) {
+      @content;
+    }
+  } @else if $breakpoint == md {
+    @media (min-width: $breakpoint-md) {
+      @content;
+    }
+  } @else if $breakpoint == lg {
+    @media (min-width: $breakpoint-lg) {
+      @content;
+    }
+  } @else if $breakpoint == xl {
+    @media (min-width: $breakpoint-xl) {
+      @content;
+    }
+  }
+}
+
+// 卡片基础样式
+@mixin card-base {
+  background: var(--color-surface);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-admin);
+  border: 1px solid var(--color-gray-200);
+  transition: box-shadow var(--transition-normal);
+}
+
+@mixin card-hover {
+  &:hover {
+    box-shadow: var(--shadow-admin-lg);
+  }
+}
+
+@mixin card-dark {
+  border-color: var(--color-gray-700);
+  background: var(--color-surface);
+}
+
+// 资产卡片专用
+@mixin asset-card-mobile {
+  margin: var(--spacing-2);
+  padding: var(--spacing-4);
+}
+
+// 交易记录
+@mixin transaction-item-base {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-4);
+  border-bottom: 1px solid var(--color-gray-200);
+  transition: all var(--transition-fast);
+}
+
+@mixin transaction-item-hover {
+  background: var(--color-gray-50);
+}
+
+@mixin transaction-item-income {
+  border-left: 4px solid var(--color-success);
+
+  .amount {
+    color: var(--color-success);
+  }
+}
+
+@mixin transaction-item-expense {
+  border-left: 4px solid var(--color-danger);
+
+  .amount {
+    color: var(--color-danger);
+  }
+}
+
+@mixin transaction-list-mobile {
+  padding: 0 var(--spacing-2);
+
+  .transaction-item {
+    padding: var(--spacing-3);
+    border-radius: var(--border-radius-lg);
+    margin-bottom: var(--spacing-2);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+// 图表容器
+@mixin chart-container-base {
+  padding: var(--spacing-6);
+  margin: var(--spacing-4) 0;
+}
+
+@mixin chart-container-dark {
+  background: var(--color-gray-800);
+}
+
+@mixin chart-container-mobile {
+  padding: var(--spacing-4);
+  margin: var(--spacing-2) 0;
+}
+
+// 标签样式
+@mixin tag-base {
+  background: var(--color-gray-100);
+  color: var(--color-gray-700);
+  border: 1px solid var(--color-gray-300);
+}
+
+@mixin tag-hover {
+  background: var(--color-secondary);
+  color: white;
+  transform: scale(1.05);
+}
+
+// 日期选择器
+@mixin date-picker-base {
+  color: var(--color-gray-900);
+}
+
+@mixin date-picker-focus {
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 3px rgba($color-secondary, 0.1);
+}
+
+@mixin date-picker-dark {
+  background: var(--color-surface);
+  border-color: var(--color-gray-600);
+  color: var(--color-gray-100);
+}
+
+// 金额输入
+@mixin amount-input-base {
+  color: var(--color-gray-900);
+}
+
+@mixin amount-input-focus {
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 4px rgba($color-secondary, 0.15);
+  background: var(--color-surface);
+}
+
+@mixin amount-input-dark {
+  background: var(--color-surface);
+  border-color: var(--color-gray-600);
+  color: var(--color-gray-100);
+}

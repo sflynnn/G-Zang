@@ -1,0 +1,154 @@
+/* G-Zang 移动端 SCSS 混入 */
+
+// 布局混入
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@mixin flex-around {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+// 卡片混入
+@mixin card-base {
+  background-color: var(--background-white);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+// 按钮混入
+@mixin button-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+@mixin button-variant($color, $hover-color) {
+  background-color: $color;
+  color: white;
+
+  &:hover {
+    background-color: $hover-color;
+  }
+
+  &:active {
+    background-color: darken($color, 10%);
+  }
+}
+
+// 响应式混入
+@mixin mobile {
+  @media (max-width: 768px) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: 769px) and (max-width: 1024px) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: 1025px) {
+    @content;
+  }
+}
+
+// 文字截断混入
+@mixin text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin text-ellipsis-multiline($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// 阴影混入
+@mixin shadow($level: sm) {
+  @if $level == sm {
+    box-shadow: var(--shadow-sm);
+  } @else if $level == md {
+    box-shadow: var(--shadow-md);
+  } @else if $level == lg {
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+// 动画混入
+@mixin transition($property: all, $duration: 0.2s, $ease: ease) {
+  transition: $property $duration $ease;
+}
+
+@mixin animation($name, $duration: 0.3s, $ease: ease, $delay: 0s, $count: 1) {
+  animation: $name $duration $ease $delay $count;
+}
+
+// 尺寸混入
+@mixin square($size) {
+  width: $size;
+  height: $size;
+}
+
+@mixin circle($size) {
+  @include square($size);
+  border-radius: 50%;
+}
+
+// 定位混入
+@mixin absolute-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@mixin fixed-center {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+// 边框混入
+@mixin border-radius($radius: var(--border-radius-md)) {
+  border-radius: $radius;
+}
+
+@mixin border($color: var(--border-color), $width: 1px, $style: solid) {
+  border: $width $style $color;
+}
+
+// 渐变混入
+@mixin gradient($direction: to right, $colors...) {
+  background: linear-gradient($direction, $colors);
+}
+
+// 透明度混入
+@mixin opacity($value: 0.8) {
+  opacity: $value;
+
+  @supports (backdrop-filter: blur(10px)) {
+    backdrop-filter: blur(10px);
+    background-color: rgba(255, 255, 255, $value);
+  }
+}

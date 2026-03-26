@@ -1,0 +1,174 @@
+// ===========================================
+// G-Zang SCSS Functions 库
+// ===========================================
+
+// ===== 颜色函数 =====
+
+// 透明度混合函数 (避免与SCSS内置函数冲突)
+@function color-alpha($color, $alpha) {
+  @return rgba($color, $alpha);
+}
+
+// 颜色亮度调整函数
+@function lighten($color, $amount) {
+  @return adjust-color($color, $lightness: $amount);
+}
+
+@function darken($color, $amount) {
+  @return adjust-color($color, $lightness: -$amount);
+}
+
+// 颜色饱和度调整函数
+@function saturate($color, $amount) {
+  @return adjust-color($color, $saturation: $amount);
+}
+
+@function desaturate($color, $amount) {
+  @return adjust-color($color, $saturation: -$amount);
+}
+
+// ===== 间距函数 =====
+
+// 生成间距类
+@function spacing($multiplier) {
+  @return $spacing-1 * $multiplier;
+}
+
+// ===== 响应式函数 =====
+
+// 生成响应式断点
+@function breakpoint($name) {
+  @if $name == sm {
+    @return $breakpoint-sm;
+  } @else if $name == md {
+    @return $breakpoint-md;
+  } @else if $name == lg {
+    @return $breakpoint-lg;
+  } @else if $name == xl {
+    @return $breakpoint-xl;
+  } @else {
+    @warn "Breakpoint '#{$name}' not found. Available breakpoints: sm, md, lg, xl";
+    @return null;
+  }
+}
+
+// ===== 字体函数 =====
+
+// 生成字体大小
+@function font-size($size) {
+  @if $size == xs {
+    @return $font-size-xs;
+  } @else if $size == sm {
+    @return $font-size-sm;
+  } @else if $size == base {
+    @return $font-size-base;
+  } @else if $size == lg {
+    @return $font-size-lg;
+  } @else if $size == xl {
+    @return $font-size-xl;
+  } @else if $size == 2xl {
+    @return $font-size-2xl;
+  } @else if $size == 3xl {
+    @return $font-size-3xl;
+  } @else if $size == 4xl {
+    @return $font-size-4xl;
+  } @else {
+    @warn "Font size '#{$size}' not found. Available sizes: xs, sm, base, lg, xl, 2xl, 3xl, 4xl";
+    @return $font-size-base;
+  }
+}
+
+// ===== 阴影函数 =====
+
+// 生成阴影
+@function shadow($level) {
+  @if $level == sm {
+    @return $shadow-sm;
+  } @else if $level == md {
+    @return $shadow-md;
+  } @else if $level == lg {
+    @return $shadow-lg;
+  } @else if $level == xl {
+    @return $shadow-xl;
+  } @else if $level == 2xl {
+    @return $shadow-2xl;
+  } @else {
+    @warn "Shadow level '#{$level}' not found. Available levels: sm, md, lg, xl, 2xl";
+    @return $shadow-md;
+  }
+}
+
+// ===== 圆角函数 =====
+
+// 生成圆角
+@function radius($size) {
+  @if $size == sm {
+    @return $border-radius-sm;
+  } @else if $size == md {
+    @return $border-radius-md;
+  } @else if $size == lg {
+    @return $border-radius-lg;
+  } @else if $size == xl {
+    @return $border-radius-xl;
+  } @else if $size == 2xl {
+    @return $border-radius-2xl;
+  } @else if $size == 4xl {
+    @return $border-radius-4xl;
+  } @else {
+    @warn "Border radius '#{$size}' not found. Available sizes: sm, md, lg, xl, 2xl, 4xl";
+    @return $border-radius-md;
+  }
+}
+
+// ===== 动画函数 =====
+
+// 生成过渡
+@function transition($speed: normal) {
+  @if $speed == fast {
+    @return $transition-fast;
+  } @else if $speed == normal {
+    @return $transition-normal;
+  } @else if $speed == slow {
+    @return $transition-slow;
+  } @else {
+    @return $transition-normal;
+  }
+}
+
+// ===== 工具函数 =====
+
+// 去除单位
+@function strip-unit($number) {
+  @if type-of($number) == 'number' and not unitless($number) {
+    @return $number / ($number * 0 + 1);
+  }
+  @return $number;
+}
+
+// 转换为rem
+@function rem($px) {
+  @return strip-unit($px) / 16 * 1rem;
+}
+
+// 颜色对比度检查
+@function contrast-ratio($color1, $color2) {
+  // 简化的对比度计算
+  // 实际项目中可能需要更复杂的算法
+  $l1: lightness($color1);
+  $l2: lightness($color2);
+  @if $l1 > $l2 {
+    @return ($l1 + 0.05) / ($l2 + 0.05);
+  } @else {
+    @return ($l2 + 0.05) / ($l1 + 0.05);
+  }
+}
+
+// 检查颜色对比度是否符合WCAG标准
+@function is-accessible($color1, $color2, $level: AA) {
+  $ratio: contrast-ratio($color1, $color2);
+  @if $level == AAA {
+    @return $ratio >= 7;
+  } @else {
+    @return $ratio >= 4.5;
+  }
+}

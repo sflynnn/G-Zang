@@ -1,0 +1,225 @@
+---
+alwaysApply: false
+filePathPatterns:
+  - "server/**"
+  - "**/*.java"
+framework: "Spring Boot + Java"
+description: "G-Zang 后端服务开发规范"
+---
+
+# G-Zang 后端服务 (Backend) MDC 规则
+
+## 1. 应用概述
+
+### 1.1 应用定位
+G-Zang后端服务是基于Spring Boot的微服务架构系统，为前端应用提供RESTful API服务。采用多租户架构，支持用户级和企业级数据隔离，提供完整的财务管理业务逻辑、数据存储、缓存管理、安全认证等核心功能。
+
+### 1.2 核心功能
+- **身份认证与授权**：JWT认证、RBAC权限控制、多租户数据隔离
+- **用户管理**：用户注册、登录、信息管理、角色分配
+- **财务核心**：交易记录管理、账户管理、分类管理、预算控制
+- **企业功能**：公司管理、成本中心、业务订单、审批流程
+- **数据服务**：数据统计分析、报表生成、数据导出
+- **系统管理**：操作日志、系统配置、文件管理
+
+## 2. 技术栈规范
+
+### 2.1 核心技术栈
+```json
+{
+  "框架": "Spring Boot 3.1.x",
+  "语言": "Java 17",
+  "ORM": "MyBatis Plus 3.5.x",
+  "数据库": "MySQL 8.0",
+  "缓存": "Redis 7.x",
+  "安全框架": "Spring Security 6.x",
+  "认证": "JWT (jjwt)",
+  "连接池": "Druid 1.2.x",
+  "API文档": "SpringDoc OpenAPI 2.x",
+  "工具库": "Lombok, Apache Commons, Guava",
+  "测试框架": "JUnit 5 + Mockito"
+}
+```
+
+### 2.2 扩展技术栈
+```json
+{
+  "消息队列": "RabbitMQ (预留)",
+  "搜索引擎": "Elasticsearch (预留)",
+  "文件存储": "阿里云OSS",
+  "定时任务": "Spring Scheduler",
+  "监控": "Spring Boot Actuator + Micrometer",
+  "日志": "SLF4J + Logback",
+  "配置中心": "Spring Cloud Config (预留)",
+  "服务发现": "Nacos (预留)"
+}
+```
+
+## 3. 项目结构规范
+
+### 3.1 Spring Boot项目结构
+```
+server/
+├── src/main/java/com/gzang/app/
+│   ├── config/                    # 配置类
+│   │   ├── CacheConfig.java       # 缓存配置
+│   │   ├── DruidConfig.java       # 数据库连接池配置
+│   │   ├── MyBatisPlusConfig.java # MyBatis Plus配置
+│   │   ├── RedisConfig.java       # Redis配置
+│   │   ├── SecurityConfig.java    # 安全配置
+│   │   ├── SwaggerConfig.java     # API文档配置
+│   │   ├── TenantConfig.java      # 多租户配置
+│   │   └── WebConfig.java         # Web配置
+│   ├── controller/                # 控制器层
+│   │   ├── AuthController.java    # 认证接口
+│   │   ├── UserController.java    # 用户管理接口
+│   │   ├── TransactionController.java # 交易接口
+│   │   ├── AccountController.java # 账户接口
+│   │   ├── CategoryController.java # 分类接口
+│   │   ├── BudgetController.java  # 预算接口
+│   │   ├── CompanyController.java # 公司接口
+│   │   ├── BusinessController.java # 业务接口
+│   │   ├── ReportController.java  # 报表接口
+│   │   └── FileController.java    # 文件接口
+│   ├── service/                   # 业务逻辑层
+│   │   ├── impl/                  # 实现类
+│   │   │   ├── UserServiceImpl.java
+│   │   │   ├── TransactionServiceImpl.java
+│   │   │   ├── AccountServiceImpl.java
+│   │   │   ├── CategoryServiceImpl.java
+│   │   │   ├── BudgetServiceImpl.java
+│   │   │   ├── CompanyServiceImpl.java
+│   │   │   ├── BusinessServiceImpl.java
+│   │   │   ├── ReportServiceImpl.java
+│   │   │   └── FileServiceImpl.java
+│   │   └── interfaces/            # 接口定义
+│   │       ├── UserService.java
+│   │       ├── TransactionService.java
+│   │       ├── AccountService.java
+│   │       ├── CategoryService.java
+│   │       ├── BudgetService.java
+│   │       ├── CompanyService.java
+│   │       ├── BusinessService.java
+│   │       ├── ReportService.java
+│   │       └── FileService.java
+│   ├── mapper/                    # 数据访问层
+│   │   ├── UserMapper.java
+│   │   ├── TransactionMapper.java
+│   │   ├── AccountMapper.java
+│   │   ├── CategoryMapper.java
+│   │   ├── BudgetMapper.java
+│   │   ├── CompanyMapper.java
+│   │   ├── BusinessMapper.java
+│   │   ├── ReportMapper.java
+│   │   └── FileMapper.java
+│   ├── entity/                    # 实体类
+│   │   ├── BaseEntity.java        # 基础实体
+│   │   ├── User.java              # 用户实体
+│   │   ├── Transaction.java       # 交易实体
+│   │   ├── Account.java           # 账户实体
+│   │   ├── Category.java          # 分类实体
+│   │   ├── Budget.java            # 预算实体
+│   │   ├── Company.java           # 公司实体
+│   │   ├── BusinessOrder.java     # 业务订单实体
+│   │   ├── FileUpload.java        # 文件实体
+│   │   └── OperationLog.java      # 操作日志实体
+│   ├── dto/                       # 数据传输对象
+│   │   ├── auth/                  # 认证相关DTO
+│   │   │   ├── LoginRequest.java
+│   │   │   └── RegisterRequest.java
+│   │   ├── user/                  # 用户相关DTO
+│   │   │   ├── CreateUserDTO.java
+│   │   │   └── UpdateUserDTO.java
+│   │   ├── transaction/           # 交易相关DTO
+│   │   │   ├── CreateTransactionDTO.java
+│   │   │   └── TransactionQuery.java
+│   │   ├── business/              # 业务相关DTO
+│   │   └── common/                # 通用DTO
+│   │       └── PageQuery.java     # 分页查询基类
+│   ├── vo/                        # 视图对象
+│   │   ├── UserVO.java            # 用户视图
+│   │   ├── TransactionVO.java     # 交易视图
+│   │   ├── AccountVO.java         # 账户视图
+│   │   ├── CategoryVO.java        # 分类视图
+│   │   ├── BudgetVO.java          # 预算视图
+│   │   ├── CompanyVO.java         # 公司视图
+│   │   ├── BusinessOrderVO.java   # 业务订单视图
+│   │   └── ReportVO.java          # 报表视图
+│   ├── exception/                 # 异常处理
+│   │   ├── BusinessException.java # 业务异常
+│   │   ├── DataNotFoundException.java # 数据不存在异常
+│   │   ├── PermissionDeniedException.java # 权限不足异常
+│   │   └── GlobalExceptionHandler.java # 全局异常处理器
+│   ├── util/                      # 工具类
+│   │   ├── JwtUtil.java           # JWT工具
+│   │   ├── RedisUtil.java         # Redis工具
+│   │   ├── DateUtil.java          # 日期工具
+│   │   ├── EncryptUtil.java       # 加密工具
+│   │   ├── FileUtil.java          # 文件工具
+│   │   └── TenantContextHolder.java # 租户上下文
+│   ├── constant/                  # 常量定义
+│   │   ├── BusinessType.java      # 业务类型常量
+│   │   ├── ErrorCode.java         # 错误码常量
+│   │   ├── PermissionCode.java    # 权限码常量
+│   │   └── SystemConfig.java      # 系统配置常量
+│   ├── annotation/                # 自定义注解
+│   │   ├── EncryptField.java      # 字段加密注解
+│   │   └── OperationLog.java      # 操作日志注解
+│   └── GZangApplication.java      # 启动类
+├── src/main/resources/
+│   ├── application.yml            # 主配置文件
+│   ├── application-dev.yml        # 开发环境配置
+│   ├── application-test.yml       # 测试环境配置
+│   ├── application-prod.yml       # 生产环境配置
+│   ├── db/                        # 数据库脚本
+│   │   ├── schema.sql             # 数据库结构
+│   │   └── init-data.sql          # 初始化数据
+│   ├── mapper/                    # MyBatis XML映射
+│   │   ├── UserMapper.xml
+│   │   ├── TransactionMapper.xml
+│   │   └── ...
+│   ├── static/                    # 静态资源
+│   └── templates/                 # 模板文件
+├── src/test/java/com/gzang/app/   # 测试类
+├── target/                        # 编译输出
+├── pom.xml                        # Maven配置
+└── README.md                      # 项目说明
+```
+
+## 4. 核心服务规范
+
+### 4.1 认证服务
+实现基于JWT的用户认证、注册、登录、登出和令牌刷新功能。
+
+### 4.2 交易服务
+实现交易记录的增删改查、账户余额管理、多租户数据隔离和数据导出功能。
+
+### 4.3 预算服务
+实现预算编制、执行监控、预警提醒和统计分析功能。
+
+### 5. 多租户实现规范
+
+### 5.1 租户拦截器
+基于MyBatis拦截器实现多租户数据隔离，在SQL执行时自动注入租户条件，确保用户只能访问自己或所属公司的数据。
+
+### 5.2 JWT认证过滤器
+基于Spring Security过滤器实现JWT令牌验证，从请求头提取JWT令牌进行验证，设置用户认证上下文和租户信息。
+
+## 6. 代码生成规范
+
+### 6.1 后端服务生成
+生成后端服务代码时，请明确指定：
+- **业务模块**：用户、交易、账户、预算、报表等
+- **API类型**：CRUD操作、分页查询、批量操作、数据导出
+- **数据模型**：实体类、DTO、VO的字段定义
+- **权限控制**：RBAC权限、数据隔离、多租户处理
+- **业务逻辑**：数据验证、状态流转、关联操作
+
+### 6.2 代码生成要求
+生成后端服务代码时，必须包含完整的业务逻辑实现、多租户数据隔离、权限控制验证和单元测试覆盖。
+
+---
+
+**文档版本**：1.1.0
+**最后更新**：2026-01-18
+**维护人员**：后端开发团队

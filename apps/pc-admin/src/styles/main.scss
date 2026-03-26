@@ -1,0 +1,446 @@
+// ===========================================
+// G-Zang 管理端全局 SCSS 主题系统
+// ===========================================
+
+// SCSS 变量和函数定义 (使用模块化 @use，保留现有全局符号 via `as *` 以减少改动)
+@use 'variables' as *;
+@use 'mixins' as *;
+@use 'functions' as *;
+
+/* Tailwind directives (required) */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+// ===== CSS 变量定义 =====
+// 将SCSS变量转换为CSS变量，供组件使用
+:root {
+  // 颜色系统
+  --color-primary: #{$color-primary};
+  --color-secondary: #{$color-secondary};
+  --color-success: #{$color-success};
+  --color-danger: #{$color-danger};
+  --color-background: #{$color-background};
+  --color-surface: #{$color-surface};
+
+  // 中性色
+  --color-gray-50: #{$color-gray-50};
+  --color-gray-100: #{$color-gray-100};
+  --color-gray-200: #{$color-gray-200};
+  --color-gray-300: #{$color-gray-300};
+  --color-gray-400: #{$color-gray-400};
+  --color-gray-500: #{$color-gray-500};
+  --color-gray-600: #{$color-gray-600};
+  --color-gray-700: #{$color-gray-700};
+  --color-gray-800: #{$color-gray-800};
+  --color-gray-900: #{$color-gray-900};
+
+  // 字体系统
+  --font-family-sans: #{$font-family-sans};
+  --font-family-chinese: #{$font-family-chinese};
+  --font-family-mono: #{$font-family-mono};
+
+  --font-size-xs: #{$font-size-xs};
+  --font-size-sm: #{$font-size-sm};
+  --font-size-base: #{$font-size-base};
+  --font-size-lg: #{$font-size-lg};
+  --font-size-xl: #{$font-size-xl};
+  --font-size-2xl: #{$font-size-2xl};
+  --font-size-3xl: #{$font-size-3xl};
+  --font-size-4xl: #{$font-size-4xl};
+
+  --font-weight-light: #{$font-weight-light};
+  --font-weight-normal: #{$font-weight-normal};
+  --font-weight-medium: #{$font-weight-medium};
+  --font-weight-semibold: #{$font-weight-semibold};
+  --font-weight-bold: #{$font-weight-bold};
+
+  // 间距系统
+  --spacing-1: #{$spacing-1};
+  --spacing-2: #{$spacing-2};
+  --spacing-3: #{$spacing-3};
+  --spacing-4: #{$spacing-4};
+  --spacing-6: #{$spacing-6};
+  --spacing-8: #{$spacing-8};
+  --spacing-12: #{$spacing-12};
+
+  // 圆角系统
+  --border-radius-sm: #{$border-radius-sm};
+  --border-radius-md: #{$border-radius-md};
+  --border-radius-lg: #{$border-radius-lg};
+  --border-radius-xl: #{$border-radius-xl};
+  --border-radius-2xl: #{$border-radius-2xl};
+  --border-radius-4xl: #{$border-radius-4xl};
+
+  // 阴影系统
+  --shadow-sm: #{$shadow-sm};
+  --shadow-md: #{$shadow-md};
+  --shadow-lg: #{$shadow-lg};
+  --shadow-xl: #{$shadow-xl};
+  --shadow-2xl: #{$shadow-2xl};
+  --shadow-admin: #{$shadow-admin};
+  --shadow-admin-lg: #{$shadow-admin-lg};
+
+  // 动画系统
+  --transition-fast: #{$transition-fast};
+  --transition-normal: #{$transition-normal};
+  --transition-slow: #{$transition-slow};
+}
+:root {
+  // 颜色系统
+  --color-primary: #{$color-primary};
+  --color-secondary: #{$color-secondary};
+  --color-success: #{$color-success};
+  --color-danger: #{$color-danger};
+  --color-background: #{$color-background};
+  --color-surface: #{$color-surface};
+
+  // 中性色
+  --color-gray-50: #{$color-gray-50};
+  --color-gray-100: #{$color-gray-100};
+  --color-gray-200: #{$color-gray-200};
+  --color-gray-300: #{$color-gray-300};
+  --color-gray-400: #{$color-gray-400};
+  --color-gray-500: #{$color-gray-500};
+  --color-gray-600: #{$color-gray-600};
+  --color-gray-700: #{$color-gray-700};
+  --color-gray-800: #{$color-gray-800};
+  --color-gray-900: #{$color-gray-900};
+
+  // 字体系统
+  --font-family-sans: #{$font-family-sans};
+  --font-family-chinese: #{$font-family-chinese};
+  --font-family-mono: #{$font-family-mono};
+
+  --font-size-xs: #{$font-size-xs};
+  --font-size-sm: #{$font-size-sm};
+  --font-size-base: #{$font-size-base};
+  --font-size-lg: #{$font-size-lg};
+  --font-size-xl: #{$font-size-xl};
+  --font-size-2xl: #{$font-size-2xl};
+  --font-size-3xl: #{$font-size-3xl};
+  --font-size-4xl: #{$font-size-4xl};
+
+  --font-weight-light: #{$font-weight-light};
+  --font-weight-normal: #{$font-weight-normal};
+  --font-weight-medium: #{$font-weight-medium};
+  --font-weight-semibold: #{$font-weight-semibold};
+  --font-weight-bold: #{$font-weight-bold};
+
+  // 间距系统
+  --spacing-1: #{$spacing-1};
+  --spacing-2: #{$spacing-2};
+  --spacing-3: #{$spacing-3};
+  --spacing-4: #{$spacing-4};
+  --spacing-6: #{$spacing-6};
+  --spacing-8: #{$spacing-8};
+  --spacing-12: #{$spacing-12};
+
+  // 圆角系统
+  --border-radius-sm: #{$border-radius-sm};
+  --border-radius-md: #{$border-radius-md};
+  --border-radius-lg: #{$border-radius-lg};
+  --border-radius-xl: #{$border-radius-xl};
+  --border-radius-2xl: #{$border-radius-2xl};
+  --border-radius-4xl: #{$border-radius-4xl};
+
+  // 阴影系统
+  --shadow-sm: #{$shadow-sm};
+  --shadow-md: #{$shadow-md};
+  --shadow-lg: #{$shadow-lg};
+  --shadow-xl: #{$shadow-xl};
+  --shadow-2xl: #{$shadow-2xl};
+  --shadow-admin: #{$shadow-admin};
+  --shadow-admin-lg: #{$shadow-admin-lg};
+
+  // 动画系统
+  --transition-fast: #{$transition-fast};
+  --transition-normal: #{$transition-normal};
+  --transition-slow: #{$transition-slow};
+}
+
+// 全局样式重置
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+// 基础 HTML 元素样式
+html,
+body,
+#app {
+  height: 100%;
+  font-family: var(--font-family-sans);
+  background-color: var(--color-background);
+  color: var(--color-gray-900);
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+// 中文文本使用 PingFang SC
+:lang(zh-CN) {
+  font-family: var(--font-family-chinese);
+}
+
+// 数字和统计数据使用等宽字体
+.font-mono {
+  font-family: var(--font-family-mono);
+}
+
+// ===== 组件样式系统 =====
+
+// 卡片组件
+.card {
+  @include card-base;
+  @include card-hover;
+}
+
+// 按钮组件
+.btn {
+  @include button-base;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.btn-primary {
+  @include button-variant(primary);
+}
+
+.btn-secondary {
+  @include button-variant(secondary);
+}
+
+ 
+
+// 表单组件
+.form-input {
+  @include form-input-base;
+}
+
+.form-input:focus {
+  @include form-input-focus;
+}
+
+// 表格组件
+.table-container {
+  @include table-container;
+}
+
+.table {
+  @include table-base;
+}
+
+.table th,
+.table td {
+  @include table-cell;
+}
+
+.table th {
+  @include table-header;
+}
+
+.table tbody tr:nth-child(even) {
+  @include table-row-striped;
+}
+
+.table tbody tr:hover {
+  @include table-row-hover;
+}
+
+// 状态标签
+.status-badge {
+  @include status-badge-base;
+}
+
+.status-success {
+  @include status-badge-variant(success);
+}
+
+.status-danger {
+  @include status-badge-variant(danger);
+}
+
+.status-warning {
+  @include status-badge-variant(warning);
+}
+
+// ===== 布局组件 =====
+.sidebar {
+  @include sidebar-base;
+}
+
+.main-content {
+  @include main-content-base;
+}
+
+// ===== 登录页样式 =====
+.login-right-section {
+  @include login-right-section;
+}
+
+.login-bg-gradient {
+  @include login-bg-gradient;
+  transition: background 0.5s ease-in-out;
+}
+
+.login-bg-overlay {
+  @include login-bg-overlay;
+  transition: background 0.5s ease-in-out, backdrop-filter 0.5s ease-in-out;
+}
+
+/* Light theme - default state */
+.login-right-section:not(.theme-dark) .login-bg-gradient {
+  @include login-bg-gradient-light;
+}
+
+.login-right-section:not(.theme-dark) .login-bg-overlay {
+  @include login-bg-overlay-light;
+}
+
+.login-right-section:not(.theme-dark) .login-form-card {
+  @include login-form-card-light;
+}
+
+.login-decoration {
+  @include login-decoration-base;
+}
+
+.login-decoration-1 {
+  @include login-decoration-variant(1);
+}
+
+.login-decoration-2 {
+  @include login-decoration-variant(2);
+}
+
+.login-form-wrapper {
+  @include login-form-wrapper;
+}
+
+.login-form-card {
+  @include login-form-card;
+  transition: background 0.5s ease-in-out, border-color 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
+}
+
+.login-form-header {
+  @include login-form-header;
+}
+
+.login-form-title {
+  @include login-form-title;
+  transition: color 0.5s ease-in-out;
+}
+
+.login-form-subtitle {
+  @include login-form-subtitle;
+}
+
+.login-btn-primary {
+  @include login-btn-primary;
+}
+
+/* Dark theme - when theme-dark class is present */
+.login-right-section.theme-dark .login-bg-overlay {
+  @include login-bg-overlay-dark;
+}
+
+.login-right-section.theme-dark .login-form-card {
+  @include login-form-card-dark;
+}
+
+/* Title color adjustments for themes - high priority */
+.login-right-section:not(.theme-dark) .login-form-title {
+  color: var(--color-primary) !important;
+}
+
+.login-right-section.theme-dark .login-form-title {
+  color: #FFFFFF !important;
+}
+
+/* Legacy dark theme rules - kept for compatibility */
+
+/* ============================
+   Reset page-level input overrides
+   Ensure Naive UI default styling is used (clear any component/page overrides)
+   ============================ */
+/* Reset form item container overrides */
+.n-form-item-blank,
+.n-form-item-blank:hover,
+.n-form-item-blank:focus-within {
+  background: unset !important;
+  border: unset !important;
+  box-shadow: unset !important;
+  transform: none !important;
+}
+
+/* Ensure input elements use Naive defaults */
+.n-input__input,
+.n-input__input:focus,
+.n-input__input::placeholder {
+  color: inherit !important;
+  background: inherit !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Keep checkbox label / button text tweaks if needed (non-intrusive) */
+.n-checkbox__label {
+  color: var(--color-gray-600);
+}
+
+.n-button--text {
+  color: var(--color-secondary);
+}
+
+// ===== 响应式设计 =====
+@media (max-width: 768px) {
+  .sidebar {
+    @include sidebar-mobile;
+  }
+
+  .main-content {
+    @include main-content-mobile;
+  }
+
+  .login-right-section {
+    @include login-mobile;
+  }
+
+  .login-form-card {
+    @include login-form-card-mobile;
+  }
+}
+
+// ===== 深色主题 =====
+@media (prefers-color-scheme: dark) {
+  :root {
+    @include theme-dark;
+  }
+
+  .card {
+    @include card-dark;
+  }
+
+  .form-input {
+    @include form-input-dark;
+  }
+
+  .table th {
+    @include table-header-dark;
+  }
+
+  .login-bg-gradient {
+    @include login-bg-gradient-dark;
+  }
+
+  .login-form-title {
+    @include login-form-title-dark;
+  }
+
+  .login-form-subtitle {
+    @include login-form-subtitle-dark;
+  }
+}

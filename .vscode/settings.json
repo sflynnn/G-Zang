@@ -1,0 +1,16 @@
+{
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.vmargs": [
+        "--add-opens",
+        "java.base/java.lang=ALL-UNNAMED"
+    ],
+    "java.server.launchMode": "Standard",
+    "java.configuration.runtimes": [
+        {
+            "name": "JavaSE-21",
+            "path": "d:\\Software\\Java\\jdk-21",
+            "default": true
+        }
+    ],
+    "java.configuration.updateBuildConfiguration": "automatic"
+}

@@ -1,0 +1,19 @@
+// ===========================================
+// G-Zang PC-Main SCSS Functions 库
+// ===========================================
+
+@function color-alpha($color, $alpha) {
+  @return rgba($color, $alpha);
+}
+
+@function lighten($color, $amount) {
+  @return adjust-color($color, $lightness: $amount);
+}
+
+@function darken($color, $amount) {
+  @return adjust-color($color, $lightness: -$amount);
+}
+
+@function rem($px) {
+  @return ($px / 16) * 1rem;
+}

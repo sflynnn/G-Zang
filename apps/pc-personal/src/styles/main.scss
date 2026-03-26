@@ -1,0 +1,160 @@
+// ===========================================
+// G-Zang PC-Personal SCSS 主样式文件
+// ===========================================
+
+// 全局变量和函数（使用模块化 @use，保持短期兼容 via `as *`）
+@use 'variables' as *;
+@use 'mixins' as *;
+@use 'functions' as *;
+
+// 全局样式重置
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #app {
+  height: 100%;
+  font-family: var(--font-family-sans);
+  background-color: var(--color-background);
+  color: var(--color-gray-900);
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+// 中文文本使用 PingFang SC
+:lang(zh-CN) {
+  font-family: var(--font-family-chinese);
+}
+
+// 数字和统计数据使用等宽字体
+.font-mono {
+  font-family: var(--font-family-mono);
+}
+
+// ===== 个人记账应用专用样式 =====
+
+// 资产卡片
+.asset-card {
+  @include card-base;
+  @include card-hover;
+  background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-gray-50) 100%);
+  border: 1px solid var(--color-gray-200);
+}
+
+// 交易记录列表
+.transaction-list {
+  .transaction-item {
+    @include transaction-item-base;
+
+    &:hover {
+      @include transaction-item-hover;
+    }
+
+    &.income {
+      @include transaction-item-income;
+    }
+
+    &.expense {
+      @include transaction-item-expense;
+    }
+  }
+}
+
+// 统计图表容器
+.chart-container {
+  @include chart-container-base;
+  background: var(--color-surface);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-admin);
+}
+
+// 标签云
+.tag-cloud {
+  .tag {
+    @include tag-base;
+    display: inline-block;
+    margin: var(--spacing-1);
+    padding: var(--spacing-1) var(--spacing-2);
+    border-radius: var(--border-radius-lg);
+    font-size: var(--font-size-sm);
+    transition: all var(--transition-fast);
+    cursor: pointer;
+
+    &:hover {
+      @include tag-hover;
+    }
+  }
+}
+
+// 日期选择器
+.date-picker {
+  @include date-picker-base;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-3);
+  background: var(--color-surface);
+  transition: all var(--transition-fast);
+
+  &:focus {
+    @include date-picker-focus;
+  }
+}
+
+// 金额输入
+.amount-input {
+  @include amount-input-base;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+  border: 2px solid var(--color-gray-300);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-4);
+  background: var(--color-surface);
+  transition: all var(--transition-fast);
+
+  &:focus {
+    @include amount-input-focus;
+  }
+}
+
+// ===== 深色主题支持 =====
+@media (prefers-color-scheme: dark) {
+  :root {
+    @include theme-dark;
+  }
+
+  .asset-card {
+    @include card-dark;
+  }
+
+  .chart-container {
+    @include chart-container-dark;
+  }
+
+  .date-picker {
+    @include date-picker-dark;
+  }
+
+  .amount-input {
+    @include amount-input-dark;
+  }
+}
+
+// ===== 响应式设计 =====
+@media (max-width: 768px) {
+  .asset-card {
+    @include asset-card-mobile;
+  }
+
+  .transaction-list {
+    @include transaction-list-mobile;
+  }
+
+  .chart-container {
+    @include chart-container-mobile;
+  }
+}

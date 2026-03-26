@@ -1,0 +1,33 @@
+// ===========================================
+// G-Zang PC-Personal SCSS Functions 库
+// ===========================================
+
+@function color-alpha($color, $alpha) {
+  @return rgba($color, $alpha);
+}
+
+@function lighten($color, $amount) {
+  @return adjust-color($color, $lightness: $amount);
+}
+
+@function darken($color, $amount) {
+  @return adjust-color($color, $lightness: -$amount);
+}
+
+@function rem($px) {
+  @return ($px / 16) * 1rem;
+}
+
+// 货币格式化函数
+@function format-currency($amount, $symbol: '¥') {
+  @if $amount >= 0 {
+    @return '#{$symbol}#{$amount}';
+  } @else {
+    @return '-#{$symbol}#{-$amount}';
+  }
+}
+
+// 颜色透明度混合
+@function alpha($color, $opacity) {
+  @return rgba($color, $opacity);
+}

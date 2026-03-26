@@ -1,0 +1,267 @@
+---
+alwaysApply: false
+filePathPatterns:
+  - "apps/pc-business/**"
+framework: "Vue 3 + TypeScript"
+description: "G-Zang PC企业业务子应用开发规范"
+---
+
+# G-Zang PC企业业务子应用 (PC-Business) MDC 规则
+
+## 0. 设计哲学遵循
+
+### "智简·归藏" 企业端实现
+企业业务子应用遵循G-Zang的"Trust/Professionalism" (信任/专业性)理念：
+- **Container隐喻**：数据表格和表单作为企业财务信息的"存储容器"
+- **Flow隐喻**：审批流程和工作流的流畅数据处理
+- **企业场景 (Desktop First)**：密集布局、专业配色、有序的数据展示
+
+## 1. 应用概述
+
+### 1.1 应用定位
+PC企业业务子应用是G-Zang财务管理系统的企业级功能模块，基于qiankun微前端架构运行。专注于企业财务管理，提供多用户协作、成本中心管理、预算控制、财务分析、业务关联等企业级功能。
+
+### 1.2 核心功能
+- **企业财务管理**：企业级账本管理、多用户协作记账
+- **成本中心管理**：成本中心设置、费用分摊、预算控制
+- **预算管理**：企业预算编制、执行监控、预警提醒
+- **业务关联**：与业务系统的集成（如维修工单、采购订单）
+- **财务分析**：企业财务报表、成本分析、效益分析
+- **权限控制**：企业级权限管理、数据隔离、审计日志
+
+## 2. 技术栈规范
+
+### 2.1 基础技术栈
+```json
+{
+  "框架": "Vue 3.0+ (Composition API)",
+  "构建工具": "Vite 4.x",
+  "样式框架": "Tailwind CSS (优先级最高 - 所有样式均使用Tailwind)",
+  "UI组件库": "Naive UI (与Tailwind CSS结合使用)",
+  "图标库": "Iconify / Lucide-vue",
+  "状态管理": "Pinia",
+  "路由": "Vue Router 4",
+  "HTTP客户端": "Axios (通过packages/shared)",
+  "类型系统": "TypeScript 5.x",
+  "图表库": "ECharts (必须使用定义的颜色调色板)",
+  "表格组件": "Naive UI DataTable + Tailwind样式",
+  "表单组件": "Naive UI Form + Tailwind样式",
+  "字体系统": {
+    "UI界面": "Inter",
+    "中文文本": "PingFang SC",
+    "数字/货币": "DIN Alternate / Roboto Mono (必须使用font-mono)"
+  },
+  "代码规范": "ESLint + Prettier"
+}
+```
+
+### 2.2 设计系统实现 (企业端)
+
+#### 2.2.1 颜色调色板严格使用
+```javascript
+// tailwind.config.js - 企业端配置
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        primary: '#0F4C5C',      // 归藏青 - 侧边栏、标题、专业文本
+        secondary: '#FB8B24',    // 琉璃金 - CTA按钮、重要操作
+        success: '#06D6A0',      // 利润绿 - 成功状态、增长指标
+        danger: '#EF476F',       // 支出红 - 错误状态、支出显示
+        background: '#F8F9FA',   // 浅灰背景 - 页面背景
+        surface: '#FFFFFF',      // 白色 - 卡片、表格背景
+      }
+    }
+  }
+}
+```
+
+#### 2.2.2 企业端布局模式
+- **固定侧边栏**：`bg-primary` (深色主题)，可折叠
+- **主内容区**：网格布局仪表板，数据表格
+- **表格样式**：条纹行 (`even:bg-slate-50`)，货币列右对齐
+- **响应式断点**：使用 `md:`, `lg:` 等Tailwind前缀
+
+### 2.2 企业级特性技术栈
+```json
+{
+  "工作流引擎": "自定义状态机",
+  "审批流程": "多级审批 + 条件分支",
+  "批量操作": "数据导入导出 + 批量处理",
+  "高级搜索": "组合条件 + 保存搜索",
+  "数据导出": "Excel/CSV + 自定义模板",
+  "实时协作": "WebSocket + 操作同步",
+  "权限控制": "RBAC + 数据权限",
+  "审计日志": "完整操作记录 + 数据变更追踪"
+}
+```
+
+## 3. 项目结构规范
+
+### 3.1 目录结构
+```
+apps/pc-business/
+├── src/
+│   ├── api/                    # API接口 (引用packages/shared)
+│   ├── assets/                 # 静态资源
+│   │   ├── icons/             # 图标资源
+│   │   └── images/            # 图片资源
+│   ├── components/            # 组件目录
+│   │   ├── common/            # 通用组件
+│   │   │   ├── AdvancedSearch/ # 高级搜索组件
+│   │   │   ├── BatchOperations/ # 批量操作组件
+│   │   │   ├── WorkflowStatus/ # 工作流状态组件
+│   │   │   ├── ApprovalFlow/   # 审批流程组件
+│   │   │   ├── CostCenterTree/ # 成本中心树组件
+│   │   │   ├── BudgetProgress/ # 预算进度组件
+│   │   │   └── ReportChart/    # 报表图表组件
+│   │   ├── business/          # 业务组件
+│   │   │   ├── BusinessOrderForm/ # 业务订单表单
+│   │   │   ├── CostAllocation/ # 成本分摊组件
+│   │   │   ├── BudgetPlanning/ # 预算编制组件
+│   │   │   ├── FinancialReport/ # 财务报表组件
+│   │   │   ├── ExpenseClaim/   # 费用报销组件
+│   │   │   └── AssetManagement/ # 资产管理组件
+│   │   └── layout/            # 布局组件
+│   │       ├── BusinessLayout/ # 企业端主布局
+│   │       └── CompanySwitcher/ # 公司切换器
+│   ├── composables/           # 组合式函数
+│   │   ├── useBusinessOrder.ts # 业务订单hooks
+│   │   ├── useCostCenter.ts    # 成本中心hooks
+│   │   ├── useBudget.ts        # 预算管理hooks
+│   │   ├── useWorkflow.ts      # 工作流hooks
+│   │   ├── useApproval.ts      # 审批流程hooks
+│   │   ├── useCollaboration.ts # 协作功能hooks
+│   │   └── useAudit.ts         # 审计日志hooks
+│   ├── router/                # 路由配置
+│   │   ├── index.ts           # 路由配置
+│   │   ├── routes.ts          # 路由定义
+│   │   └── guards.ts          # 路由守卫
+│   ├── stores/                # 状态管理
+│   │   ├── modules/           # 按模块组织
+│   │   │   ├── business.ts    # 业务数据状态
+│   │   │   ├── cost-center.ts # 成本中心状态
+│   │   │   ├── budget.ts      # 预算状态
+│   │   │   ├── workflow.ts    # 工作流状态
+│   │   │   ├── approval.ts    # 审批状态
+│   │   │   └── report.ts      # 报表状态
+│   │   └── index.ts           # 导出配置
+│   ├── types/                 # TypeScript类型定义
+│   │   ├── business.ts        # 业务相关类型
+│   │   ├── cost-center.ts     # 成本中心类型
+│   │   ├── budget.ts          # 预算相关类型
+│   │   ├── workflow.ts        # 工作流类型
+│   │   └── approval.ts        # 审批相关类型
+│   ├── utils/                 # 工具函数
+│   │   ├── business.ts        # 业务工具
+│   │   ├── workflow.ts        # 工作流工具
+│   │   ├── export.ts          # 数据导出工具
+│   │   ├── permission.ts      # 权限工具
+│   │   └── validation.ts      # 验证工具
+│   ├── views/                 # 页面组件
+│   │   ├── dashboard/         # 企业仪表板
+│   │   │   ├── index.vue      # 主仪表板
+│   │   │   └── components/    # 仪表板组件
+│   │   ├── business/          # 业务管理页面
+│   │   │   ├── orders/        # 业务订单
+│   │   │   ├── claims/        # 费用报销
+│   │   │   └── assets/        # 资产管理
+│   │   ├── finance/           # 财务管理页面
+│   │   │   ├── accounting/    # 企业记账
+│   │   │   ├── budget/        # 预算管理
+│   │   │   └── reports/       # 财务报表
+│   │   ├── cost-center/       # 成本中心页面
+│   │   ├── workflow/          # 工作流页面
+│   │   ├── approval/          # 审批页面
+│   │   └── settings/          # 企业设置页面
+│   ├── styles/                # 样式文件
+│   │   ├── main.css           # 主样式文件
+│   │   ├── variables.css      # CSS变量
+│   │   ├── components.css     # 组件样式
+│   │   └── enterprise.css     # 企业端特色样式
+│   ├── constants/             # 常量定义
+│   │   ├── business-types.ts  # 业务类型常量
+│   │   ├── workflow-status.ts # 工作流状态常量
+│   │   ├── approval-rules.ts  # 审批规则常量
+│   │   └── budget-categories.ts # 预算分类常量
+│   └── locales/               # 国际化
+│       ├── zh-CN/             # 中文语言包
+│       └── en-US/             # 英文语言包
+├── public/                    # 公共资源
+├── tests/                     # 测试文件
+└── types/                     # 全局类型定义
+```
+
+## 4. 核心功能组件规范
+
+### 4.1 业务订单管理组件
+提供业务订单的完整生命周期管理，包括创建、编辑、审批、状态跟踪和批量操作。
+
+### 4.2 成本中心管理组件
+集成成本中心层级管理、预算分配、费用归集等功能的企业级成本管控组件。
+
+### 4.3 预算管理组件
+支持预算编制、执行监控、预警提醒和多维度分析的企业预算管理组件。
+
+## 5. 工作流与审批规范
+
+### 5.1 审批流程管理
+提供可视化审批流程设计、动态流程配置和流程执行监控的企业级工作流引擎。
+
+### 5.2 审批操作组件
+支持多级审批、条件分支、代理审批和审批历史的完整审批操作界面组件。
+
+## 6. 代码生成规范
+
+### 6.1 企业业务功能生成
+生成企业业务功能时，请明确指定：
+- **业务场景**：企业财务管理、成本控制、预算编制等
+- **用户角色**：管理员、财务人员、部门经理等
+- **审批流程**：单级审批、多级审批、条件审批
+- **数据权限**：公司级权限、部门级权限、个人级权限
+- **集成需求**：与其他业务系统的接口集成
+
+### 6.2 示例指令
+明确指定业务场景、用户角色、审批流程、数据权限和集成需求要求。
+
+#### 6.2.1 设计系统要求
+- **布局模式**：企业场景Desktop First，固定侧边栏 + 主内容网格布局
+- **组件样式**：数据表格使用条纹行，货币数字右对齐使用等宽字体
+- **配色方案**：严格使用定义的品牌色和功能色
+- **字体规范**：财务数字必须使用 `font-mono` 确保表格对齐
+
+### 6.3 企业级特性实现
+企业业务应用需实现：
+- **多租户数据隔离**：公司级数据完全隔离
+- **权限分级控制**：支持RBAC和数据级权限
+- **审批流程引擎**：灵活可配的审批流
+- **审计日志记录**：完整操作记录和数据变更追踪
+- **批量操作支持**：数据导入导出和批量处理
+- **实时协作功能**：多用户同时操作和状态同步
+
+## 7. 国际化与主题规范
+
+### 7.1 企业业务国际化要求
+
+#### 7.1.1 企业专用语言包
+按企业业务模块组织的多语言文件，支持财务术语、审批流程、报表字段的专业翻译。
+
+#### 7.1.2 多语言切换
+支持运行时语言切换，保持用户语言偏好设置。
+
+### 7.2 企业业务全局主题配置
+
+#### 7.2.1 App.vue配置
+在应用入口配置Naive UI主题和企业特色样式。
+
+#### 7.2.2 企业特色主题变量
+定义企业端专用的主题变量，包括企业色、图标样式、布局参数等。
+
+#### 7.2.2 审批流程主题适配
+为审批流程相关的组件提供专门的主题样式适配。
+
+---
+
+**文档版本**：1.1.0
+**最后更新**：2026-01-18
+**维护人员**：前端开发团队
