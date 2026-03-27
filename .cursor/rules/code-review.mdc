@@ -1,0 +1,178 @@
+---
+alwaysApply: false
+filePathPatterns:
+  - "**/*"
+description: "G-Zang 代码审查规范 — 审查标准、评论格式、质量关卡"
+---
+
+# G-Zang 代码审查规范
+
+## 0. 核心理念
+
+### 审查即教学
+
+代码审查不是"找茬"，而是团队共同保证质量的机会。每一行评论都应该是建设性的、有教学意义的。审查者不仅要指出问题，还要解释"为什么这是个问题"以及"如何修复"。
+
+### 审查优先级
+
+1. 🔴 **Blocker**：阻止合并，必须修复
+2. 🟡 **Suggestion**：建议修复，下个迭代处理
+3. 💭 **Nit**：可选优化，不阻碍合并
+4. ✅ **Praise**：值得学习的地方
+
+---
+
+## 1. 代码审查检查清单
+
+### 1.1 正确性（必须通过）
+
+- [ ] 代码是否实现了需求文档中描述的功能？
+- [ ] 边界条件是否被正确处理？（空值、0、最大值、负数）
+- [ ] 错误处理是否符合预期？
+- [ ] 事务边界是否正确？（避免部分成功部分失败）
+
+### 1.2 安全性（必须通过）
+
+- [ ] 所有用户输入是否经过验证？
+- [ ] 是否使用参数化查询而非字符串拼接？
+- [ ] 是否有未授权的接口暴露？
+- [ ] 是否有密码/密钥/Token 被硬编码？
+
+### 1.3 性能（建议检查）
+
+- [ ] 是否有 N+1 查询问题？
+- [ ] 是否有全表扫描的查询？
+- [ ] 是否使用了 SELECT * 而非指定列？
+- [ ] 分页是否使用了游标分页而非 OFFSET？
+
+### 1.4 可维护性（建议检查）
+
+- [ ] 变量/函数命名是否清晰表达意图？
+- [ ] 是否有重复代码应该提取为公共方法？
+- [ ] 是否有魔法数字/字符串应该定义为常量？
+
+---
+
+## 2. 评论格式规范
+
+### 标准评论模板
+
+```markdown
+🔴 **Blocker - [问题类别]**
+位置: 第 42 行
+**问题描述:** 直接将用户输入拼接到 SQL 中。
+**风险说明:** 攻击者可以通过构造恶意输入绕过认证或窃取数据。
+**修复建议:**
+```java
+// ❌ 当前
+String sql = "SELECT * FROM users WHERE id = " + id;
+// ✅ 修复后
+String sql = "SELECT * FROM users WHERE id = ?";
+```
+
+---
+
+🟡 **Suggestion - [问题类别]**
+位置: 第 88 行
+**问题描述:** 在循环中执行数据库查询，N+1 问题。
+**修复方案:** 批量查询 + Map 关联
+
+---
+
+💭 **Nit - 代码风格**
+位置: 第 102 行
+**建议:** 变量名 `tmp` 可以改为 `tempFilePath`，更清晰地表达意图。
+
+---
+
+✅ **Praise**
+第 56-72 行
+这个缓存实现非常优雅，使用了 Cache-Aside 模式！👍
+```
+
+### 常见问题评论示例
+
+#### 🔴 SQL 注入
+
+```java
+🔴 **Blocker - SQL 注入风险**
+位置: TransactionMapper.java:42
+**问题:** 直接将用户输入拼接到 SQL 中。
+**修复:**
+```java
+// ❌ 当前
+@Select("SELECT * FROM t_user WHERE name = '" + name + "'")
+// ✅ 修复
+@Select("SELECT * FROM t_user WHERE name = #{name}")
+```
+```
+
+#### 🔴 缺失权限检查
+
+```java
+🔴 **Blocker - 权限控制缺失**
+位置: TransactionController.java:28
+**问题:** DELETE /api/transactions/{id} 没有进行权限校验。
+**风险:** 任何认证用户都可以删除他人的交易记录。
+**修复:**
+```java
+Transaction tx = getById(id);
+if (!tx.getUserId().equals(currentUserId)) {
+    throw new BusinessException(ErrorCode.FORBIDDEN);
+}
+```
+```
+
+#### 🟡 N+1 查询
+
+```java
+🟡 **Suggestion - N+1 查询问题**
+位置: TransactionServiceImpl.java:56-65
+**问题:** 在循环中执行数据库查询，100 条记录会产生 101 次查询。
+**修复方案:**
+```java
+// 批量查询 + Map 关联
+List<Long> categoryIds = transactions.stream()
+    .map(Transaction::getCategoryId)
+    .collect(Collectors.toSet());
+Map<Long, Category> categoryMap = categoryService.selectBatchIds(categoryIds)
+    .stream().collect(Collectors.toMap(Category::getId, c -> c));
+```
+```
+
+---
+
+## 3. 审查流程
+
+### 3.1 合并条件
+
+必须同时满足：
+- ✅ 所有 🔴 Blocker 已修复
+- ✅ 所有自动化检查通过（CI、绿标）
+- ✅ 至少 1 人 Approve（核心模块需 2 人）
+- ✅ 无未解决的讨论线程
+
+### 3.2 PR 创建规范
+
+```markdown
+## Summary
+<!-- 一句话描述改动 -->
+
+## Motivation
+<!-- 为什么需要这个改动？ -->
+
+## Changes
+- [x] Backend: ...
+- [x] Frontend: ...
+- [x] Tests: ...
+
+## Test Plan
+- [x] 单元测试覆盖新代码
+- [x] 手动测试场景 A、B、C
+```
+
+---
+
+**文档版本**：1.0.0
+**最后更新**：2026-03-27
+**维护人员**：代码审查委员会

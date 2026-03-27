@@ -24,7 +24,7 @@ filePathPatterns:
 ### 2.1 技术栈选型
 - **框架**：Vue 3.0+ (Composition API)
 - **构建工具**：Vite 4.x
-- **样式预处理器**：SCSS (所有项目必须使用)
+- **样式框架**：Tailwind CSS (PC端优先级最高，所有样式均使用Tailwind实现)；SCSS仅用于Tailwind无法覆盖的高级场景
 - **状态管理**：Pinia
 - **路由**：Vue Router 4
 - **HTTP 客户端**：Axios
@@ -42,7 +42,7 @@ filePathPatterns:
 ```
 G-Zang/
 ├── apps/                          # 应用目录
-│   ├── admin/                     # 管理端 (Naive UI)
+│   ├── pc-admin/                  # 管理端 (Naive UI)
 │   │   ├── src/
 │   │   │   ├── api/              # API接口
 │   │   │   ├── assets/           # 静态资源
@@ -160,18 +160,26 @@ G-Zang/
 
 #### 2.8.2 主题系统规范
 
-##### SCSS变量主题系统
-使用 SCSS 变量和 mixin 定义完整的主题系统，包括：
-- 颜色系统 (品牌色、功能色、中性色)
+##### Tailwind CSS 变量主题系统
+使用 Tailwind CSS 配置和 CSS 变量定义完整的主题系统，包括：
+- 颜色系统 (品牌色、功能色、中性色) - 在 `tailwind.config.js` 中精确扩展十六进制颜色代码
 - 字体系统 (字体族、字号、字重)
 - 间距系统 (spacing scale)
 - 圆角系统 (border-radius scale)
 - 阴影系统 (box-shadow scale)
 - 动画系统 (transition timing)
 
-支持浅色、深色和自动主题切换，所有组件样式必须基于SCSS变量构建。
+**G-Zang 品牌色（所有应用必须严格使用）**：
+- `primary: '#0F4C5C'` — 归藏青，用于标题、侧边栏、主文本
+- `secondary: '#FB8B24'` — 琉璃金，用于 CTA、高亮、VIP 图标
+- `success: '#06D6A0'` — 利润绿，用于成功状态、统计图表
+- `danger: '#EF476F'` — 支出红，用于错误状态、警告信息
+- `background: '#F8F9FA'` — 浅灰背景
+- `surface: '#FFFFFF'` — 卡片背景
 
-##### 主题管理器 (Naive UI配置)
+支持浅色、深色和自动主题切换，所有组件样式必须基于 Tailwind 类或 CSS 变量构建。
+
+##### 主题管理器 (Naive UI 配置)
 使用组合式函数管理主题状态，支持主题切换和系统主题监听。
 
 ##### 主题切换组件 (Naive UI)

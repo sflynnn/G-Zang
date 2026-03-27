@@ -1,0 +1,170 @@
+---
+alwaysApply: false
+filePathPatterns:
+  - "**/*"
+description: "G-Zang Git 工作流规范 — 分支策略、提交规范、协作流程"
+---
+
+# G-Zang Git 工作流规范
+
+## 0. 核心理念
+
+- **原子化提交**：每个提交只做一件事，可独立 revert
+- **清晰可读的提交历史**：描述"为什么改"，而非"改了什么"
+- **安全操作**：危险操作（如 force push）必须使用 `--force-with-lease`
+- **分支命名**：`类型/简短描述-工单号`（如 `feat/user-auth-123`）
+
+---
+
+## 1. 分支策略
+
+### 采用 Trunk-Based Development
+
+```
+main ─────●────●────●────●────●────●─── (始终可部署)
+          \  /          \  /          \  /
+           ●             ●             ●     (短期特性分支)
+```
+
+### 分支类型
+
+| 分支类型 | 命名格式 | 生命周期 | 合并方式 |
+|---------|---------|---------|---------|
+| 特性分支 | `feat/xxx-123` | 1天-1周 | Squash Merge |
+| 修复分支 | `fix/xxx-123` | 几小时-1天 | Squash Merge |
+| 热修复分支 | `hotfix/xxx` | 几小时 | Merge |
+| 发布分支 | `release/x.y.z` | 发布周期 | Merge |
+
+### 分支操作
+
+```bash
+# ✅ Good: 从最新主干创建特性分支
+git fetch origin
+git checkout -b feat/transaction-search-456 origin/main
+
+# ✅ Good: 使用 worktree 并行开发
+git worktree add ../feat-report-dashboard feat/report-dashboard-789
+
+# ✅ Good: 提交前清理提交历史
+git fetch origin
+git rebase -i origin/main
+
+# ✅ Good: 安全 force push（带租约检查）
+git push --force-with-lease
+
+# ✅ Good: 删除已合并的分支
+git push origin --delete feat/xxx-123
+```
+
+---
+
+## 2. 提交信息规范
+
+### 采用 Conventional Commits
+
+```
+<类型>(<范围>): <简短描述>
+[可选正文]
+[可选脚注]
+```
+
+### 类型定义
+
+| 类型 | 描述 | 示例 |
+|------|------|------|
+| `feat` | 新功能 | `feat(transaction): add voice input for quick recording` |
+| `fix` | Bug 修复 | `fix(auth): prevent token refresh race condition` |
+| `docs` | 文档更新 | `docs: update API documentation` |
+| `refactor` | 重构 | `refactor(report): extract chart components` |
+| `perf` | 性能优化 | `perf(transaction): add index for date range query` |
+| `test` | 测试相关 | `test: add unit tests for CategoryService` |
+| `chore` | 构建/工具/依赖 | `chore: upgrade Spring Boot to 3.2.0` |
+| `ci` | CI/CD 配置 | `ci: add GitHub Actions for backend deployment` |
+
+### 提交信息示例
+
+```bash
+# ✅ Good: 清晰的提交信息
+feat(transaction): add voice recording for quick transaction entry
+- Integrate browser MediaRecorder API for audio capture
+- Add Whisper AI transcription endpoint
+- Auto-classify transaction based on voice content
+Closes #456
+
+# ✅ Good: 修复类提交（需说明影响范围）
+fix(auth): prevent session hijacking on concurrent login
+When a user logs in from multiple devices, the previous session token
+was not properly invalidated.
+Fixes: CVE-2026-1234
+
+# ❌ Bad: 无意义的提交信息
+fix bug
+WIP
+asdf
+changes
+```
+
+---
+
+## 3. Pull Request 规范
+
+### PR 描述模板
+
+```markdown
+## Summary
+<!-- 简述改动的核心内容 -->
+
+## Motivation
+<!-- 为什么需要这个改动？解决了什么问题？ -->
+
+## Changes
+- [x] Backend: add voice transcription API endpoint
+- [x] Frontend: integrate MediaRecorder in QuickRecord component
+- [x] Tests: add unit tests for transcription service
+
+## Test Plan
+- [x] Manual testing: voice recording on Chrome/Safari/Firefox
+- [x] Unit tests: 95% coverage on new service
+```
+
+---
+
+## 4. 常见场景操作
+
+### 撤销操作
+
+```bash
+# ✅ 撤销工作区的修改（未暂存）
+git restore file.js
+
+# ✅ 撤销暂存区（已 add，未 commit）
+git restore --staged file.js
+
+# ✅ 撤销上一次提交（保留修改在暂存区）
+git reset --soft HEAD~1
+
+# ✅ 撤销上一次提交（完全丢弃）
+git reset --hard HEAD~1
+
+# ✅ 恢复被删除的提交（30天内有效）
+git reflog
+git checkout -b recovery <commit-hash>
+```
+
+### 处理冲突
+
+```bash
+# ✅ Rebase 冲突处理
+git rebase origin/main
+# 解决冲突后
+git add .
+git rebase --continue
+# 或放弃 rebase
+git rebase --abort
+```
+
+---
+
+**文档版本**：1.0.0
+**最后更新**：2026-03-27
+**维护人员**：Git 工作流管理员

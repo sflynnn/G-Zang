@@ -1,0 +1,248 @@
+---
+alwaysApply: false
+filePathPatterns:
+  - "server/src/main/resources/**"
+  - "**/mapper/**"
+  - "**/*Mapper.xml"
+  - "server/**"
+description: "G-Zang 数据库设计与优化规范 — 索引、查询优化、安全迁移"
+---
+
+# G-Zang 数据库设计与优化规范
+
+## 0. 核心理念
+
+数据库是系统性能的核心瓶颈来源。每一个外键必须有索引；每一条慢查询必须被优化；每一次迁移必须可逆；N+1 查询必须被杜绝。
+
+---
+
+## 1. 命名规范
+
+### 表命名
+
+```
+前缀: t_
+命名: 小写字母 + 下划线
+t_user                    # 用户表
+t_transaction             # 交易表
+t_company                 # 公司表
+```
+
+### 字段命名
+
+```
+主键: id (BIGINT, 自增)
+外键: xxx_id (e.g., user_id, company_id)
+时间: create_time, update_time, delete_time
+状态: status (TINYINT)
+逻辑删除: deleted (TINYINT, 0=存在, 1=删除)
+金额: amount (DECIMAL(19,4))
+```
+
+### 索引命名
+
+```
+主键索引: PRIMARY
+唯一索引: uk_{表名}_{字段名}
+普通索引: idx_{表名}_{字段名}
+复合索引: idx_{表名}_{字段1}_{字段2}
+```
+
+---
+
+## 2. 表结构设计
+
+### 2.1 标准表结构模板
+
+```sql
+-- ✅ Good: 标准表结构
+CREATE TABLE t_example (
+    id          BIGINT          NOT NULL    AUTO_INCREMENT  COMMENT '主键ID',
+    tenant_id   BIGINT          NULL                        COMMENT '租户ID',
+    company_id  BIGINT          NULL                        COMMENT '公司ID',
+    name        VARCHAR(100)    NOT NULL                    COMMENT '名称',
+    status      TINYINT         NOT NULL    DEFAULT 0       COMMENT '状态',
+    deleted     TINYINT         NOT NULL    DEFAULT 0       COMMENT '逻辑删除',
+    create_by   BIGINT          NULL,
+    create_time DATETIME        NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    update_by   BIGINT          NULL,
+    update_time DATETIME        NOT NULL    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_example_name_tenant (name, tenant_id, deleted)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='示例表';
+```
+
+### 2.2 交易表 (t_transaction)
+
+```sql
+-- ✅ Good: 交易表设计
+CREATE TABLE t_transaction (
+    id              BIGINT          NOT NULL    AUTO_INCREMENT  COMMENT '主键ID',
+    tenant_id       BIGINT          NOT NULL                    COMMENT '租户ID',
+    company_id      BIGINT          NULL                        COMMENT '公司ID',
+    user_id         BIGINT          NOT NULL                    COMMENT '所属用户',
+    account_id      BIGINT          NOT NULL                    COMMENT '账户ID',
+    category_id     BIGINT          NOT NULL                    COMMENT '分类ID',
+    type            TINYINT         NOT NULL                    COMMENT '类型：1=收入，2=支出，3=转账',
+    amount          DECIMAL(19,4)   NOT NULL                    COMMENT '金额',
+    remark          VARCHAR(500)    NULL                        COMMENT '备注',
+    happen_time     DATETIME        NOT NULL                    COMMENT '发生时间',
+    category_name   VARCHAR(50)     NOT NULL                    COMMENT '分类名称（冗余）',
+    account_name    VARCHAR(100)    NOT NULL                    COMMENT '账户名称（冗余）',
+    deleted         TINYINT         NOT NULL    DEFAULT 0,
+    create_by       BIGINT          NULL,
+    create_time     DATETIME        NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    update_by       BIGINT          NULL,
+    update_time     DATETIME        NOT NULL    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    -- 核心查询索引
+    KEY idx_trans_tenant_user_time (tenant_id, user_id, happen_time DESC),
+    -- 按账户查询
+    KEY idx_trans_account (account_id, happen_time DESC),
+    -- 分类统计
+    KEY idx_trans_category (tenant_id, category_id, happen_time DESC),
+    -- 趋势分析
+    KEY idx_trans_type_time (tenant_id, user_id, type, happen_time DESC)
+) ENGINE=InnoDB COMMENT='交易记录表';
+```
+
+---
+
+## 3. 索引优化策略
+
+### 3.1 必须创建索引的场景
+
+```sql
+-- ✅ 1. 外键列必须创建索引（JOIN 性能）
+KEY idx_user_role_user (user_id),
+KEY idx_user_role_role (role_id),
+
+-- ✅ 2. WHERE 子句中频繁使用的列
+KEY idx_trans_tenant_user_time (tenant_id, user_id, happen_time DESC),
+
+-- ✅ 3. ORDER BY 子句中的列（避免 filesort）
+KEY idx_trans_time (tenant_id, happen_time DESC),
+```
+
+### 3.2 复合索引设计
+
+```sql
+-- ✅ Good: 复合索引遵循最左前缀原则
+KEY idx_trans_tenant_user_time (tenant_id, user_id, happen_time DESC)
+-- 可优化的查询:
+-- WHERE tenant_id = ?                               -- ✅ 命中
+-- WHERE tenant_id = ? AND user_id = ?               -- ✅ 命中
+-- WHERE tenant_id = ? AND user_id = ? AND happen_time BETWEEN ? AND ?  -- ✅ 命中
+-- WHERE user_id = ? AND tenant_id = ?               -- ❌ 不命中（顺序错误）
+```
+
+### 3.3 EXPLAIN 分析
+
+```sql
+-- ✅ 必读: 执行 EXPLAIN ANALYZE 查看实际执行计划
+EXPLAIN ANALYZE
+SELECT t.id, t.amount, t.happen_time
+FROM t_transaction t
+WHERE t.tenant_id = 1 AND t.user_id = 100
+ORDER BY t.happen_time DESC LIMIT 20;
+
+-- 关注指标:
+-- type: const > eq_ref > ref > range > index > ALL (ALL=全表扫描，需要优化)
+-- key: 实际使用的索引名称
+-- Extra: Using index(覆盖索引) > Using filesort(需优化)
+```
+
+---
+
+## 4. 查询优化
+
+### 4.1 禁止的查询模式
+
+```sql
+-- ❌ Bad: SELECT * （获取所有列）
+-- ✅ Good: 只查询需要的列
+SELECT id, amount, remark FROM t_transaction WHERE id = ?;
+
+-- ❌ Bad: 隐式类型转换（导致索引失效）
+WHERE category_id = '123'    -- ❌ 字符串导致全表扫描
+WHERE category_id = 123      -- ✅ 命中索引
+
+-- ❌ Bad: 在索引列上使用函数
+WHERE YEAR(happen_time) = 2026            -- ❌ 索引失效
+WHERE happen_time >= '2026-01-01'         -- ✅ 正确
+
+-- ❌ Bad: 前导通配符模糊匹配
+WHERE remark LIKE '%餐饮%'                  -- ❌ 全表扫描
+WHERE remark LIKE '餐饮%'                   -- ✅ 可用索引
+```
+
+### 4.2 分页优化
+
+```sql
+-- ❌ Bad: 深分页问题
+SELECT * FROM t_transaction
+WHERE tenant_id = 1 ORDER BY id DESC LIMIT 1000000, 20;
+
+-- ✅ Good: 使用游标分页（基于上一页最后一条ID）
+SELECT * FROM t_transaction
+WHERE tenant_id = 1 AND id < #{lastId}
+ORDER BY id DESC LIMIT 20;
+
+-- ✅ Good: 使用延迟关联
+SELECT t.* FROM t_transaction t
+INNER JOIN (
+    SELECT id FROM t_transaction
+    WHERE tenant_id = 1
+    ORDER BY id DESC
+    LIMIT 1000000, 20
+) AS page ON t.id = page.id;
+```
+
+### 4.3 N+1 查询预防
+
+```java
+// ❌ Bad: N+1 查询（100条记录 = 1 + 100 次查询）
+List<Transaction> transactions = transactionMapper.selectList(queryWrapper);
+for (Transaction t : transactions) {
+    Category category = categoryMapper.selectById(t.getCategoryId()); // N次
+}
+
+// ✅ Good: 批量查询 + Map 关联（推荐）
+List<Transaction> transactions = transactionMapper.selectList(queryWrapper);
+Set<Long> categoryIds = transactions.stream()
+    .map(Transaction::getCategoryId)
+    .collect(Collectors.toSet());
+Map<Long, Category> categoryMap = categoryMapper.selectBatchIds(categoryIds)
+    .stream().collect(Collectors.toMap(Category::getId, c -> c));
+// 2次查询，总耗时固定
+```
+
+---
+
+## 5. 安全迁移规范
+
+### 5.1 迁移原则
+
+1. **可逆性**：所有迁移必须有对应的 DOWN 脚本
+2. **零停机**：大表迁移使用在线变更策略
+3. **小步快跑**：每次迁移只做一件事
+
+### 5.2 在线迁移
+
+```sql
+-- ✅ Good: 安全添加新列（MySQL 5.6+ 不锁表）
+ALTER TABLE t_transaction ADD COLUMN tags VARCHAR(255) NULL COMMENT '标签' AFTER remark;
+
+-- ✅ Good: 创建索引（不锁表）
+CREATE INDEX idx_trans_reconciled
+ON t_transaction (tenant_id, is_reconciled, happen_time DESC)
+ALGORITHM=INPLACE, LOCK=NONE;
+
+-- ❌ Bad: 在高峰期对大表执行 ALTER TABLE（会锁表！）
+```
+
+---
+
+**文档版本**：1.0.0
+**最后更新**：2026-03-27
+**维护人员**：数据库优化工程师

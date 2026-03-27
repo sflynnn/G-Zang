@@ -1,0 +1,240 @@
+---
+alwaysApply: false
+filePathPatterns:
+  - "**/*.test.ts"
+  - "**/*.spec.ts"
+  - "**/__tests__/**"
+  - "server/src/test/**"
+description: "G-Zang 测试策略规范 — 单元测试、集成测试、E2E 测试"
+---
+
+# G-Zang 测试策略规范
+
+## 0. 测试金字塔
+
+```
+                    ▲ E2E (少量，高度可信)
+                   / \
+                  /   \  集成测试 (中量)
+                 /───────\
+                /  单元测试  \  (大量，快速)
+               /─────────────\
+目标: 80%+ 测试覆盖来自单元测试
+```
+
+---
+
+## 1. 前端单元测试 (Vitest + Vue Test Utils)
+
+### 1.1 组合式函数测试
+
+```typescript
+// ✅ Good: useVoiceRecord.spec.ts
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { flushPromises } from '@vue/test-utils';
+import { useVoiceRecord } from '../useVoiceRecord';
+
+describe('useVoiceRecord', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should set isRecording to true after starting', async () => {
+    const mockStart = vi.fn();
+    global.MediaRecorder = vi.fn().mockImplementation(() => ({
+      start: mockStart,
+      addEventListener: vi.fn(),
+    })) as any;
+
+    const { isRecording, startRecording } = useVoiceRecord();
+    expect(isRecording.value).toBe(false);
+    startRecording();
+    await flushPromises();
+
+    expect(isRecording.value).toBe(true);
+  });
+
+  it('should handle permission denied error', async () => {
+    vi.spyOn(navigator.mediaDevices, 'getUserMedia')
+      .mockRejectedValue(new DOMException('Permission denied'));
+
+    const { error, startRecording } = useVoiceRecord();
+    startRecording();
+    await flushPromises();
+
+    expect(error.value).toBe('请允许麦克风权限');
+  });
+});
+```
+
+### 1.2 组件测试
+
+```typescript
+// ✅ Good: QuickRecord.spec.ts
+import { mount } from '@vue/test-utils';
+import QuickRecord from '../QuickRecord.vue';
+
+describe('QuickRecord.vue', () => {
+  it('should emit submit with correct data on form submission', async () => {
+    const wrapper = mount(QuickRecord, {
+      props: { amount: 100, categoryId: 1 },
+    });
+
+    await wrapper.find('[data-testid="submit-btn"]').trigger('click');
+
+    expect(wrapper.emitted('submit')).toBeTruthy();
+    expect(wrapper.emitted('submit')[0]).toEqual([{
+      amount: 100,
+      categoryId: 1,
+    }]);
+  });
+
+  it('should disable submit button when amount is 0', () => {
+    const wrapper = mount(QuickRecord, { props: { amount: 0 } });
+    expect(wrapper.find('[data-testid="submit-btn"]').attributes('disabled')).toBeDefined();
+  });
+});
+```
+
+---
+
+## 2. 前端 E2E 测试 (Playwright)
+
+```typescript
+// ✅ Good: tests/e2e/transaction.spec.ts
+import { test, expect } from '@playwright/test';
+
+test.describe('Transaction Management', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/login');
+    await page.fill('[name="username"]', 'testuser');
+    await page.fill('[name="password"]', 'password');
+    await page.click('[data-testid="login-btn"]');
+    await page.waitForURL('/transactions');
+  });
+
+  test('should create a new expense transaction', async ({ page }) => {
+    await page.click('[data-testid="add-btn"]');
+    await page.fill('[data-testid="amount-input"]', '150.50');
+    await page.selectOption('[data-testid="category-select"]', '餐饮');
+    await page.click('[data-testid="save-btn"]');
+
+    const rows = page.locator('[data-testid="transaction-row"]');
+    await expect(rows.first().locator('.amount')).toContainText('-150.50');
+  });
+});
+```
+
+---
+
+## 3. 后端单元测试 (JUnit 5 + Mockito)
+
+### 3.1 Service 层测试
+
+```java
+// ✅ Good: TransactionServiceImplTest.java
+@ExtendWith(MockitoExtension.class)
+class TransactionServiceImplTest {
+    @Mock
+    private TransactionMapper transactionMapper;
+    @Mock
+    private CategoryService categoryService;
+    @InjectMocks
+    private TransactionServiceImpl transactionService;
+
+    @Test
+    @DisplayName("创建交易记录 - 成功")
+    void createTransaction_Success() {
+        // Arrange
+        CreateTransactionDTO dto = new CreateTransactionDTO();
+        dto.setAmount(new BigDecimal("150.50"));
+        dto.setType((byte) 2);
+        dto.setCategoryId(10L);
+        dto.setAccountId(1L);
+
+        Account mockAccount = new Account();
+        mockAccount.setId(1L);
+        mockAccount.setBalance(new BigDecimal("10000"));
+
+        when(categoryService.getById(10L)).thenReturn(new Category());
+        when(accountService.getById(1L)).thenReturn(mockAccount);
+        when(transactionMapper.insert(any(Transaction.class)))
+            .thenAnswer(inv -> { inv.getArgument(0, Transaction.class).setId(1000L); return 1; });
+
+        // Act
+        TransactionVO result = transactionService.create(dto, 1L, 100L);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1000L, result.getId());
+        verify(transactionMapper).insert(any(Transaction.class));
+    }
+
+    @Test
+    @DisplayName("创建交易 - 金额不合法")
+    void createTransaction_InvalidAmount() {
+        CreateTransactionDTO dto = new CreateTransactionDTO();
+        dto.setAmount(BigDecimal.ZERO);
+        dto.setType((byte) 2);
+
+        assertThrows(BusinessException.class, () ->
+            transactionService.create(dto, 1L, 100L)
+        );
+    }
+}
+```
+
+### 3.2 Controller 层测试 (WebMvcTest)
+
+```java
+// ✅ Good: TransactionControllerTest.java
+@WebMvcTest(TransactionController.class)
+@AutoConfigureMockMvc
+class TransactionControllerTest {
+    @Autowired
+    private MockMvc mockMvc;
+    @MockBean
+    private TransactionService transactionService;
+    @MockBean
+    private JwtUtil jwtUtil;
+
+    @Test
+    @DisplayName("GET /api/transactions - 返回分页列表")
+    void listTransactions_Success() throws Exception {
+        when(jwtUtil.extractUserId(anyString())).thenReturn(1L);
+        when(transactionService.page(any(), eq(1L), any()))
+            .thenReturn(Page.of(List.of(new TransactionVO()), 1, 20));
+
+        mockMvc.perform(get("/api/transactions")
+                .header("Authorization", "Bearer mock-token")
+                .param("page", "1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.records").isArray());
+    }
+
+    @Test
+    @DisplayName("POST /api/transactions - 未认证返回401")
+    void createTransaction_Unauthorized() throws Exception {
+        mockMvc.perform(post("/api/transactions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+            .andExpect(status().isUnauthorized());
+    }
+}
+```
+
+---
+
+## 4. 测试覆盖率目标
+
+| 层级 | 覆盖率目标 | 工具 |
+|------|-----------|------|
+| 单元测试 | Service 层 ≥ 80% | JaCoCo |
+| 单元测试 | 核心工具类 ≥ 90% | JaCoCo |
+| E2E 测试 | 核心用户路径 (P0) | Playwright |
+
+---
+
+**文档版本**：1.0.0
+**最后更新**：2026-03-27
+**维护人员**：QA 工程师

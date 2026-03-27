@@ -1,0 +1,385 @@
+---
+alwaysApply: false
+filePathPatterns:
+  - ".github/**"
+  - "**/docker/**"
+  - "**/k8s/**"
+  - "**/deploy/**"
+  - "**/scripts/**"
+  - "server/**"
+description: "G-Zang DevOps 与部署自动化规范 — CI/CD、容器化、监控告警"
+---
+
+# G-Zang DevOps 与部署自动化规范
+
+## 0. 核心理念
+
+- **自动化优先**：所有环境搭建、部署、回滚操作必须自动化
+- **幂等性设计**：部署脚本可重复执行，结果一致
+- **零停机部署**：通过蓝绿/金丝雀发布实现无缝升级
+- **快速回滚**：任何版本可在 5 分钟内回滚到上一稳定版本
+
+---
+
+## 1. 环境规划
+
+| 环境 | 用途 | 部署策略 | 访问权限 |
+|------|------|----------|----------|
+| `dev` | 开发自测 | 手动触发 | 全部开发者 |
+| `test` | 集成测试 | CI/CD 自动触发 | 测试团队 |
+| `staging` | 预发布验证 | CI/CD 自动触发 | 产品/运营 |
+| `production` | 正式生产 | 仅主干合并触发，需审批 | 运维 + SRE |
+
+---
+
+## 2. Docker 容器化规范
+
+### 2.1 后端 (Spring Boot) 多阶段构建
+
+```dockerfile
+# ✅ Good: 多阶段构建，产物分离
+FROM maven:3.9-eclipse-temurin-17 AS builder
+WORKDIR /build
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+COPY src ./src
+RUN mvn package -DskipTests -B
+
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+COPY --from=builder /build/target/*.jar app.jar
+RUN chown -R appuser:appgroup /app
+USER appuser
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+ENTRYPOINT ["java", "-XX:+UseG1GC", "-Xms512m", "-Xmx1024m", "-jar", "app.jar"]
+```
+
+### 2.2 前端 (Node/Vite) 多阶段构建
+
+```dockerfile
+# ✅ Good: Node 构建 + Nginx 服务
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost/ || exit 1
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+### 2.3 .dockerignore 规范
+
+```gitignore
+# ✅ Good: 排除不必要的文件
+.git
+.gitignore
+*.md
+.env*
+docker-compose*.yml
+Dockerfile*
+.idea/
+.vscode/
+**/node_modules/
+**/target/
+**/dist/
+**/build/
+**/*.log
+```
+
+---
+
+## 3. CI/CD 流水线规范
+
+### 3.1 GitHub Actions 后端流水线
+
+```yaml
+# ✅ Good: .github/workflows/backend.yml
+name: Backend CI/CD
+on:
+  push:
+    branches: [main, develop]
+    paths: ['server/**']
+  pull_request:
+    branches: [main]
+    paths: ['server/**']
+env:
+  REGISTRY: registry.gzang.com
+  IMAGE_NAME: gzang-server
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      - name: Checkstyle
+        run: mvn checkstyle:check -B
+      - name: Maven Verify
+        run: mvn verify -DskipTests -B
+
+  test:
+    runs-on: ubuntu-latest
+    needs: [code-quality]
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_DATABASE: gzang_test
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s --health-timeout=5s --health-retries=5
+      redis:
+        image: redis:7-alpine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      - name: Run tests
+        env:
+          SPRING_PROFILES_ACTIVE: test
+        run: mvn test -B
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: server
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [build]
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to Staging
+        run: |
+          kubectl set image deployment/gzang-server \
+            app=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --namespace=staging
+          kubectl rollout status deployment/gzang-server \
+            --namespace=staging --timeout=300s
+
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: [deploy-staging]
+    environment:
+      name: production
+      url: https://api.gzang.com
+    steps:
+      - uses: actions/checkout@v4
+      - name: Blue-Green Deploy
+        run: |
+          kubectl set image deployment/gzang-server \
+            app=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --namespace=production --record
+          kubectl rollout status deployment/gzang-server \
+            --namespace=production --timeout=300s
+      - name: Health check
+        run: |
+          curl -f https://api.gzang.com/actuator/health || exit 1
+```
+
+---
+
+## 4. Kubernetes 部署配置
+
+### 4.1 Deployment 配置
+
+```yaml
+# ✅ Good: server/k8s/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gzang-server
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: gzang-server
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    spec:
+      containers:
+        - name: app
+          image: registry.gzang.com/gzang-server:latest
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 15
+```
+
+### 4.2 HPA 自动扩缩容
+
+```yaml
+# ✅ Good: server/k8s/hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: gzang-server-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: gzang-server
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+```
+
+---
+
+## 5. 监控与告警规范
+
+### 5.1 Prometheus 指标配置
+
+```yaml
+# ✅ Good: prometheus.yml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+scrape_configs:
+  - job_name: 'gzang-backend'
+    static_configs:
+      - targets: ['gzang-server:8080']
+    metrics_path: /actuator/prometheus
+    scrape_interval: 5s
+```
+
+### 5.2 告警规则
+
+```yaml
+# ✅ Good: alert_rules.yml
+groups:
+  - name: gzang-backend
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_server_requests_seconds_count{status=~"5.."}[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "后端错误率超过 5%"
+          description: "实例 {{ $labels.instance }} 错误率为 {{ $value | humanizePercentage }}"
+
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_server_requests_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "P95 响应时间超过 2 秒"
+
+      - alert: HighJVMHeapUsage
+        expr: jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} > 0.85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "JVM 堆内存使用率超过 85%"
+```
+
+---
+
+## 6. 数据库备份
+
+```yaml
+# ✅ Good: 每日全量备份 CronJob
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mysql-backup
+  namespace: production
+spec:
+  schedule: "0 2 * * *"
+  successfulJobsHistoryLimit: 7
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: backup
+              image: mysql:8.0
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  mysqldump -h$MYSQL_HOST -uroot -p$MYSQL_PASSWORD \
+                    --single-transaction --routines --triggers \
+                    --all-databases \
+                    | gzip > /backup/full-backup-$(date +%Y%m%d).sql.gz
+          restartPolicy: OnFailure
+```
+
+---
+
+**文档版本**：1.0.0
+**最后更新**：2026-03-27
+**维护人员**：DevOps 工程师

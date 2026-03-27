@@ -1,0 +1,371 @@
+---
+alwaysApply: false
+filePathPatterns:
+  - "apps/pc-admin/**"
+  - "apps/pc-main/**"
+  - "apps/pc-personal/**"
+  - "apps/pc-business/**"
+  - "apps/mobile/**"
+description: "G-Zang UI 设计系统规范 — 设计令牌、组件样式、无障碍标准"
+---
+
+# G-Zang UI 设计系统规范
+
+## 0. 核心理念
+
+### 一致性优先
+
+G-Zang 所有应用共享同一套设计令牌（Design Tokens），确保跨平台体验一致。设计不是"画图"，而是建立可复用、可扩展、可维护的视觉系统。
+
+### 无障碍设计
+
+所有 UI 必须满足 WCAG AA 标准（色彩对比度 4.5:1），支持键盘导航和屏幕阅读器。Accessibility 不是"额外功能"，而是基础要求。
+
+---
+
+## 1. G-Zang 设计令牌
+
+### 1.1 颜色令牌
+
+```css
+/* ✅ Good: CSS 变量系统 */
+:root {
+  /* ================== 品牌色 ================== */
+  /* 归藏青 - 品牌主色，用于标题、侧边栏、主文本 */
+  --gzang-primary: #0F4C5C;
+  --gzang-primary-light: #186a7d;
+  --gzang-primary-dark: #0a3644;
+
+  /* 琉璃金 - 强调色，用于 CTA、高亮、VIP 图标 */
+  --gzang-secondary: #FB8B24;
+  --gzang-secondary-light: #fca03d;
+  --gzang-secondary-dark: #e67a1a;
+
+  /* ================== 功能色 ================== */
+  --gzang-success: #06D6A0;  /* 利润绿 - 成功状态 */
+  --gzang-danger: #EF476F;   /* 支出红 - 错误、警告 */
+  --gzang-warning: #FFD166; /* 警示黄 */
+  --gzang-info: #118AB2;     /* 信息蓝 */
+
+  /* ================== 中性色 ================== */
+  --gzang-bg: #F8F9FA;       /* 浅灰背景 */
+  --gzang-surface: #FFFFFF;  /* 卡片背景 */
+  --gzang-text-primary: #1F2937;
+  --gzang-text-secondary: #6B7280;
+  --gzang-border: #E5E7EB;
+
+  /* ================== 语义化别名 ================== */
+  --color-text: var(--gzang-text-primary);
+  --color-bg: var(--gzang-bg);
+  --color-cta: var(--gzang-secondary);
+}
+
+/* 深色主题 */
+[data-theme="dark"] {
+  --gzang-primary: #0a3644;
+  --gzang-primary-light: #0F4C5C;
+  --gzang-bg: #111827;
+  --gzang-surface: #1F2937;
+  --gzang-text-primary: #F9FAFB;
+  --gzang-text-secondary: #9CA3AF;
+  --gzang-border: #374151;
+}
+```
+
+### 1.2 字体令牌
+
+```css
+:root {
+  /* UI 界面字体 */
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* 中文文本 */
+  --font-cn: 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
+  /* 数字/货币（等宽，确保垂直对齐） */
+  --font-mono: 'Roboto Mono', 'JetBrains Mono', 'SF Mono', monospace;
+
+  /* 字号 */
+  --text-xs: 0.75rem;    /* 12px */
+  --text-sm: 0.875rem;   /* 14px */
+  --text-base: 1rem;     /* 16px */
+  --text-lg: 1.125rem;   /* 18px */
+  --text-xl: 1.25rem;    /* 20px */
+  --text-2xl: 1.5rem;    /* 24px */
+  --text-3xl: 1.875rem;  /* 30px */
+  --text-4xl: 2.25rem;   /* 36px */
+
+  /* 字重 */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+}
+```
+
+### 1.3 间距令牌
+
+```css
+:root {
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;     /* 8px */
+  --space-3: 0.75rem;    /* 12px */
+  --space-4: 1rem;       /* 16px */
+  --space-5: 1.25rem;    /* 20px */
+  --space-6: 1.5rem;     /* 24px */
+  --space-8: 2rem;       /* 32px */
+  --space-10: 2.5rem;     /* 40px */
+  --space-12: 3rem;      /* 48px */
+  --space-16: 4rem;      /* 64px */
+}
+```
+
+### 1.4 阴影令牌
+
+```css
+:root {
+  /* 柔和浮雕（卡片默认） */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  /* 悬停状态（卡片） */
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  /* 弹窗/下拉 */
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+```
+
+---
+
+## 2. 组件样式规范
+
+### 2.1 按钮
+
+```css
+/* ✅ Good: 按钮基础样式 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  font-family: var(--font-ui);
+  font-weight: var(--font-medium);
+  font-size: var(--text-sm);
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: all 150ms ease;
+  user-select: none;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--gzang-primary);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* 主要按钮（CTA）- 琉璃金 */
+.btn--primary {
+  background-color: var(--gzang-secondary);
+  color: white;
+}
+
+.btn--primary:hover:not(:disabled) {
+  background-color: var(--gzang-secondary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn--primary:active {
+  transform: scale(0.98);
+}
+
+/* 次要按钮 */
+.btn--secondary {
+  background-color: transparent;
+  color: var(--gzang-primary);
+  border: 1px solid var(--gzang-primary);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  background-color: var(--gzang-primary);
+  color: white;
+}
+```
+
+### 2.2 卡片
+
+```css
+/* ✅ Good: 卡片（Container 隐喻） */
+.card {
+  background-color: var(--gzang-surface);
+  border-radius: 0.75rem;  /* 移动端 rounded-xl，桌面端 rounded-2xl */
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-6);
+  transition: all 200ms ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+```
+
+### 2.3 表单输入
+
+```css
+/* ✅ Good: 表单输入 */
+.input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  background-color: var(--gzang-surface);
+  border: 1px solid var(--gzang-border);
+  border-radius: 0.5rem;
+  transition: all 150ms ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--gzang-primary);
+  box-shadow: 0 0 0 3px rgb(15 76 92 / 0.1);
+}
+
+.input:disabled {
+  background-color: var(--gzang-bg);
+  cursor: not-allowed;
+}
+
+/* 错误状态 */
+.input--error {
+  border-color: var(--gzang-danger);
+}
+
+.input--error:focus {
+  box-shadow: 0 0 0 3px rgb(239 71 111 / 0.1);
+}
+```
+
+---
+
+## 3. 财务数字显示规范
+
+```css
+/* ✅ Good: 财务数字必须使用等宽字体，确保垂直对齐 */
+.amount {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;  /* 数字等宽 */
+}
+
+/* 收入 - 利润绿 */
+.amount--income {
+  color: var(--gzang-success);
+}
+
+/* 支出 - 支出红 */
+.amount--expense {
+  color: var(--gzang-danger);
+}
+
+/* 转账 - 主色 */
+.amount--transfer {
+  color: var(--gzang-primary);
+}
+```
+
+```vue
+<!-- ✅ Good: Vue 组件中使用 -->
+<template>
+  <span
+    class="amount"
+    :class="{
+      'amount--income': type === 1,
+      'amount--expense': type === 2,
+      'amount--transfer': type === 3,
+    }"
+  >
+    {{ formatAmount(amount, type) }}
+  </span>
+</template>
+
+<script setup lang="ts">
+// 收入: +1,000.00
+// 支出: -1,000.00
+// 转账: 1,000.00
+const formatAmount = (amount: number, type: number) => {
+  const prefix = type === 1 ? '+' : type === 2 ? '-' : '';
+  return `${prefix}${amount.toLocaleString('zh-CN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })}`;
+};
+</script>
+```
+
+---
+
+## 4. 无障碍标准
+
+### WCAG AA 合规
+
+```css
+/* ✅ Good: 色彩对比度 4.5:1 */
+.text-primary {
+  color: #1F2937;        /* 灰色 800，背景白色，比度比 15.9:1 */
+  font-size: var(--text-base);
+}
+
+.text-secondary {
+  color: #6B7280;        /* 灰色 500，背景白色，比度比 5.74:1 ≥ 4.5:1 ✅ */
+  font-size: var(--text-sm);
+}
+
+/* ❌ Bad: 色彩对比度不足 */
+.text-muted {
+  color: #9CA3AF;        /* 灰色 400，比度比 2.58:1 < 4.5:1 ❌ */
+}
+
+/* ✅ Good: 大文本（18px+ 或 14px bold）对比度 ≥ 3:1 */
+.text-large {
+  color: #9CA3AF;        /* 灰色 500，18px，比度比 5.74:1 ≥ 3:1 ✅ */
+  font-size: 1.125rem;
+}
+```
+
+### 交互无障碍
+
+```html
+<!-- ✅ Good: 键盘可访问的交互元素 -->
+<button
+  class="btn btn--primary"
+  @click="handleClick"
+  @keydown.enter="handleClick"
+  @keydown.space.prevent="handleClick"
+>
+  确认支付
+</button>
+
+<!-- ✅ Good: ARIA 标签 -->
+<button
+  class="icon-btn"
+  aria-label="删除"
+  title="删除此项"
+>
+  <TrashIcon />
+</button>
+
+<!-- ✅ Good: 焦点可见 -->
+:focus-visible {
+  outline: 2px solid var(--gzang-primary);
+  outline-offset: 2px;
+}
+```
+
+---
+
+**文档版本**：1.0.0
+**最后更新**：2026-03-27
+**维护人员**：UI 设计师

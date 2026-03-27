@@ -1,0 +1,348 @@
+---
+alwaysApply: false
+filePathPatterns:
+  - "server/**"
+  - "**/*.java"
+  - "**/security/**"
+description: "G-Zang 安全开发规范 — 威胁建模、漏洞预防、安全架构"
+---
+
+# G-Zang 安全开发规范
+
+## 0. 安全哲学
+
+### 防御优先原则
+
+- **默认拒绝**：访问控制和输入验证使用白名单而非黑名单
+- **零信任架构**：绝不信任任何输入，所有用户输入在信任边界处必须验证和清洗
+- **深度防御**：在应用的每一层都实现安全控制，单一防线失效不导致全面沦陷
+- **最小权限**：用户和服务仅被授予完成其任务所需的最小权限
+- **安全即代码**：将安全策略、扫描、合规检查集成到 CI/CD 流水线中
+
+---
+
+## 1. 认证与会话安全
+
+### 1.1 JWT 认证规范
+
+#### Token 结构
+
+```java
+// ✅ Good: JWT Claims 包含必要的安全字段
+// iss (issuer): 签发者
+// sub (subject): 用户ID
+// aud (audience): 应用标识
+// iat (issued at): 签发时间
+// exp (expiration): 访问令牌 ≤ 2小时，刷新令牌 ≤ 7天
+// jti (JWT ID): 令牌唯一标识，用于 token 撤销
+// tenant_id: 租户标识（多租户隔离）
+```
+
+#### Token 使用规范
+
+- 访问令牌：有效期 ≤ 2小时，存储在内存中
+- 刷新令牌：有效期 ≤ 7天，存储在 HttpOnly Cookie 或安全存储中
+- **禁止在 URL 中传递 Token**（防止日志泄露）
+- 每次使用前验证 Token 签名和有效期
+- 支持 Token 撤销机制（黑名单或短令牌有效期）
+
+### 1.2 密码安全
+
+```java
+// ✅ Good: 使用 BCrypt 强哈希算法
+@Bean
+public PasswordEncoder passwordEncoder() {
+    // strength 推荐值 10-12（平衡安全性与性能）
+    return new BCryptPasswordEncoder(11);
+}
+// ❌ Bad: MD5/SHA1 等快速哈希算法（易被暴力破解）
+// ❌ Bad: 仅做简单哈希而不加盐
+```
+
+#### 密码策略
+
+- 最小长度：8字符，推荐 12+ 字符
+- 必须包含：大写字母、小写字母、数字、特殊字符中的至少三种
+- 禁止使用常见弱密码（10000 常用密码黑名单校验）
+- 登录失败锁定：5次失败后锁定 30 分钟
+
+---
+
+## 2. 授权与访问控制
+
+### 2.1 RBAC 权限模型
+
+G-Zang 采用四级权限控制：
+1. **菜单级权限**：用户可访问哪些菜单/页面
+2. **操作级权限**：用户可执行哪些操作（增删改查）
+3. **数据级权限**：用户可访问哪些数据（个人/部门/全部）
+4. **字段级权限**：用户可查看/编辑哪些字段
+
+### 2.2 权限注解实现
+
+```java
+// ✅ Good: 基于注解的权限控制
+@RequirePermission(code = "transaction:create", logical = Logical.AND)
+public Result<Void> createTransaction(@RequestBody CreateTransactionDTO dto) {
+    return transactionService.create(dto);
+}
+
+// ✅ Good: 数据范围过滤（多租户）
+@GetMapping("/transactions")
+public Result<Page<TransactionVO>> list(TransactionQueryDTO query) {
+    Long tenantId = TenantContextHolder.getTenantId();
+    query.setTenantId(tenantId);
+    return transactionService.page(query);
+}
+
+// ❌ Bad: 手动检查（容易遗漏）
+if (!hasPermission(user, "transaction:create")) {
+    throw new BusinessException("无权操作");
+}
+```
+
+### 2.3 多租户数据隔离
+
+```java
+// ✅ Good: 租户上下文通过 ThreadLocal 传递
+public class TenantContextHolder {
+    private static final ThreadLocal<Long> TENANT_ID = new ThreadLocal<>();
+
+    public static void setTenantId(Long tenantId) { TENANT_ID.set(tenantId); }
+    public static Long getTenantId() { return TENANT_ID.get(); }
+    public static void clear() { TENANT_ID.remove(); }
+}
+
+// ✅ Good: MyBatis Plus 租户拦截器自动注入租户条件
+@Bean
+public MybatisPlusInterceptor mybatisPlusInterceptor() {
+    MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+    interceptor.addInnerInterceptor(new TenantLineInnerInterceptor(
+        new TenantLineHandler() {
+            @Override
+            public Expression getTenantId() {
+                return new LongValue(TenantContextHolder.getTenantId());
+            }
+        }
+    ));
+    return interceptor;
+}
+```
+
+---
+
+## 3. 输入验证与数据安全
+
+### 3.1 SQL 注入防护
+
+```java
+// ✅ Good: 使用 Lambda QueryWrapper（自动参数化）
+List<Transaction> list = transactionMapper.selectList(
+    new LambdaQueryWrapper<Transaction>()
+        .eq(Transaction::getUserId, userId)
+        .like(Transaction::getRemark, keyword)
+);
+
+// ✅ Good: 使用 DTO 对象传参 + script 标签
+@Select("<script>" +
+    "SELECT * FROM t_transaction " +
+    "WHERE user_id = #{dto.userId} " +
+    "<if test='dto.categoryId != null'>AND category_id = #{dto.categoryId}</if>" +
+    "</script>")
+List<Transaction> search(@Param("dto") TransactionQueryDTO dto);
+
+// ❌ Bad: 字符串拼接
+@Select("SELECT * FROM t_transaction WHERE id = " + id)
+```
+
+### 3.2 XSS 防护
+
+```java
+// ✅ Good: 使用 OWASP Java Encoder
+import org.owasp.encoder.Encode;
+model.addAttribute("userInput", Encode.forHtmlContent(userInput));
+
+// ✅ Good: 富文本使用 jsoup 净化
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
+public String sanitizeHtml(String dirtyHtml) {
+    return Jsoup.clean(dirtyHtml, Safelist.relaxed()
+        .removeTags("script", "iframe", "object", "embed", "link", "style")
+        .removeAttributes(":all", "onclick", "onload", "onerror"));
+}
+```
+
+### 3.3 敏感数据保护
+
+```java
+// ✅ Good: 统一响应包装，不暴露内部实现细节
+@ExceptionHandler(BusinessException.class)
+public Result<Void> handleBusinessException(BusinessException e) {
+    log.error("业务异常: userId={}, code={}", getCurrentUserId(), e.getCode(), e);
+    return Result.error(e.getCode(), e.getUserMessage());
+}
+
+@ExceptionHandler(Exception.class)
+public Result<Void> handleGenericException(Exception e) {
+    log.error("系统异常", e);
+    // ❌ Bad: return Result.error(e.getMessage()) — 暴露堆栈信息！
+    return Result.error("系统繁忙，请稍后再试");
+}
+
+// ✅ Good: 敏感字段使用 @JsonIgnore
+@JsonIgnore
+private String password;
+
+// ✅ Good: 数据脱敏序列化
+@JsonSerialize(using = DesensitizeSerializer.class)
+private String phone;  // 输出: 138****5678
+```
+
+---
+
+## 4. API 安全规范
+
+### 4.1 HTTP 安全响应头（Nginx 配置）
+
+```nginx
+# /etc/nginx/conf.d/security-headers.conf
+server {
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.gzang.com; frame-ancestors 'none';" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()" always;
+    server_tokens off;
+}
+```
+
+### 4.2 CORS 配置
+
+```java
+// ✅ Good: 限制性 CORS 配置
+@Configuration
+public class CorsConfig implements WebMvcConfigurer {
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/api/**")
+            .allowedOriginPatterns("https://*.gzang.com", "https://gzang.app")
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .allowedHeaders("Authorization", "Content-Type", "X-Tenant-Id")
+            .exposedHeaders("X-Request-Id", "X-RateLimit-Remaining")
+            .allowCredentials(true)
+            .maxAge(3600);
+    }
+}
+// ❌ Bad: 允许所有来源（生产环境禁止）
+// .allowedOrigins("*")
+```
+
+### 4.3 API 限流
+
+```java
+// ✅ Good: 基于 Redis 的令牌桶限流
+@Component
+public class RateLimiter {
+    @Autowired private StringRedisTemplate redisTemplate;
+
+    public boolean isAllowed(String key, int maxRequests, Duration window) {
+        String redisKey = "rate_limit:" + key;
+        Long count = redisTemplate.opsForValue().increment(redisKey);
+        if (count != null && count == 1) {
+            redisTemplate.expire(redisKey, window);
+        }
+        return count == null || count <= maxRequests;
+    }
+}
+```
+
+---
+
+## 5. 文件上传安全
+
+```java
+// ✅ Good: 多层验证（扩展名 + MIME 类型 + 文件头魔数）
+@Service
+public class FileValidationService {
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "gif", "pdf", "docx", "xlsx");
+    private static final Set<String> DANGEROUS_EXTENSIONS = Set.of("exe", "sh", "bat", "cmd", "msi", "dll", "jar", "php", "jsp", "asp");
+
+    public boolean isValidFile(MultipartFile file) {
+        String extension = getExtension(file.getOriginalFilename()).toLowerCase();
+        if (!ALLOWED_EXTENSIONS.contains(extension)) return false;
+        if (DANGEROUS_EXTENSIONS.contains(extension)) return false;
+        // 验证 MIME 类型
+        // 验证文件头魔数（防伪文件）
+        return true;
+    }
+}
+
+// ✅ Good: 文件访问通过 ID 而非文件名
+@GetMapping("/files/{fileId}")
+public void download(@PathVariable String fileId) {
+    // 禁止直接暴露文件路径
+    // 禁止用户上传可执行脚本作为文件名
+}
+```
+
+---
+
+## 6. 日志与审计
+
+```java
+// ✅ Good: 记录安全相关事件（但不记录敏感数据）
+public void logLogin(Long userId, String ip, boolean success, String reason) {
+    log.info("安全审计|登录|userId={}|ip={}|success={}|reason={}",
+        userId, ip, success, reason);
+    // ❌ 禁止记录：密码、Token、身份证号等敏感信息
+}
+
+public void logPermissionDenied(Long userId, String permission, String uri) {
+    log.warn("安全审计|权限拒绝|userId={}|permission={}|uri={}",
+        userId, permission, uri);
+}
+```
+
+---
+
+## 7. 依赖安全
+
+```yaml
+# ✅ GitHub Actions: 依赖扫描
+dependency-scan:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: 'server'
+        severity: 'CRITICAL,HIGH'
+        exit-code: '1'
+```
+
+---
+
+## 8. OWASP Top 10 预防清单
+
+| OWASP 类别 | G-Zang 预防措施 |
+|-----------|----------------|
+| A01 访问控制失效 | RBAC + 多租户拦截器 + DataScope 过滤器 |
+| A02 加密失败 | BCrypt + AES + HTTPS 强制 |
+| A03 注入 | MyBatis Plus 参数化查询 + 输入验证 |
+| A04 不安全设计 | 威胁建模 + 安全架构评审 |
+| A05 安全配置错误 | Nginx 安全响应头 + Spring Security 默认拒绝 |
+| A06 脆弱的组件 | 依赖扫描 (Trivy) + 及时更新 |
+| A07 认证失败 | JWT + BCrypt + 会话管理 |
+| A08 数据完整性失败 | HMAC 验证 + 审计日志 |
+| A09 日志监控失败 | 结构化日志 + 告警规则 |
+| A10 服务端请求伪造 | URL 白名单验证 |
+
+---
+
+**文档版本**：1.0.0
+**最后更新**：2026-03-27
+**维护人员**：安全工程师

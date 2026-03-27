@@ -4,7 +4,7 @@
     {
       "name": "通用规范",
       "file": "mdc_rules.mdc",
-      "description": "G-Zang 通用开发规范",
+      "description": "G-Zang 通用开发规范 — 前端/后端/数据库基础规范",
       "alwaysApply": false,
       "filePathPatterns": [
         "!apps/pc-admin/**",
@@ -76,17 +76,125 @@
         "**/*.java"
       ],
       "framework": "Spring Boot + Java"
+    },
+    {
+      "name": "安全开发规范",
+      "file": "security.mdc",
+      "description": "安全开发规范 — 认证、授权、输入验证、OWASP Top 10",
+      "alwaysApply": false,
+      "filePathPatterns": [
+        "server/**",
+        "**/*.java",
+        "**/security/**"
+      ],
+      "framework": "Security Engineering"
+    },
+    {
+      "name": "数据库规范",
+      "file": "database.mdc",
+      "description": "数据库设计与优化规范 — 索引、查询优化、安全迁移",
+      "alwaysApply": false,
+      "filePathPatterns": [
+        "server/src/main/resources/**",
+        "**/mapper/**",
+        "**/*Mapper.xml",
+        "server/**"
+      ],
+      "framework": "Database Optimization"
+    },
+    {
+      "name": "DevOps 规范",
+      "file": "devops.mdc",
+      "description": "DevOps 与部署自动化规范 — CI/CD、容器化、Kubernetes、监控告警",
+      "alwaysApply": false,
+      "filePathPatterns": [
+        ".github/**",
+        "**/docker/**",
+        "**/k8s/**",
+        "**/deploy/**",
+        "**/scripts/**",
+        "server/**"
+      ],
+      "framework": "DevOps Automation"
+    },
+    {
+      "name": "Git 工作流规范",
+      "file": "git-workflow.mdc",
+      "description": "Git 工作流规范 — 分支策略、提交规范、PR 协作流程",
+      "alwaysApply": false,
+      "filePathPatterns": [
+        "**/*"
+      ],
+      "framework": "Git Workflow"
+    },
+    {
+      "name": "测试规范",
+      "file": "testing.mdc",
+      "description": "测试策略规范 — 单元测试、集成测试、E2E 测试",
+      "alwaysApply": false,
+      "filePathPatterns": [
+        "**/*.test.ts",
+        "**/*.spec.ts",
+        "**/__tests__/**",
+        "server/src/test/**"
+      ],
+      "framework": "Testing"
+    },
+    {
+      "name": "代码审查规范",
+      "file": "code-review.mdc",
+      "description": "代码审查规范 — 审查标准、评论格式、质量关卡",
+      "alwaysApply": false,
+      "filePathPatterns": [
+        "**/*"
+      ],
+      "framework": "Code Review"
+    },
+    {
+      "name": "UI 设计规范",
+      "file": "ui-design.mdc",
+      "description": "UI 设计系统规范 — 设计令牌、组件样式、无障碍标准",
+      "alwaysApply": false,
+      "filePathPatterns": [
+        "apps/pc-admin/**",
+        "apps/pc-main/**",
+        "apps/pc-personal/**",
+        "apps/pc-business/**",
+        "apps/mobile/**"
+      ],
+      "framework": "UI Design"
+    },
+    {
+      "name": "技术写作规范",
+      "file": "technical-writing.mdc",
+      "description": "技术写作规范 — README、API 文档、变更日志",
+      "alwaysApply": false,
+      "filePathPatterns": [
+        "docs/**",
+        "**/README.md",
+        "**/CHANGELOG.md",
+        "**/*.md"
+      ],
+      "framework": "Technical Writing"
     }
   ],
   "autoApply": {
     "enabled": true,
     "priority": [
+      "security.mdc",
+      "database.mdc",
       "backend.mdc",
       "admin.mdc",
       "pc-main.mdc",
       "pc-personal.mdc",
       "pc-business.mdc",
       "mobile.mdc",
+      "devops.mdc",
+      "testing.mdc",
+      "code-review.mdc",
+      "git-workflow.mdc",
+      "ui-design.mdc",
+      "technical-writing.mdc",
       "mdc_rules.mdc"
     ]
   },
