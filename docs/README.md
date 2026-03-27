@@ -16,12 +16,12 @@
 | `API规范.md` | RESTful API 规范（合并版） | `technical-writing.mdc` |
 | `前端开发规范.md` | Vue 3 + TypeScript + Tailwind CSS | `frontend` 规范 |
 | `后端开发规范.md` | Spring Boot + Java 17 + MyBatis Plus | `backend.mdc` |
-| `database/` | MySQL 表结构、索引策略、多租户实现 | `database.mdc` |
-| `security/` | 权限体系设计、安全威胁建模、安全检查清单 | `security.mdc` |
+| `数据库/` | MySQL 表结构、索引策略、多租户实现 | `database.mdc` |
+| `安全/` | 权限体系设计、安全威胁建模、安全检查清单 | `security.mdc` |
 | `数据字典.md` | 所有数据表字段完整说明 | — |
 | `性能优化指南.md` | 前端/后端/数据库性能优化 | — |
 | `安全设计文档.md` | JWT/RBAC/数据加密/OWASP Top 10 | `security.mdc` |
-| `部署运维手册（完整版）.md` | 部署运维完整手册 | `devops.mdc` |
+| `部署运维手册.md` | 部署运维手册 — 环境规划、Docker、K8s、CI/CD | `devops.mdc` |
 
 ### 2. 产品文档 (`docs/产品文档/`)
 
@@ -72,7 +72,7 @@
 | 文档 | 描述 | 关联规则 |
 |------|------|---------|
 | `README.md` | 运维文档索引 | — |
-| `部署运维手册（精简版）.md` | 部署运维手册 | `devops.mdc` |
+| `部署运维手册.md` | 部署运维手册 | `devops.mdc` |
 | `监控与告警指南.md` | 监控与告警指南 | `devops.mdc` |
 
 ---
@@ -83,9 +83,9 @@
 |------|------|
 | 我要开始后端开发 | `docs/技术文档/后端开发规范.md` |
 | 我要开始前端开发 | `docs/技术文档/前端开发规范.md` |
-| 我要设计数据库 | `docs/技术文档/database/database-design.md` |
+| 我要设计数据库 | `docs/技术文档/数据库/数据库设计.md` |
 | 我要审查代码 | `docs/规范文档/代码审查规范.md` |
-| 我要部署服务 | `docs/运维文档/部署运维手册（精简版）.md` |
+| 我要部署服务 | `docs/运维文档/部署运维手册.md` |
 | 我要写文档 | `docs/规范文档/OpenAPI规范.md` |
 
 ---

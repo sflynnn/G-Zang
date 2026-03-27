@@ -11,7 +11,7 @@
 
 | 文档 | 描述 | 关联规则 |
 |------|------|---------|
-| `部署运维手册（精简版）.md` | 部署运维手册 — 环境规划、Docker、CI/CD、监控告警 | `devops.mdc` |
+| `部署运维手册.md` | 部署运维手册 — 环境规划、Docker、CI/CD、监控告警 | `devops.mdc` |
 | `监控与告警指南.md` | 监控与告警指南 — Prometheus、Grafana、ELK Stack | `devops.mdc` |
 
 ---
