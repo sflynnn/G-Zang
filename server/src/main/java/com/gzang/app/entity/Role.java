@@ -33,18 +33,27 @@ public class Role extends BaseEntity {
     @TableField("description")
     private String description;
 
-    // Explicit getters to ensure Lombok generates them properly
-    public String getRoleName() {
-        return roleName;
-    }
+    /**
+     * 角色类型：1=系统内置, 2=企业自定义
+     */
+    @TableField("role_type")
+    private Integer roleType = 1;
 
-    public String getRoleCode() {
-        return roleCode;
-    }
+    /**
+     * 数据范围：OWN/DEPARTMENT/COMPANY/ALL
+     */
+    @TableField("data_scope")
+    private String dataScope = "OWN";
 
-    public String getDescription() {
-        return description;
-    }
+    /**
+     * 自定义角色所属公司（内置角色为NULL）
+     */
+    @TableField("company_id")
+    private Long companyId;
+
+    /**
+     * 是否为某角色的默认角色（预留）
+     */
+    @TableField("is_default")
+    private Integer isDefault = 0;
 }
-
-
