@@ -12,5 +12,7 @@
             "default": true
         }
     ],
-    "java.configuration.updateBuildConfiguration": "automatic"
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "maven.view": "flat",
+    "maven.executable.path": "D:\\Software\\apache-maven-3.9.14\\bin\\mvn.cmd"
 }
