@@ -32,17 +32,32 @@ import java.util.List;
 public class TenantInterceptor implements InnerInterceptor {
 
     /**
-     * 需要进行多租户过滤的表
+     * 需要进行多租户过滤的表（需要 user_id 过滤）
      */
     private static final List<String> TENANT_TABLES = Arrays.asList(
-            "t_user", "t_account", "t_transaction"
+            "t_user", "t_account", "t_transaction", "t_category",
+            "t_budget", "t_business_repair_order", "t_cost_center",
+            "t_operation_log", "t_file_upload", "t_offline_transaction",
+            "t_notification_record"
     );
 
     /**
      * 公司级别的表（需要 company_id 过滤）
      */
     private static final List<String> COMPANY_TABLES = Arrays.asList(
-            "t_account", "t_transaction"
+            "t_account", "t_transaction", "t_category",
+            "t_budget", "t_business_repair_order", "t_cost_center",
+            "t_operation_log", "t_file_upload", "t_offline_transaction",
+            "t_notification_record", "t_user_role", "t_role_data_scope",
+            "t_field_permission"
+    );
+
+    /**
+     * 不进行租户过滤的表（如系统表）
+     */
+    private static final List<String> SKIP_TABLES = Arrays.asList(
+            "t_role", "t_permission", "t_role_permission",
+            "t_company", "t_system_config", "t_user_device"
     );
 
     @Override
@@ -75,6 +90,10 @@ public class TenantInterceptor implements InnerInterceptor {
      */
     private boolean isTenantTable(MappedStatement ms) {
         String tableName = getTableName(ms);
+        // 跳过不需要租户过滤的系统表
+        if (SKIP_TABLES.contains(tableName)) {
+            return false;
+        }
         return TENANT_TABLES.contains(tableName);
     }
 

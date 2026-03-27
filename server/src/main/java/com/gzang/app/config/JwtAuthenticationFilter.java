@@ -47,6 +47,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 // 设置租户上下文
                 TenantContextHolder.setCurrentUserId(userId);
+                Long companyId = jwtUtil.getCompanyIdFromToken(jwt);
+                TenantContextHolder.setCurrentCompanyId(companyId);
 
                 // 懒加载UserDetailsService以避免循环依赖
                 UserDetailsService userDetailsService = applicationContext.getBean(UserDetailsService.class);
