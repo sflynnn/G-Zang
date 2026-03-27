@@ -65,3 +65,9 @@ Thumbs.db
 CHANGELOG.md
 *.gen.ts
 *.generated.ts
+
+# Java
+target/
+*.class
+*.jar
+*.war
