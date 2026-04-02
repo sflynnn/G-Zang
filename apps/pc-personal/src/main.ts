@@ -4,9 +4,10 @@ import { createPinia } from 'pinia';
 import { createDiscreteApi } from 'naive-ui';
 import App from './App.vue';
 import routes from './router';
+import i18n from './i18n';
 
 // 样式
-import './styles/main.scss';
+import './styles/main.css';
 
 // 创建应用实例（延迟创建）
 let app: any;
@@ -43,6 +44,7 @@ function createAppInstance(props: any = {}) {
   // 使用插件
   app.use(router);
   app.use(pinia);
+  app.use(i18n);
 
   // 设置全局状态（从主应用传递）
   if (props.getGlobalState) {
