@@ -9,7 +9,9 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -22,6 +24,24 @@ import java.util.Set;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    /**
+     * 处理404 Not Found
+     */
+    @ExceptionHandler(NoHandlerFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<Result<Void>> handleNoHandlerFoundException(NoHandlerFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.error(404, "接口不存在: " + ex.getRequestURL()));
+    }
+
+    /**
+     * 处理404状态码（Spring Boot 2.6+需要配置）
+     */
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<Result<Void>> handleHttpRequestMethodNotSupportedException(org.springframework.web.HttpRequestMethodNotSupportedException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Result.error(404, "请求方法不支持"));
+    }
 
     /**
      * 处理参数校验异常 (MethodArgumentNotValidException)
@@ -98,7 +118,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Result<Void>> handleRuntimeException(RuntimeException ex) {
         // 运行时异常
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Result.serverError("系统异常，请稍后重试"));
+        ex.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Result.serverError("系统异常，请稍后重试: " + ex.getMessage()));
     }
 
     /**
@@ -107,6 +128,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Result<Void>> handleException(Exception ex) {
         // 未知异常
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Result.serverError("系统异常，请稍后重试"));
+        ex.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Result.serverError("系统异常，请稍后重试: " + ex.getMessage()));
     }
 }

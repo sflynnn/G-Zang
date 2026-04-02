@@ -91,22 +91,20 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     public boolean deleteAccount(Long id, Long userId) {
         log.info("删除账户: id={}, userId={}", id, userId);
 
-        // 获取账户信息
         Account account = getById(id);
         if (account == null) {
             log.warn("账户不存在: id={}", id);
             return false;
         }
 
-        // 验证权限
-        if (!account.getUserId().equals(userId) &&
-            !account.getCompanyId().equals(userId)) { // 这里应该是companyId，但暂时用userId作为公司管理员ID
+        // 验证权限：账户所有者本人
+        if (!account.getUserId().equals(userId)) {
             log.warn("用户无权删除此账户: userId={}, accountId={}", userId, id);
             return false;
         }
 
         // 检查账户是否有余额
-        if (account.getBalance().compareTo(BigDecimal.ZERO) != 0) {
+        if (account.getBalance() != null && account.getBalance().compareTo(BigDecimal.ZERO) != 0) {
             log.warn("账户还有余额，不能删除: id={}, balance={}", id, account.getBalance());
             return false;
         }
@@ -136,13 +134,35 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     }
 
     @Override
-    public boolean adjustBalance(Long accountId, BigDecimal amount) {
-        log.info("调整账户余额: accountId={}, amount={}", accountId, amount);
+    public boolean adjustBalance(Long accountId, BigDecimal amount, Long userId, Long companyId) {
+        log.info("调整账户余额: accountId={}, amount={}, operatorUserId={}", accountId, amount, userId);
 
         Account account = getById(accountId);
         if (account == null) {
             log.warn("账户不存在: accountId={}", accountId);
             return false;
+        }
+
+        // 数据归属验证：账户必须属于当前用户或当前公司
+        boolean isOwner = account.getUserId() != null && account.getUserId().equals(userId);
+        boolean isInCompany = companyId != null
+                && account.getCompanyId() != null
+                && account.getCompanyId().equals(companyId);
+
+        if (!isOwner && !isInCompany) {
+            log.warn("无权调整此账户余额: operatorUserId={}, companyId={}, accountOwnerUserId={}, accountCompanyId={}",
+                    userId, companyId, account.getUserId(), account.getCompanyId());
+            return false;
+        }
+
+        // 防止余额变为负数（仅在减少时检查）
+        if (amount.compareTo(BigDecimal.ZERO) < 0) {
+            BigDecimal newBalance = account.getBalance().add(amount);
+            if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
+                log.warn("余额不足，无法减少: accountId={}, currentBalance={}, reduceAmount={}",
+                        accountId, account.getBalance(), amount.abs());
+                return false;
+            }
         }
 
         BigDecimal newBalance = account.getBalance().add(amount);

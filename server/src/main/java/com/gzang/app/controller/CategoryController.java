@@ -2,7 +2,10 @@ package com.gzang.app.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gzang.app.dto.category.CreateCategoryDTO;
+import com.gzang.app.dto.category.UpdateCategoryDTO;
 import com.gzang.app.entity.Category;
+import com.gzang.app.exception.BusinessException;
 import com.gzang.app.service.CategoryService;
 import com.gzang.app.util.JwtUtil;
 import com.gzang.app.vo.Result;
@@ -15,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
+
+import static com.gzang.app.constant.ErrorCode.DATA_NOT_FOUND;
 
 /**
  * 分类管理控制器 提供记账分类管理的相关接口
@@ -42,16 +47,22 @@ public class CategoryController {
     @PostMapping
     @PreAuthorize("hasAuthority('CATEGORY_MANAGE')")
     @Operation(summary = "创建分类", description = "新增一个记账分类")
-    public Result<Void> createCategory(@Validated @RequestBody Category category, Principal principal) {
-        log.info("创建分类请求: user={}, categoryName={}", principal.getName(), category.getCategoryName());
+    public Result<Void> createCategory(@Validated @RequestBody CreateCategoryDTO dto, Principal principal) {
+        log.info("创建分类请求: user={}, categoryName={}", principal.getName(), dto.getCategoryName());
 
-        // 从JWT中获取用户ID
         Long userId = jwtUtil.getUserIdFromToken(principal.getName());
+        Long companyId = jwtUtil.getCompanyIdFromToken(principal.getName());
+
+        Category category = new Category();
+        category.setCategoryName(dto.getCategoryName());
+        category.setType(dto.getType());
+        category.setParentId(dto.getParentId());
         category.setUserId(userId);
+        category.setCompanyId(companyId);
 
         boolean success = categoryService.createCategory(category);
         if (!success) {
-            return Result.error(400, "创建分类失败，可能分类名称已存在", null);
+            throw new BusinessException(400, "创建分类失败，可能分类名称已存在");
         }
 
         log.info("分类创建成功: id={}", category.getId());
@@ -66,19 +77,23 @@ public class CategoryController {
     @Operation(summary = "更新分类", description = "更新指定分类信息")
     public Result<Void> updateCategory(
             @Parameter(description = "分类ID") @PathVariable Long id,
-            @Validated @RequestBody Category category,
+            @Validated @RequestBody UpdateCategoryDTO dto,
             Principal principal) {
 
         log.info("更新分类请求: id={}, user={}", id, principal.getName());
 
-        // 从JWT中获取用户ID
-        Long userId = jwtUtil.getUserIdFromToken(principal.getName());
+        Category category = new Category();
         category.setId(id);
-        category.setUserId(userId);
+        if (dto.getCategoryName() != null) {
+            category.setCategoryName(dto.getCategoryName());
+        }
+        if (dto.getParentId() != null) {
+            category.setParentId(dto.getParentId());
+        }
 
         boolean success = categoryService.updateCategory(category);
         if (!success) {
-            return Result.error(400, "更新分类失败，可能分类名称已存在或无权限", null);
+            throw new BusinessException(400, "更新分类失败，可能分类名称已存在或无权限");
         }
 
         log.info("分类更新成功: id={}", id);
@@ -102,7 +117,7 @@ public class CategoryController {
 
         boolean success = categoryService.deleteCategory(id, userId);
         if (!success) {
-            return Result.error(400, "删除分类失败，可能分类不存在、无权限或还有子分类", null);
+            throw new BusinessException(400, "删除分类失败，可能分类不存在、无权限或还有子分类");
         }
 
         log.info("分类删除成功: id={}", id);
@@ -118,7 +133,7 @@ public class CategoryController {
     public Result<Category> getCategoryById(@Parameter(description = "分类ID") @PathVariable Long id) {
         Category category = categoryService.getById(id);
         if (category == null) {
-            return Result.error(404, "分类不存在", null);
+            throw new BusinessException(DATA_NOT_FOUND, "分类不存在");
         }
         return Result.success(category);
     }
@@ -203,7 +218,7 @@ public class CategoryController {
 
         boolean success = categoryService.initUserCategories(userId);
         if (!success) {
-            return Result.error(500, "初始化用户分类失败", null);
+            throw new BusinessException(500, "初始化用户分类失败");
         }
 
         log.info("用户分类初始化成功: user={}", principal.getName());

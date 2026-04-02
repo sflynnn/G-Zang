@@ -29,24 +29,28 @@ public class PermissionController {
     }
 
     /**
-     * 获取所有权限列表（分组）
+     * 获取所有权限列表（按分组）
      */
     @GetMapping
     @RequirePermission(PermissionCode.ROLE_VIEW)
-    @Operation(summary = "获取所有权限列表", description = "查询所有权限，按分组排序")
+    @Operation(summary = "获取所有权限列表（分组视图）",
+            description = "查询所有权限，按分组（SYSTEM/ORGANIZATION/FINANCE/BUSINESS）组织")
     public Result<Map<String, List<PermissionVO>>> getAllPermissions() {
+        System.out.println(">>> getAllPermissions called");
         Map<String, List<PermissionVO>> grouped = permissionService.getPermissionGrouped();
+        System.out.println(">>> grouped = " + grouped);
         return Result.success(grouped);
     }
 
     /**
-     * 获取权限模块分组
+     * 获取权限模块分组（树形视图）
      */
     @GetMapping("/modules")
     @RequirePermission(PermissionCode.ROLE_VIEW)
-    @Operation(summary = "获取权限模块分组", description = "获取权限按模块分组的结构")
+    @Operation(summary = "获取权限模块分组（树形视图）",
+            description = "获取权限按模块（USER/ACCOUNT/TRANSACTION等）组织，用于角色权限配置界面")
     public Result<Map<String, List<PermissionVO>>> getPermissionModules() {
-        Map<String, List<PermissionVO>> grouped = permissionService.getPermissionGrouped();
-        return Result.success(grouped);
+        Map<String, List<PermissionVO>> byModule = permissionService.getPermissionByModule();
+        return Result.success(byModule);
     }
 }

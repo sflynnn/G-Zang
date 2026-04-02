@@ -2,7 +2,10 @@ package com.gzang.app.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gzang.app.dto.account.CreateAccountDTO;
+import com.gzang.app.dto.account.UpdateAccountDTO;
 import com.gzang.app.entity.Account;
+import com.gzang.app.exception.BusinessException;
 import com.gzang.app.service.AccountService;
 import com.gzang.app.util.JwtUtil;
 import com.gzang.app.vo.Result;
@@ -16,6 +19,8 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.List;
+
+import static com.gzang.app.constant.ErrorCode.DATA_NOT_FOUND;
 
 /**
  * 账户管理控制器
@@ -44,16 +49,22 @@ public class AccountController {
     @PostMapping
     @PreAuthorize("hasAuthority('ACCOUNT_MANAGE')")
     @Operation(summary = "创建账户", description = "新增一个账户")
-    public Result<Void> createAccount(@Validated @RequestBody Account account, Principal principal) {
-        log.info("创建账户请求: user={}, accountName={}", principal.getName(), account.getAccountName());
+    public Result<Void> createAccount(@Validated @RequestBody CreateAccountDTO dto, Principal principal) {
+        log.info("创建账户请求: user={}, accountName={}", principal.getName(), dto.getAccountName());
 
-        // 从JWT中获取用户ID
         Long userId = jwtUtil.getUserIdFromToken(principal.getName());
+        Long companyId = jwtUtil.getCompanyIdFromToken(principal.getName());
+
+        Account account = new Account();
+        account.setAccountName(dto.getAccountName());
+        account.setAccountType(dto.getAccountType());
+        account.setBalance(dto.getBalance() != null ? dto.getBalance() : BigDecimal.ZERO);
         account.setUserId(userId);
+        account.setCompanyId(companyId);
 
         boolean success = accountService.createAccount(account);
         if (!success) {
-            return Result.error(400, "创建账户失败，可能账户名称已存在", null);
+            throw new BusinessException(400, "创建账户失败，可能账户名称已存在");
         }
 
         log.info("账户创建成功: id={}", account.getId());
@@ -68,19 +79,28 @@ public class AccountController {
     @Operation(summary = "更新账户", description = "更新指定账户信息")
     public Result<Void> updateAccount(
             @Parameter(description = "账户ID") @PathVariable Long id,
-            @Validated @RequestBody Account account,
+            @Validated @RequestBody UpdateAccountDTO dto,
             Principal principal) {
 
         log.info("更新账户请求: id={}, user={}", id, principal.getName());
 
-        // 从JWT中获取用户ID
         Long userId = jwtUtil.getUserIdFromToken(principal.getName());
+        Long companyId = jwtUtil.getCompanyIdFromToken(principal.getName());
+
+        Account account = new Account();
         account.setId(id);
         account.setUserId(userId);
+        account.setCompanyId(companyId);
+        if (dto.getAccountName() != null) {
+            account.setAccountName(dto.getAccountName());
+        }
+        if (dto.getAccountType() != null) {
+            account.setAccountType(dto.getAccountType());
+        }
 
         boolean success = accountService.updateAccount(account);
         if (!success) {
-            return Result.error(400, "更新账户失败，可能账户名称已存在或无权限", null);
+            throw new BusinessException(400, "更新账户失败，可能账户名称已存在或无权限");
         }
 
         log.info("账户更新成功: id={}", id);
@@ -104,7 +124,7 @@ public class AccountController {
 
         boolean success = accountService.deleteAccount(id, userId);
         if (!success) {
-            return Result.error(400, "删除账户失败，可能账户不存在、无权限或还有余额", null);
+            throw new BusinessException(400, "删除账户失败，可能账户不存在、无权限或还有余额");
         }
 
         log.info("账户删除成功: id={}", id);
@@ -120,7 +140,7 @@ public class AccountController {
     public Result<Account> getAccountById(@Parameter(description = "账户ID") @PathVariable Long id) {
         Account account = accountService.getById(id);
         if (account == null) {
-            return Result.error(404, "账户不存在", null);
+            throw new BusinessException(DATA_NOT_FOUND, "账户不存在");
         }
         return Result.success(account);
     }
@@ -182,7 +202,7 @@ public class AccountController {
      */
     @PostMapping("/{id}/adjust-balance")
     @PreAuthorize("hasAuthority('ACCOUNT_MANAGE')")
-    @Operation(summary = "调整账户余额", description = "手动调整账户余额")
+    @Operation(summary = "调整账户余额", description = "手动调整账户余额（仅限自有账户）")
     public Result<Void> adjustBalance(
             @Parameter(description = "账户ID") @PathVariable Long id,
             @Parameter(description = "调整金额") @RequestParam BigDecimal amount,
@@ -190,9 +210,12 @@ public class AccountController {
 
         log.info("调整账户余额请求: accountId={}, amount={}, user={}", id, amount, principal.getName());
 
-        boolean success = accountService.adjustBalance(id, amount);
+        Long userId = jwtUtil.getUserIdFromToken(principal.getName());
+        Long companyId = jwtUtil.getCompanyIdFromToken(principal.getName());
+
+        boolean success = accountService.adjustBalance(id, amount, userId, companyId);
         if (!success) {
-            return Result.error(400, "调整账户余额失败", null);
+            throw new BusinessException(400, "调整账户余额失败，可能账户不存在或无权操作");
         }
 
         log.info("账户余额调整成功: accountId={}, amount={}", id, amount);

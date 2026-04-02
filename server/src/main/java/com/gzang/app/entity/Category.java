@@ -1,6 +1,8 @@
 package com.gzang.app.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
@@ -16,7 +18,7 @@ public class Category {
     /**
      * 主键ID
      */
-    @TableField("id")
+    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
@@ -54,63 +56,4 @@ public class Category {
      */
     @TableField("is_system")
     private Integer isSystem;
-
-    // Explicit getter and setter methods to ensure Lombok generates them properly
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public Long getCompanyId() {
-        return companyId;
-    }
-
-    public void setCompanyId(Long companyId) {
-        this.companyId = companyId;
-    }
-
-    public String getCategoryName() {
-        return categoryName;
-    }
-
-    public void setCategoryName(String categoryName) {
-        this.categoryName = categoryName;
-    }
-
-    public Long getParentId() {
-        return parentId;
-    }
-
-    public void setParentId(Long parentId) {
-        this.parentId = parentId;
-    }
-
-    public Integer getType() {
-        return type;
-    }
-
-    public void setType(Integer type) {
-        this.type = type;
-    }
-
-    public Integer getIsSystem() {
-        return isSystem;
-    }
-
-    public void setIsSystem(Integer isSystem) {
-        this.isSystem = isSystem;
-    }
 }
-
-

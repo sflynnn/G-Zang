@@ -26,44 +26,4 @@ public class RoleDataScope {
     private String scopeValue;
 
     private LocalDateTime createTime;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getRoleId() {
-        return roleId;
-    }
-
-    public void setRoleId(Long roleId) {
-        this.roleId = roleId;
-    }
-
-    public String getScopeType() {
-        return scopeType;
-    }
-
-    public void setScopeType(String scopeType) {
-        this.scopeType = scopeType;
-    }
-
-    public String getScopeValue() {
-        return scopeValue;
-    }
-
-    public void setScopeValue(String scopeValue) {
-        this.scopeValue = scopeValue;
-    }
-
-    public LocalDateTime getCreateTime() {
-        return createTime;
-    }
-
-    public void setCreateTime(LocalDateTime createTime) {
-        this.createTime = createTime;
-    }
 }

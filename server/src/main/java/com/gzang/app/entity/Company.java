@@ -15,17 +15,34 @@ import lombok.EqualsAndHashCode;
 @TableName("t_company")
 public class Company extends BaseEntity {
 
-    /**
-     * 公司名称
-     */
     @TableField("company_name")
     private String companyName;
 
-    /**
-     * 公司管理员用户ID
-     */
+    @TableField("company_code")
+    private String companyCode;
+
+    @TableField("contact_name")
+    private String contactName;
+
+    @TableField("contact_phone")
+    private String contactPhone;
+
+    @TableField("contact_email")
+    private String contactEmail;
+
+    @TableField("address")
+    private String address;
+
+    @TableField("status")
+    private Integer status = 1;
+
     @TableField("admin_user_id")
     private Long adminUserId;
+
+    // Lombok @Data generates: getCompanyName, setCompanyName, getCompanyCode, setCompanyCode,
+    // getContactName, setContactName, getContactPhone, setContactPhone,
+    // getContactEmail, setContactEmail, getAddress, setAddress,
+    // getStatus, setStatus, getAdminUserId, setAdminUserId
 }
 
 

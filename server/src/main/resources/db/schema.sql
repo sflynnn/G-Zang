@@ -39,6 +39,10 @@ CREATE TABLE IF NOT EXISTS t_permission (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键，权限ID',
     permission_name VARCHAR(64) NOT NULL COMMENT '权限名称（如：用户管理、记账录入）',
     permission_code VARCHAR(64) NOT NULL COMMENT '权限编码',
+    permission_group VARCHAR(32) DEFAULT 'SYSTEM' COMMENT '权限分组：SYSTEM/ORGANIZATION/FINANCE/BUSINESS',
+    permission_level TINYINT DEFAULT 2 COMMENT '权限级别：1=系统级, 2=企业级, 3=个人级',
+    sort_order INT DEFAULT 0 COMMENT '排序号',
+    description VARCHAR(255) DEFAULT NULL COMMENT '权限描述',
     create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     UNIQUE KEY uk_permission_code (permission_code)
@@ -57,10 +61,17 @@ CREATE TABLE IF NOT EXISTS t_role_permission (
 CREATE TABLE IF NOT EXISTS t_company (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键，公司ID (tenant_id)',
     company_name VARCHAR(128) NOT NULL COMMENT '公司名称',
+    company_code VARCHAR(64) NULL COMMENT '公司编码',
+    contact_name VARCHAR(64) NULL COMMENT '联系人姓名',
+    contact_phone VARCHAR(32) NULL COMMENT '联系人电话',
+    contact_email VARCHAR(128) NULL COMMENT '联系人邮箱',
+    address VARCHAR(255) NULL COMMENT '公司地址',
+    status TINYINT NOT NULL DEFAULT 1 COMMENT '状态：0=禁用，1=正常',
     admin_user_id BIGINT NOT NULL COMMENT '公司管理员用户ID',
     create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    INDEX idx_admin_user_id (admin_user_id)
+    INDEX idx_admin_user_id (admin_user_id),
+    INDEX idx_company_code (company_code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='公司/组织表';
 
 -- 账户表

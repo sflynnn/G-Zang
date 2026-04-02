@@ -2,6 +2,7 @@ package com.gzang.app.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -24,6 +25,7 @@ public class User extends BaseEntity {
     /**
      * 密码（加密存储）
      */
+    @JsonIgnore
     @TableField("password")
     private String password;
 
@@ -56,53 +58,4 @@ public class User extends BaseEntity {
      */
     @TableField("status")
     private Integer status;
-
-    // Explicit getters and setters to ensure Lombok generates them properly
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getNickname() {
-        return nickname;
-    }
-
-    public String getAvatar() {
-        return avatar;
-    }
-
-    public Long getRoleId() {
-        return roleId;
-    }
-
-    public Long getCompanyId() {
-        return companyId;
-    }
-
-    public Integer getStatus() {
-        return status;
-    }
-
-    // Explicit setters to ensure Lombok generates them properly
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setStatus(Integer status) {
-        this.status = status;
-    }
-
-    public void setRoleId(Long roleId) {
-        this.roleId = roleId;
-    }
-
-    // Explicit setter for id to ensure it's available
-    public void setId(Long id) {
-        super.setId(id);
-    }
 }
-
-

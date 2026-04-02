@@ -49,4 +49,14 @@ public interface RoleService extends IService<Role> {
      * 获取角色权限ID列表
      */
     List<Long> getRolePermissionIds(Long roleId);
+
+    /**
+     * 获取角色权限码列表
+     */
+    List<String> getRolePermissionCodes(Long roleId);
+
+    /**
+     * 根据ID查询角色（使用显式SQL，绕过MP字段检测问题）
+     */
+    Role findRoleById(Long id);
 }

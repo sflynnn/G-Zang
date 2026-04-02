@@ -70,11 +70,13 @@ public interface AccountService extends IService<Account> {
     BigDecimal getTotalBalance(Long userId, Long companyId);
 
     /**
-     * 调整账户余额
+     * 调整账户余额（带数据归属验证）
      *
      * @param accountId 账户ID
      * @param amount 调整金额（正数增加，负数减少）
+     * @param userId 当前用户ID
+     * @param companyId 当前公司ID（可为null表示超级管理员）
      * @return 是否成功
      */
-    boolean adjustBalance(Long accountId, BigDecimal amount);
+    boolean adjustBalance(Long accountId, BigDecimal amount, Long userId, Long companyId);
 }

@@ -48,7 +48,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         Role role = null;
         if (user.getRoleId() != null) {
-            role = roleMapper.selectById(user.getRoleId());
+            role = roleMapper.selectRoleById(user.getRoleId());  // 使用显式SQL避免BaseEntity字段缺失问题
         }
 
         List<Permission> permissions = Collections.emptyList();
@@ -78,7 +78,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         Role role = null;
         if (user.getRoleId() != null) {
-            role = roleMapper.selectById(user.getRoleId());
+            role = roleMapper.selectRoleById(user.getRoleId());  // 使用显式SQL避免BaseEntity字段缺失问题
         }
 
         List<Permission> permissions = Collections.emptyList();

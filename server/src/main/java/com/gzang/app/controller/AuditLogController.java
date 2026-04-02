@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gzang.app.annotation.RequirePermission;
 import com.gzang.app.constant.PermissionCode;
+import com.gzang.app.exception.BusinessException;
 import com.gzang.app.service.OperationLogService;
 import com.gzang.app.vo.OperationLogVO;
 import com.gzang.app.vo.Result;
@@ -12,6 +13,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
+
+import static com.gzang.app.constant.ErrorCode.DATA_NOT_FOUND;
 
 /**
  * 审计日志控制器
@@ -66,7 +69,7 @@ public class AuditLogController {
     public Result<OperationLogVO> getById(@Parameter(description = "日志ID") @PathVariable Long id) {
         Object record = operationLogService.getById(id);
         if (record == null) {
-            return Result.error(404, "日志不存在", null);
+            throw new BusinessException(DATA_NOT_FOUND, "日志不存在");
         }
         OperationLogVO vo = new OperationLogVO();
         BeanUtils.copyProperties(record, vo);

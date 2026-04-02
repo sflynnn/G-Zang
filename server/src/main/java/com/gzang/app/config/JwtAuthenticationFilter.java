@@ -2,6 +2,12 @@ package com.gzang.app.config;
 
 import com.gzang.app.util.JwtUtil;
 import com.gzang.app.util.TenantContextHolder;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -12,10 +18,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
@@ -25,6 +27,8 @@ import java.io.IOException;
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private final JwtUtil jwtUtil;
     private final ApplicationContext applicationContext;
@@ -51,7 +55,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 TenantContextHolder.setCurrentCompanyId(companyId);
 
                 // 懒加载UserDetailsService以避免循环依赖
-                UserDetailsService userDetailsService = applicationContext.getBean(UserDetailsService.class);
+                UserDetailsService userDetailsService = applicationContext.getBean(CustomUserDetailsService.class);
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                 UsernamePasswordAuthenticationToken authentication
                         = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
@@ -62,8 +66,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // 设置用户认证信息
             }
         } catch (Exception ex) {
-            // 无法设置用户认证信息
-            return;
+            // 数据库或业务异常不在此处处理，让 filterChain 继续，controller 层会正常返回业务错误
+            log.error("JWT验证失败: uri={}, error={}, message={}", request.getRequestURI(), ex.getClass().getSimpleName(), ex.getMessage());
+            if (log.isDebugEnabled()) {
+                log.debug("JWT验证堆栈:", ex);
+            }
         }
 
         filterChain.doFilter(request, response);

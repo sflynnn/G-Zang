@@ -35,7 +35,7 @@ public class TenantInterceptor implements InnerInterceptor {
      * 需要进行多租户过滤的表（需要 user_id 过滤）
      */
     private static final List<String> TENANT_TABLES = Arrays.asList(
-            "t_user", "t_account", "t_transaction", "t_category",
+            "t_account", "t_transaction", "t_category",
             "t_budget", "t_business_repair_order", "t_cost_center",
             "t_operation_log", "t_file_upload", "t_offline_transaction",
             "t_notification_record"
@@ -56,7 +56,7 @@ public class TenantInterceptor implements InnerInterceptor {
      * 不进行租户过滤的表（如系统表）
      */
     private static final List<String> SKIP_TABLES = Arrays.asList(
-            "t_role", "t_permission", "t_role_permission",
+            "t_user", "t_role", "t_permission", "t_role_permission",
             "t_company", "t_system_config", "t_user_device"
     );
 

@@ -34,6 +34,13 @@ public class Permission extends BaseEntity {
     private String permissionGroup;
 
     /**
+     * 权限所属模块（用于构建权限树形结构）
+     * 如：USER/ROLE/PERMISSION/ACCOUNT/CATEGORY/TRANSACTION/REPORT
+     */
+    @TableField("permission_module")
+    private String permissionModule;
+
+    /**
      * 权限级别：1=系统级, 2=企业级, 3=个人级
      */
     @TableField("permission_level")

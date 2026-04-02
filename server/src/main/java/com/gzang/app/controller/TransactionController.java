@@ -2,7 +2,10 @@ package com.gzang.app.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gzang.app.dto.transaction.CreateTransactionDTO;
+import com.gzang.app.dto.transaction.UpdateTransactionDTO;
 import com.gzang.app.entity.Transaction;
+import com.gzang.app.exception.BusinessException;
 import com.gzang.app.mapper.TransactionMapper;
 import com.gzang.app.service.TransactionService;
 import com.gzang.app.util.JwtUtil;
@@ -18,6 +21,8 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import static com.gzang.app.constant.ErrorCode.DATA_NOT_FOUND;
 
 /**
  * 交易记录控制器
@@ -46,22 +51,26 @@ public class TransactionController {
     @PostMapping
     @PreAuthorize("hasAuthority('TRANSACTION_ADD')")
     @Operation(summary = "创建交易记录", description = "新增一笔交易记录")
-    public Result<Void> createTransaction(@Validated @RequestBody Transaction transaction, Principal principal) {
+    public Result<Void> createTransaction(@Validated @RequestBody CreateTransactionDTO dto, Principal principal) {
         log.info("创建交易记录请求: user={}, amount={}, type={}",
-                principal.getName(), transaction.getAmount(), transaction.getType());
+                principal.getName(), dto.getAmount(), dto.getType());
 
-        // 从JWT中获取用户ID
         Long userId = jwtUtil.getUserIdFromToken(principal.getName());
-        transaction.setUserId(userId);
+        Long companyId = jwtUtil.getCompanyIdFromToken(principal.getName());
 
-        // 如果没有设置交易时间，使用当前时间
-        if (transaction.getTransactionTime() == null) {
-            transaction.setTransactionTime(LocalDateTime.now());
-        }
+        Transaction transaction = new Transaction();
+        transaction.setAmount(dto.getAmount());
+        transaction.setType(dto.getType());
+        transaction.setCategoryId(dto.getCategoryId());
+        transaction.setAccountId(dto.getAccountId());
+        transaction.setTransactionTime(dto.getTransactionTime() != null ? dto.getTransactionTime() : LocalDateTime.now());
+        transaction.setRemark(dto.getRemark());
+        transaction.setUserId(userId);
+        transaction.setCompanyId(companyId);
 
         boolean success = transactionService.createTransaction(transaction);
         if (!success) {
-            return Result.error(500, "创建交易记录失败", null);
+            throw new BusinessException(500, "创建交易记录失败");
         }
 
         log.info("交易记录创建成功: id={}", transaction.getId());
@@ -76,19 +85,27 @@ public class TransactionController {
     @Operation(summary = "更新交易记录", description = "更新指定交易记录")
     public Result<Void> updateTransaction(
             @Parameter(description = "交易记录ID") @PathVariable Long id,
-            @Validated @RequestBody Transaction transaction,
+            @Validated @RequestBody UpdateTransactionDTO dto,
             Principal principal) {
 
         log.info("更新交易记录请求: id={}, user={}", id, principal.getName());
 
-        // 从JWT中获取用户ID
-        Long userId = jwtUtil.getUserIdFromToken(principal.getName());
+        Transaction transaction = new Transaction();
         transaction.setId(id);
+
+        Long userId = jwtUtil.getUserIdFromToken(principal.getName());
         transaction.setUserId(userId);
+
+        if (dto.getAmount() != null) transaction.setAmount(dto.getAmount());
+        if (dto.getType() != null) transaction.setType(dto.getType());
+        if (dto.getCategoryId() != null) transaction.setCategoryId(dto.getCategoryId());
+        if (dto.getAccountId() != null) transaction.setAccountId(dto.getAccountId());
+        if (dto.getTransactionTime() != null) transaction.setTransactionTime(dto.getTransactionTime());
+        if (dto.getRemark() != null) transaction.setRemark(dto.getRemark());
 
         boolean success = transactionService.updateTransaction(transaction);
         if (!success) {
-            return Result.error(500, "更新交易记录失败", null);
+            throw new BusinessException(500, "更新交易记录失败");
         }
 
         log.info("交易记录更新成功: id={}", id);
@@ -112,7 +129,7 @@ public class TransactionController {
 
         boolean success = transactionService.deleteTransaction(id, userId);
         if (!success) {
-            return Result.error(500, "删除交易记录失败", null);
+            throw new BusinessException(500, "删除交易记录失败");
         }
 
         log.info("交易记录删除成功: id={}", id);
@@ -128,7 +145,7 @@ public class TransactionController {
     public Result<Transaction> getTransactionById(@Parameter(description = "交易记录ID") @PathVariable Long id) {
         Transaction transaction = transactionService.getById(id);
         if (transaction == null) {
-            return Result.error(404, "交易记录不存在", null);
+            throw new BusinessException(DATA_NOT_FOUND, "交易记录不存在");
         }
         return Result.success(transaction);
     }

@@ -159,6 +159,19 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<String> getRolePermissionCodes(Long roleId) {
+        List<Permission> permissions = permissionMapper.selectByRoleId(roleId);
+        return permissions.stream()
+                .map(Permission::getPermissionCode)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Role findRoleById(Long id) {
+        return getBaseMapper().selectRoleById(id);
+    }
+
     private RoleVO convertToVO(Role role) {
         RoleVO vo = new RoleVO();
         BeanUtils.copyProperties(role, vo);

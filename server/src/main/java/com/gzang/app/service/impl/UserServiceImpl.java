@@ -1,13 +1,19 @@
 package com.gzang.app.service.impl;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.gzang.app.dto.RegisterRequest;
 import com.gzang.app.entity.User;
+import com.gzang.app.exception.BusinessException;
 import com.gzang.app.mapper.UserMapper;
 import com.gzang.app.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import static com.gzang.app.constant.ErrorCode.USERNAME_EXISTS;
 
 /**
  * 用户服务实现类
@@ -30,23 +36,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public boolean register(User user) {
+    public boolean register(RegisterRequest request) {
         // 检查用户名是否已存在
-        User existingUser = getUserByUsername(user.getUsername());
+        User existingUser = getUserByUsername(request.getUsername());
         if (existingUser != null) {
-            log.warn("用户名已存在: {}", user.getUsername());
-            return false;
+            log.warn("用户名已存在: {}", request.getUsername());
+            throw new BusinessException(USERNAME_EXISTS, "用户名已存在");
         }
 
-        // 加密密码
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        // 构建用户实体（仅从 DTO 复制允许的字段）
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setNickname(request.getNickname());
         // 设置默认状态
         user.setStatus(1);
-
-        // 如果没有指定角色，默认设置为普通用户（假设角色ID为3）
-        if (user.getRoleId() == null) {
-            user.setRoleId(3L); // 普通用户角色ID
-        }
+        // 默认设置为普通用户角色（角色ID为3，可配置）
+        user.setRoleId(3L);
 
         return save(user);
     }
@@ -67,5 +73,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         log.info("用户登录成功: {}", username);
         return user;
+    }
+
+    @Override
+    public IPage<User> getUsersByCompanyId(IPage<User> page, Long companyId) {
+        return getBaseMapper().selectPageByCompanyId((Page<User>) page, companyId);
     }
 }

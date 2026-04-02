@@ -33,9 +33,11 @@ public class PermissionServiceImpl extends ServiceImpl<PermissionMapper, Permiss
 
     @Override
     public Map<String, List<PermissionVO>> getPermissionGrouped() {
+        System.out.println(">>> getPermissionGrouped called");
         LambdaQueryWrapper<Permission> wrapper = new LambdaQueryWrapper<>();
         wrapper.orderByAsc(Permission::getSortOrder);
         List<Permission> permissions = list(wrapper);
+        System.out.println(">>> permissions count = " + (permissions != null ? permissions.size() : "null"));
 
         Map<String, List<PermissionVO>> grouped = new LinkedHashMap<>();
         for (Permission permission : permissions) {
@@ -43,6 +45,24 @@ public class PermissionServiceImpl extends ServiceImpl<PermissionMapper, Permiss
             grouped.computeIfAbsent(group, k -> new ArrayList<>()).add(convertToVO(permission));
         }
         return grouped;
+    }
+
+    @Override
+    public Map<String, List<PermissionVO>> getPermissionByModule() {
+        LambdaQueryWrapper<Permission> wrapper = new LambdaQueryWrapper<>();
+        wrapper.orderByAsc(Permission::getSortOrder);
+        List<Permission> permissions = list(wrapper);
+
+        Map<String, List<PermissionVO>> byModule = new LinkedHashMap<>();
+        for (Permission permission : permissions) {
+            String module = permission.getPermissionModule() != null
+                    ? permission.getPermissionModule()
+                    : permission.getPermissionGroup() != null
+                            ? permission.getPermissionGroup()
+                            : "OTHER";
+            byModule.computeIfAbsent(module, k -> new ArrayList<>()).add(convertToVO(permission));
+        }
+        return byModule;
     }
 
     @Override
