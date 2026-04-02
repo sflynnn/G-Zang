@@ -1,12 +1,10 @@
 ---
+description: "G-Zang (归藏) 通用开发规范 - 涵盖 Vue3 + TypeScript 前端开发、Java + Spring Boot 后端开发、数据库设计、安全规范和部署运维标准。适用于所有应用模块（pc-admin、pc-main、pc-personal、pc-business、mobile）和后端服务开发。"
+globs:
+  - "apps/**"
+  - "server/**"
+  - "packages/**"
 alwaysApply: false
-filePathPatterns:
-  - "!apps/pc-admin/**"
-  - "!apps/pc-main/**"
-  - "!apps/pc-personal/**"
-  - "!apps/pc-business/**"
-  - "!apps/mobile/**"
-  - "!server/**"
 ---
 
 # G-Zang (归藏) Cursor MDC 通用规范
