@@ -28,10 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { useI18n } from 'vue-i18n';
-
-const { t } = useI18n();
+import { ref, computed } from 'vue';
 
 // Props
 interface Props {
@@ -53,7 +50,6 @@ const emit = defineEmits<{
 const progress = ref(0);
 const isDragging = ref(false);
 const startX = ref(0);
-const trackWidth = ref(0);
 
 // Computed
 const isCompleted = computed(() => progress.value >= props.threshold);

@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosRequestConfig } from 'axios';
 import { useLoadingStore } from '@/stores/loading';
 
 // 创建axios实例
@@ -9,6 +9,18 @@ const api: AxiosInstance = axios.create({
     'Content-Type': 'application/json'
   }
 });
+
+// 扩展接口：响应拦截器已将 AxiosResponse.data 作为返回值，因此 get/post/put/delete 返回 T 而非 AxiosResponse<T>
+interface TypedAxiosInstance extends AxiosInstance {
+  get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T>;
+  post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T>;
+  put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T>;
+  delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T>;
+  patch<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T>;
+}
+
+// 断言为带类型安全的实例
+const typedApi = api as TypedAxiosInstance;
 
 // 获取loading store实例
 const loadingStore = useLoadingStore();
@@ -98,8 +110,12 @@ function getLoadingTextFromConfig(config: InternalAxiosRequestConfig): string {
   return '处理中...';
 }
 
-export default api;
+export default typedApi;
 
 // 导出所有API模块
 export * from './auth';
 export * from './user';
+export * from './role';
+export * from './permission';
+export * from './audit-log';
+export * from './company';

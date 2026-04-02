@@ -2,27 +2,53 @@
 // G-Zang 管理端全局 SCSS 主题系统
 // ===========================================
 
-// SCSS 变量和函数定义 (使用模块化 @use，保留现有全局符号 via `as *` 以减少改动)
+// SCSS 变量和函数定义
 @use 'variables' as *;
 @use 'mixins' as *;
 @use 'functions' as *;
 
-/* Tailwind directives (required) */
+/* Tailwind directives */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 // ===== CSS 变量定义 =====
-// 将SCSS变量转换为CSS变量，供组件使用
 :root {
-  // 颜色系统
+  // ================== 品牌色 ==================
+  /* 归藏青 - 品牌主色 */
+  --gzang-primary: #0F4C5C;
+  --gzang-primary-light: #186a7d;
+  --gzang-primary-dark: #0a3644;
+  
+  /* 琉璃金 - 强调色 */
+  --gzang-secondary: #FB8B24;
+  --gzang-secondary-light: #fca03d;
+  --gzang-secondary-dark: #e67a1a;
+  
+  // ================== 功能色 ==================
+  --gzang-success: #06D6A0;
+  --gzang-danger: #EF476F;
+  --gzang-warning: #FFD166;
+  --gzang-info: #118AB2;
+  
+  // ================== 中性色 ==================
+  --gzang-bg: #F8F9FA;
+  --gzang-surface: #FFFFFF;
+  --gzang-surface-elevated: #FFFFFF;
+  --gzang-text-primary: #1F2937;
+  --gzang-text-secondary: #6B7280;
+  --gzang-text-tertiary: #9CA3AF;
+  --gzang-border: #E5E7EB;
+  --gzang-border-light: #F3F4F6;
+  
+  // ================== 颜色系统 ==================
   --color-primary: #{$color-primary};
   --color-secondary: #{$color-secondary};
   --color-success: #{$color-success};
   --color-danger: #{$color-danger};
   --color-background: #{$color-background};
   --color-surface: #{$color-surface};
-
+  
   // 中性色
   --color-gray-50: #{$color-gray-50};
   --color-gray-100: #{$color-gray-100};
@@ -34,132 +60,426 @@
   --color-gray-700: #{$color-gray-700};
   --color-gray-800: #{$color-gray-800};
   --color-gray-900: #{$color-gray-900};
-
+  
   // 字体系统
   --font-family-sans: #{$font-family-sans};
   --font-family-chinese: #{$font-family-chinese};
-  --font-family-mono: #{$font-family-mono};
-
-  --font-size-xs: #{$font-size-xs};
-  --font-size-sm: #{$font-size-sm};
-  --font-size-base: #{$font-size-base};
-  --font-size-lg: #{$font-size-lg};
-  --font-size-xl: #{$font-size-xl};
-  --font-size-2xl: #{$font-size-2xl};
-  --font-size-3xl: #{$font-size-3xl};
-  --font-size-4xl: #{$font-size-4xl};
-
-  --font-weight-light: #{$font-weight-light};
-  --font-weight-normal: #{$font-weight-normal};
-  --font-weight-medium: #{$font-weight-medium};
-  --font-weight-semibold: #{$font-weight-semibold};
-  --font-weight-bold: #{$font-weight-bold};
-
+  --font-family-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+  
+  // 字号
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+  
+  // 字重
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
   // 间距系统
-  --spacing-1: #{$spacing-1};
-  --spacing-2: #{$spacing-2};
-  --spacing-3: #{$spacing-3};
-  --spacing-4: #{$spacing-4};
-  --spacing-6: #{$spacing-6};
-  --spacing-8: #{$spacing-8};
-  --spacing-12: #{$spacing-12};
-
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-12: 3rem;
+  --spacing-16: 4rem;
+  
   // 圆角系统
-  --border-radius-sm: #{$border-radius-sm};
-  --border-radius-md: #{$border-radius-md};
-  --border-radius-lg: #{$border-radius-lg};
-  --border-radius-xl: #{$border-radius-xl};
-  --border-radius-2xl: #{$border-radius-2xl};
-  --border-radius-4xl: #{$border-radius-4xl};
-
+  --border-radius-sm: 0.375rem;
+  --border-radius-md: 0.5rem;
+  --border-radius-lg: 0.75rem;
+  --border-radius-xl: 1rem;
+  --border-radius-2xl: 1.5rem;
+  --border-radius-full: 9999px;
+  
   // 阴影系统
-  --shadow-sm: #{$shadow-sm};
-  --shadow-md: #{$shadow-md};
-  --shadow-lg: #{$shadow-lg};
-  --shadow-xl: #{$shadow-xl};
-  --shadow-2xl: #{$shadow-2xl};
-  --shadow-admin: #{$shadow-admin};
-  --shadow-admin-lg: #{$shadow-admin-lg};
-
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-gzang: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-gzang-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-gzang-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-admin: 0 4px 6px -1px rgba(0, 76, 92, 0.1), 0 2px 4px -2px rgba(0, 76, 92, 0.1);
+  --shadow-admin-lg: 0 10px 15px -3px rgba(0, 76, 92, 0.15), 0 4px 6px -4px rgba(0, 76, 92, 0.1);
+  
   // 动画系统
-  --transition-fast: #{$transition-fast};
-  --transition-normal: #{$transition-normal};
-  --transition-slow: #{$transition-slow};
-}
-:root {
-  // 颜色系统
-  --color-primary: #{$color-primary};
-  --color-secondary: #{$color-secondary};
-  --color-success: #{$color-success};
-  --color-danger: #{$color-danger};
-  --color-background: #{$color-background};
-  --color-surface: #{$color-surface};
-
-  // 中性色
-  --color-gray-50: #{$color-gray-50};
-  --color-gray-100: #{$color-gray-100};
-  --color-gray-200: #{$color-gray-200};
-  --color-gray-300: #{$color-gray-300};
-  --color-gray-400: #{$color-gray-400};
-  --color-gray-500: #{$color-gray-500};
-  --color-gray-600: #{$color-gray-600};
-  --color-gray-700: #{$color-gray-700};
-  --color-gray-800: #{$color-gray-800};
-  --color-gray-900: #{$color-gray-900};
-
-  // 字体系统
-  --font-family-sans: #{$font-family-sans};
-  --font-family-chinese: #{$font-family-chinese};
-  --font-family-mono: #{$font-family-mono};
-
-  --font-size-xs: #{$font-size-xs};
-  --font-size-sm: #{$font-size-sm};
-  --font-size-base: #{$font-size-base};
-  --font-size-lg: #{$font-size-lg};
-  --font-size-xl: #{$font-size-xl};
-  --font-size-2xl: #{$font-size-2xl};
-  --font-size-3xl: #{$font-size-3xl};
-  --font-size-4xl: #{$font-size-4xl};
-
-  --font-weight-light: #{$font-weight-light};
-  --font-weight-normal: #{$font-weight-normal};
-  --font-weight-medium: #{$font-weight-medium};
-  --font-weight-semibold: #{$font-weight-semibold};
-  --font-weight-bold: #{$font-weight-bold};
-
-  // 间距系统
-  --spacing-1: #{$spacing-1};
-  --spacing-2: #{$spacing-2};
-  --spacing-3: #{$spacing-3};
-  --spacing-4: #{$spacing-4};
-  --spacing-6: #{$spacing-6};
-  --spacing-8: #{$spacing-8};
-  --spacing-12: #{$spacing-12};
-
-  // 圆角系统
-  --border-radius-sm: #{$border-radius-sm};
-  --border-radius-md: #{$border-radius-md};
-  --border-radius-lg: #{$border-radius-lg};
-  --border-radius-xl: #{$border-radius-xl};
-  --border-radius-2xl: #{$border-radius-2xl};
-  --border-radius-4xl: #{$border-radius-4xl};
-
-  // 阴影系统
-  --shadow-sm: #{$shadow-sm};
-  --shadow-md: #{$shadow-md};
-  --shadow-lg: #{$shadow-lg};
-  --shadow-xl: #{$shadow-xl};
-  --shadow-2xl: #{$shadow-2xl};
-  --shadow-admin: #{$shadow-admin};
-  --shadow-admin-lg: #{$shadow-admin-lg};
-
-  // 动画系统
-  --transition-fast: #{$transition-fast};
-  --transition-normal: #{$transition-normal};
-  --transition-slow: #{$transition-slow};
+  --transition-fast: 150ms ease;
+  --transition-normal: 300ms ease;
+  --transition-slow: 500ms ease;
+  
+  // 滚动条
+  --scrollbar-track: #{$color-gray-100};
+  --scrollbar-thumb: #{$color-gray-300};
+  --scrollbar-thumb-hover: #{$color-gray-400};
+  
+  // 输入框边框色 (浅色主题)
+  --gzang-input-border: #{$color-gray-300};
+  --gzang-input-border-hover: #{$color-gray-400};
+  --gzang-input-focus-border: #{$color-secondary};
+  --gzang-input-focus-shadow: #{'rgba(251, 139, 36, 0.15)'};
 }
 
-// 全局样式重置
+// ===== Dark Theme CSS Variables =====
+.dark, [data-theme="dark"] {
+  // 品牌色保持一致
+  --gzang-primary: #0a3644;
+  --gzang-primary-light: #0F4C5C;
+  
+  // 深色主题表面色
+  --gzang-bg: #111827;
+  --gzang-surface: #1F2937;
+  --gzang-surface-elevated: #374151;
+  --gzang-text-primary: #F9FAFB;
+  --gzang-text-secondary: #9CA3AF;
+  --gzang-text-tertiary: #6B7280;
+  --gzang-border: #374151;
+  --gzang-border-light: #4B5563;
+  
+  // 输入框边框色 - 确保深色主题下可见
+  --gzang-input-border: #4B5563;
+  --gzang-input-border-hover: #6B7280;
+  --gzang-input-focus-border: #9CA3AF;
+  --gzang-input-focus-shadow: rgba(156, 163, 175, 0.25);
+  
+  // 滚动条
+  --scrollbar-track: #1F2937;
+  --scrollbar-thumb: #4B5563;
+  --scrollbar-thumb-hover: #6B7280;
+  
+  // 阴影
+  --shadow-gzang: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-gzang-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+  --shadow-gzang-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -4px rgba(0, 0, 0, 0.5);
+  --shadow-admin: 0 4px 6px -1px rgba(0, 76, 92, 0.2), 0 2px 4px -2px rgba(0, 76, 92, 0.15);
+  --shadow-admin-lg: 0 10px 15px -3px rgba(0, 76, 92, 0.25), 0 4px 6px -4px rgba(0, 76, 92, 0.2);
+}
+
+// ===== G-Zang Design System Extensions =====
+
+// Tailwind CSS 组件扩展
+@layer components {
+  // 渐变背景
+  .bg-gradient-primary {
+    background: linear-gradient(135deg, var(--gzang-primary) 0%, var(--gzang-primary-light) 100%);
+  }
+  
+  .bg-gradient-secondary {
+    background: linear-gradient(135deg, var(--gzang-secondary) 0%, var(--gzang-secondary-light) 100%);
+  }
+  
+  // 玻璃效果
+  .glass {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  
+  .dark .glass {
+    background: rgba(31, 41, 55, 0.8);
+  }
+  
+  // G-Zang 阴影系统
+  .shadow-gzang {
+    box-shadow: var(--shadow-gzang);
+  }
+  
+  .shadow-gzang-md {
+    box-shadow: var(--shadow-gzang-md);
+  }
+  
+  .shadow-gzang-lg {
+    box-shadow: var(--shadow-gzang-lg);
+  }
+  
+  .shadow-admin {
+    box-shadow: var(--shadow-admin);
+  }
+  
+  // 卡片组件
+  .card {
+    background-color: var(--gzang-surface);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-gzang);
+    transition: all var(--transition-normal);
+  }
+  
+  .card:hover {
+    box-shadow: var(--shadow-gzang-md);
+  }
+  
+  // 主要按钮 (CTA) - 琉璃金
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-2) var(--spacing-4);
+    border-radius: var(--border-radius-md);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-sm);
+    background-color: var(--gzang-secondary);
+    color: white;
+    transition: all var(--transition-fast);
+    cursor: pointer;
+    border: none;
+    
+    &:hover:not(:disabled) {
+      background-color: var(--gzang-secondary-dark);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    &:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+    
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+  
+  // 次要按钮
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-2) var(--spacing-4);
+    border-radius: var(--border-radius-md);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-sm);
+    background-color: transparent;
+    color: var(--gzang-primary);
+    border: 2px solid var(--gzang-primary);
+    transition: all var(--transition-fast);
+    cursor: pointer;
+    
+    &:hover:not(:disabled) {
+      background-color: var(--gzang-primary);
+      color: white;
+    }
+  }
+  
+  // 轮廓按钮
+  .btn-outline {
+    @extend .btn-secondary;
+  }
+  
+  // 统计卡片
+  .stat-card {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-4);
+    padding: var(--spacing-4);
+    border-radius: var(--border-radius-lg);
+    background-color: var(--gzang-surface);
+    box-shadow: var(--shadow-gzang);
+    transition: all var(--transition-normal);
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-gzang-md);
+  }
+  
+  // 图标容器
+  .icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--border-radius-lg);
+  }
+  
+  .icon-wrapper-primary {
+    @extend .icon-wrapper;
+    background-color: rgba($color-primary, 0.1);
+    color: $color-primary;
+  }
+
+  .icon-wrapper-success {
+    @extend .icon-wrapper;
+    background-color: rgba($color-success, 0.1);
+    color: $color-success;
+  }
+
+  .icon-wrapper-danger {
+    @extend .icon-wrapper;
+    background-color: rgba($color-danger, 0.1);
+    color: $color-danger;
+  }
+
+  .icon-wrapper-warning {
+    @extend .icon-wrapper;
+    background-color: rgba($color-secondary, 0.1);
+    color: $color-secondary;
+  }
+  
+  // 快捷操作按钮
+  .quick-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-2);
+    padding: var(--spacing-4);
+    border-radius: var(--border-radius-lg);
+    background-color: var(--gzang-surface);
+    box-shadow: var(--shadow-gzang);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    
+    &:hover {
+      box-shadow: var(--shadow-gzang-md);
+      transform: translateY(-0.25rem);
+    }
+  }
+  
+  // 页面头部
+  .page-header {
+    margin-bottom: var(--spacing-6);
+  }
+  
+  .page-title {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--gzang-text-primary);
+    margin: 0 0 var(--spacing-1) 0;
+  }
+  
+  .page-subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--gzang-text-secondary);
+    margin: 0;
+  }
+}
+
+// ===== Tailwind Utility Extensions =====
+
+@layer utilities {
+  // 语义化文字颜色
+  .text-income {
+    color: var(--gzang-success);
+  }
+  
+  .text-expense {
+    color: var(--gzang-danger);
+  }
+  
+  // 语义化背景颜色
+  .bg-income {
+    background-color: var(--gzang-success);
+  }
+  
+  .bg-expense {
+    background-color: var(--gzang-danger);
+  }
+  
+  // 数字等宽对齐
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+  
+  // 自定义动画
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out both;
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse 3s infinite;
+  }
+  
+  // 主题感知颜色
+  .text-primary {
+    color: var(--gzang-text-primary);
+  }
+  
+  .text-secondary {
+    color: var(--gzang-text-secondary);
+  }
+  
+  .bg-background {
+    background-color: var(--gzang-bg);
+  }
+  
+  .bg-surface {
+    background-color: var(--gzang-surface);
+  }
+  
+  .border-default {
+    border-color: var(--gzang-border);
+  }
+  
+  // 等宽字体
+  .font-mono {
+    font-family: var(--font-family-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  
+  // 状态颜色
+  .status-success {
+    color: var(--gzang-success);
+  }
+  
+  .status-danger {
+    color: var(--gzang-danger);
+  }
+  
+  .status-warning {
+    color: var(--gzang-warning);
+  }
+  
+  .status-info {
+    color: var(--gzang-info);
+  }
+}
+
+// ===== 动画关键帧 =====
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+// ===== 全局样式重置 =====
 *,
 *::before,
 *::after {
@@ -174,8 +494,8 @@ body,
 #app {
   height: 100%;
   font-family: var(--font-family-sans);
-  background-color: var(--color-background);
-  color: var(--color-gray-900);
+  background-color: var(--gzang-bg);
+  color: var(--gzang-text-primary);
   transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
@@ -184,35 +504,7 @@ body,
   font-family: var(--font-family-chinese);
 }
 
-// 数字和统计数据使用等宽字体
-.font-mono {
-  font-family: var(--font-family-mono);
-}
-
 // ===== 组件样式系统 =====
-
-// 卡片组件
-.card {
-  @include card-base;
-  @include card-hover;
-}
-
-// 按钮组件
-.btn {
-  @include button-base;
-  transition: all var(--transition-fast);
-  cursor: pointer;
-}
-
-.btn-primary {
-  @include button-variant(primary);
-}
-
-.btn-secondary {
-  @include button-variant(secondary);
-}
-
- 
 
 // 表单组件
 .form-input {
@@ -249,6 +541,11 @@ body,
   @include table-row-hover;
 }
 
+// 深色主题表格
+.dark .table {
+  @include table-dark;
+}
+
 // 状态标签
 .status-badge {
   @include status-badge-base;
@@ -264,15 +561,6 @@ body,
 
 .status-warning {
   @include status-badge-variant(warning);
-}
-
-// ===== 布局组件 =====
-.sidebar {
-  @include sidebar-base;
-}
-
-.main-content {
-  @include main-content-base;
 }
 
 // ===== 登录页样式 =====
@@ -359,13 +647,9 @@ body,
   color: #FFFFFF !important;
 }
 
-/* Legacy dark theme rules - kept for compatibility */
-
 /* ============================
    Reset page-level input overrides
-   Ensure Naive UI default styling is used (clear any component/page overrides)
    ============================ */
-/* Reset form item container overrides */
 .n-form-item-blank,
 .n-form-item-blank:hover,
 .n-form-item-blank:focus-within {
@@ -375,24 +659,51 @@ body,
   transform: none !important;
 }
 
-/* Ensure input elements use Naive defaults */
-.n-input__input,
-.n-input__input:focus,
-.n-input__input::placeholder {
+.n-input__input {
   color: inherit !important;
   background: inherit !important;
   outline: none !important;
-  box-shadow: none !important;
-  border: none !important;
 }
 
-/* Keep checkbox label / button text tweaks if needed (non-intrusive) */
+.n-input__input:focus {
+  color: inherit !important;
+  background: inherit !important;
+  outline: none !important;
+}
+
+.n-input__input::placeholder {
+  color: inherit !important;
+  opacity: 0.6 !important;
+}
+
+// 深色主题下确保输入框边框可见
+.dark, [data-theme="dark"] {
+  .n-input__input-el {
+    border-color: var(--gzang-input-border) !important;
+    background-color: var(--gzang-surface) !important;
+  }
+  
+  .n-input:hover .n-input__input-el {
+    border-color: var(--gzang-input-border-hover) !important;
+  }
+  
+  .n-input--focus .n-input__input-el,
+  .n-input:focus-within .n-input__input-el {
+    border-color: var(--gzang-input-focus-border) !important;
+    box-shadow: 0 0 0 2px var(--gzang-input-focus-shadow) !important;
+  }
+}
+
 .n-checkbox__label {
-  color: var(--color-gray-600);
+  color: var(--gzang-text-secondary);
+}
+
+.dark .n-checkbox__label {
+  color: var(--gzang-text-secondary);
 }
 
 .n-button--text {
-  color: var(--color-secondary);
+  color: var(--gzang-secondary);
 }
 
 // ===== 响应式设计 =====
@@ -400,47 +711,115 @@ body,
   .sidebar {
     @include sidebar-mobile;
   }
-
+  
   .main-content {
     @include main-content-mobile;
   }
-
+  
   .login-right-section {
     @include login-mobile;
   }
-
+  
   .login-form-card {
     @include login-form-card-mobile;
   }
 }
 
-// ===== 深色主题 =====
-@media (prefers-color-scheme: dark) {
-  :root {
-    @include theme-dark;
-  }
+// ===== 自定义滚动条 =====
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
 
-  .card {
-    @include card-dark;
-  }
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 4px;
+}
 
-  .form-input {
-    @include form-input-dark;
-  }
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
 
-  .table th {
-    @include table-header-dark;
-  }
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
 
-  .login-bg-gradient {
-    @include login-bg-gradient-dark;
-  }
+// Firefox滚动条
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
 
-  .login-form-title {
-    @include login-form-title-dark;
-  }
+// ===== 平滑滚动 =====
+html {
+  scroll-behavior: smooth;
+}
 
-  .login-form-subtitle {
-    @include login-form-subtitle-dark;
+// ===== Focus样式 =====
+:focus-visible {
+  outline: 2px solid var(--gzang-primary);
+  outline-offset: 2px;
+}
+
+// Naive UI 按钮已有主题内焦点样式，避免与全局 outline 叠加成粗黑框
+.n-button:focus-visible {
+  outline: none;
+}
+
+// ===== 选中文本样式 =====
+::selection {
+  background-color: rgba(15, 76, 92, 0.2);
+  color: var(--gzang-text-primary);
+}
+
+.dark ::selection {
+  background-color: rgba(15, 76, 92, 0.3);
+}
+
+// ===== Naive UI DataTable 全局居中覆盖 =====
+.n-data-table {
+  .n-data-table-th {
+    text-align: center !important;
+  }
+  .n-data-table-td {
+    text-align: center !important;
+  }
+  // 操作列按钮强制居中
+  .n-data-table-td--last-col,
+  .n-data-table-th--last-col {
+    text-align: center !important;
+  }
+}
+
+// ===== Naive UI Input/Search 组件深色主题边框修复 =====
+.dark, [data-theme="dark"] {
+  // 输入框边框
+  .n-input,
+  .n-input--focus,
+  .n-input:not(.n-input--disabled):hover {
+    .n-input__input-el,
+    .n-input__textarea-el {
+      border-color: var(--gzang-input-border) !important;
+    }
+  }
+  
+  // 搜索框
+  .n-input,
+  .n-base-selection {
+    --n-border: 1px solid var(--gzang-input-border) !important;
+    --n-border-hover: 1px solid var(--gzang-input-border-hover) !important;
+    --n-border-focus: 1px solid var(--gzang-input-focus-border) !important;
+    --n-box-shadow-focus: 0 0 0 2px var(--gzang-input-focus-shadow) !important;
+  }
+  
+  // 修复 n-input 内部 input 元素的边框
+  .n-input__input {
+    border-color: var(--gzang-input-border) !important;
+  }
+  
+  // Auto Complete 下拉面板
+  .n-base-select-menu {
+    --n-border: 1px solid var(--gzang-border) !important;
   }
 }

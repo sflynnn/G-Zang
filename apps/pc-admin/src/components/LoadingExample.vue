@@ -88,12 +88,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useLoadingStore, useLocalLoading } from '@/utils/loading';
+import { useLocalLoading } from '@/utils/loading';
 import { httpClient, HttpClient } from '@/utils/http';
 import api from '@/api';
-
-// Store
-const loadingStore = useLoadingStore();
 
 // 局部状态
 const globalLoading = ref(false);

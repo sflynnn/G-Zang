@@ -9,4 +9,12 @@ declare global {
     $dialog: DialogApi;
     $loadingBar: LoadingBarApi;
   }
+
+  // 扩展路由元信息
+  interface RouteMeta {
+    title?: string;
+    permission?: string;
+    role?: string;
+    requiresAuth?: boolean;
+  }
 }

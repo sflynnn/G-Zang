@@ -3,16 +3,16 @@
     <div class="not-found-content">
       <n-result
         status="404"
-        title="页面未找到"
-        description="抱歉，您访问的页面不存在或已被删除"
+        :title="t('messages.notFoundTitle')"
+        :description="t('messages.notFoundDesc')"
       >
         <template #footer>
           <n-space>
             <n-button @click="$router.go(-1)">
-              返回上一页
+              {{ t('messages.backPrev') }}
             </n-button>
             <n-button type="primary" @click="$router.push('/')">
-              返回首页
+              {{ t('messages.backHome') }}
             </n-button>
           </n-space>
         </template>
@@ -22,7 +22,8 @@
 </template>
 
 <script setup lang="ts">
-// 404页面组件
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 </script>
 
 <style scoped>

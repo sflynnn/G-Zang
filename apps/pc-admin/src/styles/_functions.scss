@@ -2,6 +2,9 @@
 // G-Zang SCSS Functions 库
 // ===========================================
 
+// 导入 sass:color 模块 (使用现代 API)
+@use "sass:color";
+
 // ===== 颜色函数 =====
 
 // 透明度混合函数 (避免与SCSS内置函数冲突)
@@ -9,22 +12,22 @@
   @return rgba($color, $alpha);
 }
 
-// 颜色亮度调整函数
+// 颜色亮度调整函数 (使用 sass:color 模块)
 @function lighten($color, $amount) {
-  @return adjust-color($color, $lightness: $amount);
+  @return color.adjust($color, $lightness: $amount);
 }
 
 @function darken($color, $amount) {
-  @return adjust-color($color, $lightness: -$amount);
+  @return color.adjust($color, $lightness: -$amount);
 }
 
 // 颜色饱和度调整函数
 @function saturate($color, $amount) {
-  @return adjust-color($color, $saturation: $amount);
+  @return color.adjust($color, $saturation: $amount);
 }
 
 @function desaturate($color, $amount) {
-  @return adjust-color($color, $saturation: -$amount);
+  @return color.adjust($color, $saturation: -$amount);
 }
 
 // ===== 间距函数 =====

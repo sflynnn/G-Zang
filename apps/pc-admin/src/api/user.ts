@@ -26,6 +26,6 @@ export const deleteUser = (id: number) => {
 };
 
 // 获取当前用户信息
-export const getCurrentUser = () => {
+export const getLoginUser = () => {
   return api.get('/api/v1/users/me');
 };

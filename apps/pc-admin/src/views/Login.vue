@@ -146,7 +146,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch, nextTick } from 'vue';
+import { ref, reactive, onMounted, watch, nextTick, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 // Icons are no longer needed in the simplified Apple-style design
@@ -162,12 +162,12 @@ const { t, locale } = useI18n();
 // 语言选项
 const languageOptions = [
   {
-    label: '中文',
-    key: 'zh'
+    label: computed(() => t('common.chinese')),
+    key: 'zh-CN'
   },
   {
-    label: 'English',
-    key: 'en'
+    label: computed(() => t('common.english')),
+    key: 'en-US'
   }
 ];
 
@@ -245,7 +245,7 @@ const handleSubmit = async () => {
   try {
     // 检查滑块验证
     if (!captchaVerified.value) {
-      window.$message?.warning('请先拖动滑块完成验证');
+      window.$message?.warning(t('login.captchaRequired'));
       return;
     }
 
@@ -256,17 +256,22 @@ const handleSubmit = async () => {
     // 调用真实API进行登录
     const response = await login(formData);
 
-    if ((response as any).code === 0) {
-      // 保存token和用户信息
-      const loginData = (response as any).data;
-      appStore.setToken(loginData.token);
+    if (response.code === 0) {
+      // 保存token和用户信息（含角色和权限）
+      const loginData = response.data;
+      appStore.setToken(loginData.token || '');
       appStore.setUser({
         userId: loginData.userId,
         username: loginData.username,
-        nickname: loginData.nickname,
+        nickname: loginData.nickname || loginData.username,
         avatar: loginData.avatar,
         roleId: loginData.roleId,
-        companyId: loginData.companyId
+        roleCode: loginData.roleCode,
+        roleName: loginData.roleName,
+        companyId: loginData.companyId,
+        companyName: loginData.companyName,
+        status: loginData.status,
+        permissions: loginData.permissions || []
       });
 
       // 如果选择记住我，保存用户名
@@ -283,22 +288,22 @@ const handleSubmit = async () => {
       sliderCaptchaRef.value?.reset();
 
       // 显示成功消息
-      window.$message?.success('登录成功！');
+      window.$message?.success(t('login.success'));
 
       // 跳转到首页
       router.push('/dashboard');
     } else {
       // 处理登录失败的情况
-      const errorMsg = (response as any).message || '登录失败，请重试';
-      console.error('登录失败:', errorMsg);
+      const errorMsg = response.message || t('login.loginFailed');
+      console.error('Login failed:', errorMsg);
       window.$message?.error(errorMsg);
       // 重置滑块验证
       captchaVerified.value = false;
       sliderCaptchaRef.value?.reset();
     }
   } catch (error: any) {
-    console.error('登录失败:', error);
-    window.$message?.error('登录失败，请检查网络连接或稍后重试');
+    console.error('Login failed:', error);
+    window.$message?.error(t('login.networkError'));
 
     // 处理表单验证错误或其他错误
     if (error.message) {

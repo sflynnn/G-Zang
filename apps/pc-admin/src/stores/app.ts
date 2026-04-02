@@ -3,31 +3,56 @@ import { ref, computed, watch } from 'vue';
 import { hasPermission, hasRole, getUserPermissions, getUserRole } from '@/utils/permission';
 
 export interface User {
-  id: number;
+  userId: number;
   username: string;
   nickname: string;
+  avatar?: string;
   roleId: number;
   roleCode: string;
   roleName: string;
-  permissions: string[];
   companyId?: number;
   companyName?: string;
-  avatar?: string;
   status: number;
+  permissions: string[];
 }
 
 export const useAppStore = defineStore('app', () => {
   // 应用状态
-  const isDark = ref(localStorage.getItem('admin_theme') === 'dark' || false);
+  const themeMode = ref<'light' | 'dark' | 'auto'>(
+    (localStorage.getItem('admin_theme_mode') as 'light' | 'dark' | 'auto') || 'light'
+  );
+  const isDark = ref(
+    localStorage.getItem('admin_theme_mode') === 'auto'
+      ? window.matchMedia('(prefers-color-scheme: dark)').matches
+      : localStorage.getItem('admin_theme') === 'dark'
+  );
   const loading = ref(false);
   const collapsed = ref(false);
-  const language = ref(localStorage.getItem('admin_language') || 'zh');
+  const language = ref(localStorage.getItem('admin_language') || 'zh-CN');
 
   // 用户信息
-  const user = ref<User | null>(null);
+  const user = ref<User | null>(JSON.parse(localStorage.getItem('admin_user') || 'null'));
   const token = ref(localStorage.getItem('admin_token') || '');
 
-  // 监听主题变化，应用到DOM
+  // 监听系统主题变化
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  const handleSystemThemeChange = (e: MediaQueryListEvent | MediaQueryList) => {
+    if (themeMode.value === 'auto') {
+      isDark.value = e.matches;
+    }
+  };
+  mediaQuery.addEventListener('change', handleSystemThemeChange);
+
+  // 监听用户信息变化，同步持久化
+  watch(user, (newUser) => {
+    if (newUser) {
+      localStorage.setItem('admin_user', JSON.stringify(newUser));
+    } else {
+      localStorage.removeItem('admin_user');
+    }
+  }, { deep: true });
+
+  // 监听主题模式变化，应用到DOM
   watch(isDark, (newDark) => {
     const html = document.documentElement;
     if (newDark) {
@@ -38,15 +63,30 @@ export const useAppStore = defineStore('app', () => {
     localStorage.setItem('admin_theme', newDark ? 'dark' : 'light');
   }, { immediate: true });
 
-  // 设置暗色主题
+  // 设置主题模式
+  const setThemeMode = (mode: 'light' | 'dark' | 'auto') => {
+    themeMode.value = mode;
+    localStorage.setItem('admin_theme_mode', mode);
+    if (mode === 'auto') {
+      isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    } else {
+      isDark.value = mode === 'dark';
+    }
+  };
+
+  // 设置暗色主题（兼容旧接口）
   const setDarkTheme = (dark: boolean) => {
-    isDark.value = dark;
+    setThemeMode(dark ? 'dark' : 'light');
   };
 
   // 设置语言
   const setLanguage = (lang: string) => {
     language.value = lang;
     localStorage.setItem('admin_language', lang);
+    // 同步更新 i18n locale
+    import('@/i18n').then(({ default: i18n }) => {
+      i18n.global.locale.value = lang as 'zh-CN' | 'en-US';
+    });
   };
 
   // 设置加载状态
@@ -79,7 +119,7 @@ export const useAppStore = defineStore('app', () => {
     user.value = null;
     token.value = '';
     localStorage.removeItem('admin_token');
-    // 注意：不清除记住我相关的localStorage，让用户下次登录时保持选择
+    localStorage.removeItem('admin_user');
   };
 
   // 计算属性
@@ -96,6 +136,7 @@ export const useAppStore = defineStore('app', () => {
   return {
     // 状态
     isDark,
+    themeMode,
     loading,
     collapsed,
     language,
@@ -110,6 +151,7 @@ export const useAppStore = defineStore('app', () => {
     isAdmin,
 
     // 方法
+    setThemeMode,
     setDarkTheme,
     setLanguage,
     setLoading,

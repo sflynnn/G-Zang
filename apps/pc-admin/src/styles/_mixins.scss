@@ -112,23 +112,27 @@
 @mixin form-input-base {
   width: 100%;
   padding: var(--spacing-3);
-  border: 1px solid var(--color-gray-300);
+  border: 1px solid var(--gzang-input-border, var(--color-gray-300));
   border-radius: var(--border-radius-lg);
   font-size: var(--font-size-base);
   transition: all var(--transition-fast);
   background: var(--color-surface);
   font-family: var(--font-family-sans);
+  
+  &:hover {
+    border-color: var(--gzang-input-border-hover, var(--color-gray-400));
+  }
 }
 
 @mixin form-input-focus {
   outline: none;
-  border-color: var(--color-secondary);
-  box-shadow: 0 0 0 3px rgba($color-secondary, 0.15);
+  border-color: var(--gzang-input-focus-border, var(--color-secondary));
+  box-shadow: 0 0 0 3px var(--gzang-input-focus-shadow, rgba($color-secondary, 0.15));
 }
 
 @mixin form-input-dark {
   background: var(--color-surface);
-  border-color: var(--color-gray-600);
+  border-color: var(--gzang-input-border, var(--color-gray-600));
   color: var(--color-gray-100);
 }
 
@@ -173,6 +177,34 @@
   }
 }
 
+@mixin table-dark {
+  background: var(--color-surface);
+  border-color: var(--color-gray-700);
+
+  thead tr {
+    background: var(--color-gray-800);
+    color: var(--color-gray-200);
+  }
+
+  tbody tr {
+    border-color: var(--color-gray-700);
+
+    &:hover {
+      background: var(--color-gray-700);
+    }
+  }
+
+  td {
+    color: var(--color-gray-200);
+    border-color: var(--color-gray-700);
+  }
+
+  th {
+    color: var(--color-gray-200);
+    border-color: var(--color-gray-700);
+  }
+}
+
 // ===== 状态标签 Mixins =====
 @mixin status-badge-base {
   padding: var(--spacing-1) var(--spacing-2);
@@ -204,7 +236,6 @@
 @mixin sidebar-base {
   background: var(--color-primary);
   color: white;
-  width: 240px;
   min-height: 100vh;
   position: fixed;
   left: 0;
@@ -221,7 +252,6 @@
 }
 
 @mixin main-content-base {
-  margin-left: 240px;
   background: var(--color-background);
   min-height: 100vh;
   padding: var(--spacing-6);

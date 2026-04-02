@@ -20,6 +20,10 @@ export default defineConfig({
     target: 'esnext'
   },
   css: {
-    postcss: './postcss.config.js'
+    preprocessorOptions: {
+      scss: {
+        api: 'modern-compiler'  // 使用新版 Sass API，消除了 legacy JS API 警告
+      }
+    }
   }
 });
