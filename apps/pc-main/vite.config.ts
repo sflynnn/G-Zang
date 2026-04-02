@@ -19,7 +19,8 @@ export default defineConfig({
   css: {
     preprocessorOptions: {
       scss: {
-        additionalData: '@import "@/styles/variables.scss";'
+        api: 'modern-compiler',  // 使用新版 Sass API，消除 legacy JS API 警告
+        additionalData: `@use "@/styles/variables.scss" as *;`
       }
     }
   },

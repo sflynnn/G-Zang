@@ -2,16 +2,20 @@
 // G-Zang PC-Main SCSS Functions 库
 // ===========================================
 
+// 导入 sass:color 模块 (使用现代 API)
+@use "sass:color";
+
 @function color-alpha($color, $alpha) {
   @return rgba($color, $alpha);
 }
 
+// 颜色亮度调整函数 (使用 sass:color 模块)
 @function lighten($color, $amount) {
-  @return adjust-color($color, $lightness: $amount);
+  @return color.adjust($color, $lightness: $amount);
 }
 
 @function darken($color, $amount) {
-  @return adjust-color($color, $lightness: -$amount);
+  @return color.adjust($color, $lightness: -$amount);
 }
 
 @function rem($px) {

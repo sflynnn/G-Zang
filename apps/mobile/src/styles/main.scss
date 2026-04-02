@@ -1,5 +1,8 @@
 /* G-Zang 移动端主样式文件 */
 
+// 导入 sass:color 模块 (使用现代 API)
+@use "sass:color";
+
 // 导入全局变量和混入（使用模块化 @use，保持短期兼容 via `as *`）
 @use './variables' as *;
 @use './mixins' as *;
@@ -76,15 +79,15 @@ body {
   }
 
   &-success {
-    @include button-variant(var(--success-color), darken(#07c160, 10%));
+    @include button-variant(var(--success-color), color.adjust(#07c160, $lightness: -10%));
   }
 
   &-warning {
-    @include button-variant(var(--warning-color), darken(#ff976a, 10%));
+    @include button-variant(var(--warning-color), color.adjust(#ff976a, $lightness: -10%));
   }
 
   &-danger {
-    @include button-variant(var(--error-color), darken(#ff4d4f, 10%));
+    @include button-variant(var(--error-color), color.adjust(#ff4d4f, $lightness: -10%));
   }
 
   &:disabled {

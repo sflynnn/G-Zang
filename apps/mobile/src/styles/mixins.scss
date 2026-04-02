@@ -1,5 +1,8 @@
 /* G-Zang 移动端 SCSS 混入 */
 
+// 导入 sass:color 模块 (使用现代 API)
+@use "sass:color";
+
 // 布局混入
 @mixin flex-center {
   display: flex;
@@ -46,7 +49,7 @@
   }
 
   &:active {
-    background-color: darken($color, 10%);
+    background-color: color.adjust($color, $lightness: -10%);
   }
 }
 
