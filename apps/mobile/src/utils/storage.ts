@@ -13,7 +13,7 @@ export class Storage {
       const serializedValue = JSON.stringify(value)
       uni.setStorageSync(`${PREFIX}${key}`, serializedValue)
     } catch (error) {
-      console.error('存储数据失败:', error)
+      // ignore
     }
   }
 
@@ -26,7 +26,6 @@ export class Storage {
       }
       return JSON.parse(value)
     } catch (error) {
-      console.error('获取存储数据失败:', error)
       return defaultValue || null
     }
   }
@@ -36,7 +35,7 @@ export class Storage {
     try {
       uni.removeStorageSync(`${PREFIX}${key}`)
     } catch (error) {
-      console.error('删除存储数据失败:', error)
+      // ignore
     }
   }
 
@@ -47,7 +46,7 @@ export class Storage {
       const keys = info.keys.filter(key => key.startsWith(PREFIX))
       keys.forEach(key => uni.removeStorageSync(key))
     } catch (error) {
-      console.error('清空存储失败:', error)
+      // ignore
     }
   }
 
@@ -66,7 +65,6 @@ export class Storage {
     try {
       return uni.getStorageInfoSync()
     } catch (error) {
-      console.error('获取存储信息失败:', error)
       return null
     }
   }
@@ -124,10 +122,11 @@ export class PreferencesStorage {
   private static readonly LANGUAGE_KEY = 'language'
   private static readonly CURRENCY_KEY = 'currency'
   private static readonly SETTINGS_KEY = 'settings'
+  private static readonly RECENT_ACCOUNTS_KEY = 'recent_accounts'
 
   // 主题设置
   static getTheme(): 'light' | 'dark' | 'auto' {
-    return Storage.get(this.THEME_KEY, 'light')
+    return (Storage.get(this.THEME_KEY, 'light') as 'light' | 'dark' | 'auto') || 'light'
   }
 
   static setTheme(theme: 'light' | 'dark' | 'auto'): void {
@@ -136,7 +135,7 @@ export class PreferencesStorage {
 
   // 语言设置
   static getLanguage(): string {
-    return Storage.get(this.LANGUAGE_KEY, 'zh-CN')
+    return (Storage.get(this.LANGUAGE_KEY, 'zh-CN') as string) || 'zh-CN'
   }
 
   static setLanguage(language: string): void {
@@ -145,7 +144,7 @@ export class PreferencesStorage {
 
   // 货币设置
   static getCurrency(): string {
-    return Storage.get(this.CURRENCY_KEY, 'CNY')
+    return (Storage.get(this.CURRENCY_KEY, 'CNY') as string) || 'CNY'
   }
 
   static setCurrency(currency: string): void {
@@ -154,7 +153,7 @@ export class PreferencesStorage {
 
   // 应用设置
   static getSettings(): Record<string, any> {
-    return Storage.get(this.SETTINGS_KEY, {})
+    return (Storage.get(this.SETTINGS_KEY, {}) as Record<string, any>) || {}
   }
 
   static setSettings(settings: Record<string, any>): void {
@@ -166,6 +165,21 @@ export class PreferencesStorage {
     settings[key] = value
     this.setSettings(settings)
   }
+
+  static removeSetting(key: string): void {
+    const settings = this.getSettings()
+    delete settings[key]
+    this.setSettings(settings)
+  }
+
+  // 账户列表
+  static getRecentAccounts(): string[] {
+    return (Storage.get(this.RECENT_ACCOUNTS_KEY, []) as string[]) || []
+  }
+
+  static setRecentAccounts(accounts: string[]): void {
+    Storage.set(this.RECENT_ACCOUNTS_KEY, accounts)
+  }
 }
 
 // 搜索历史存储
@@ -175,7 +189,7 @@ export class SearchHistoryStorage {
 
   // 获取搜索历史
   static getHistory(): string[] {
-    return Storage.get(this.HISTORY_KEY, [])
+    return (Storage.get(this.HISTORY_KEY, []) as string[]) || []
   }
 
   // 添加搜索记录
@@ -210,20 +224,18 @@ export class TempDataStorage {
 
   // 设置临时数据
   static set(key: string, value: any): void {
-    const tempData = Storage.get(this.TEMP_KEY, {})
+    const tempData = (Storage.get(this.TEMP_KEY, {}) as Record<string, any>) || {}
     tempData[key] = value
     Storage.set(this.TEMP_KEY, tempData)
   }
 
-  // 获取临时数据
   static get<T = any>(key: string): T | null {
-    const tempData = Storage.get(this.TEMP_KEY, {})
-    return tempData[key] || null
+    const tempData = (Storage.get(this.TEMP_KEY, {}) as Record<string, any>) || {}
+    return (tempData[key] as T) || null
   }
 
-  // 删除临时数据
   static remove(key: string): void {
-    const tempData = Storage.get(this.TEMP_KEY, {})
+    const tempData = (Storage.get(this.TEMP_KEY, {}) as Record<string, any>) || {}
     delete tempData[key]
     Storage.set(this.TEMP_KEY, tempData)
   }

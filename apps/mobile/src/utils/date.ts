@@ -4,11 +4,13 @@ import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import isBetween from 'dayjs/plugin/isBetween'
+import quarterOfYear from 'dayjs/plugin/quarterOfYear'
 
 // 配置 dayjs
 dayjs.locale('zh-cn')
 dayjs.extend(relativeTime)
 dayjs.extend(isBetween)
+dayjs.extend(quarterOfYear)
 
 // 日期格式常量
 export const DATE_FORMATS = {

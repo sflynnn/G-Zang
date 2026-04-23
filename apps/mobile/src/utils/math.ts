@@ -13,7 +13,7 @@ export class MoneyCalculator {
 
   // 加法
   static add(...values: (number | string)[]): number {
-    return values.reduce((sum, value) =>
+    return values.reduce<number>((sum, value) =>
       this.createDecimal(sum).add(this.createDecimal(value)).toNumber(),
       0
     )
@@ -26,7 +26,7 @@ export class MoneyCalculator {
 
   // 乘法
   static multiply(...values: (number | string)[]): number {
-    return values.reduce((product, value) =>
+    return values.reduce<number>((product, value) =>
       this.createDecimal(product).mul(this.createDecimal(value)).toNumber(),
       1
     )
@@ -286,7 +286,7 @@ export class FinanceCalculator {
 }
 
 // 数字格式化
-export const formatNumber = (value: number | string, options: {
+export const formatNumberAdvanced = (value: number | string, options: {
   decimals?: number
   thousands?: boolean
   prefix?: string

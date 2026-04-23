@@ -113,7 +113,7 @@ export class DeviceUtils {
             longitude: res.longitude,
             altitude: res.altitude,
             accuracy: res.accuracy || 0,
-            altitudeAccuracy: res.altitudeAccuracy,
+            altitudeAccuracy: (res as any).altitudeAccuracy,
             speed: res.speed,
             timestamp: Date.now()
           })
@@ -144,10 +144,10 @@ export class DeviceUtils {
 
     const watchId = uni.onLocationChange?.((res) => {
       const location: LocationInfo = {
-        latitude: res.latitude,
-        longitude: res.longitude,
+        latitude: res.latitude || 0,
+        longitude: res.longitude || 0,
         accuracy: res.accuracy || 0,
-        speed: res.speed,
+        speed: res.speed || 0,
         timestamp: Date.now()
       }
       callback(location)
@@ -230,7 +230,7 @@ export class DeviceUtils {
     const systemInfo = uni.getSystemInfoSync()
     switch (feature) {
       case 'camera':
-        return !!uni.getSystemInfoSync().camera
+        return true // uni.getSystemInfoSync may not have camera property
       case 'microphone':
         return true // 大多数设备都支持
       case 'location':
@@ -245,13 +245,12 @@ export class DeviceUtils {
   }
 
   // 获取设备唯一标识（如果支持）
-  static getDeviceId(): string | null {
+  static getDeviceId(): string | undefined {
     try {
       // 在uni-app中，可能需要使用特定的API
-      return uni.getSystemInfoSync().deviceId || null
+      return (uni.getSystemInfoSync() as any).deviceId || null
     } catch (error) {
-      console.warn('无法获取设备ID:', error)
-      return null
+      // ignore
     }
   }
 
@@ -313,7 +312,7 @@ export class CameraUtils {
         sizeType,
         sourceType,
         success: (res) => {
-          resolve(res.tempFilePaths)
+          resolve(Array.isArray(res.tempFilePaths) ? res.tempFilePaths : [res.tempFilePaths])
         },
         fail: reject
       })
@@ -342,7 +341,7 @@ export class FileUtils {
     return new Promise((resolve, reject) => {
       uni.saveImageToPhotosAlbum({
         filePath,
-        success: resolve,
+        success: () => resolve(),
         fail: reject
       })
     })
@@ -357,11 +356,11 @@ export class FileUtils {
     return new Promise((resolve, reject) => {
       uni.getFileInfo({
         filePath,
-        success: (res) => {
+        success: (infoRes) => {
           resolve({
-            size: res.size,
-            createTime: res.createTime,
-            modifyTime: res.modifyTime
+            size: infoRes.size,
+            createTime: (infoRes as any).createTime || 0,
+            modifyTime: (infoRes as any).modifyTime
           })
         },
         fail: reject

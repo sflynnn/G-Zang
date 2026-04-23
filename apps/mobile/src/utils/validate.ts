@@ -111,7 +111,7 @@ export const validateUsername = (username: string): {
 export const createValidator = (rules: Array<{
   field: string
   required?: boolean
-  validator?: (value: any) => boolean
+  validator?: (value: any, data?: Record<string, any>) => boolean
   message: string
 }>) => {
   return (data: Record<string, any>) => {
@@ -212,7 +212,7 @@ export const validateRegisterForm = createValidator([
   {
     field: 'confirmPassword',
     required: true,
-    validator: (value, data) => value === data.password,
+    validator: (value, data) => value === (data as any)?.password,
     message: '两次输入的密码不一致'
   }
 ])

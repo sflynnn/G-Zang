@@ -167,7 +167,7 @@ export class SystemPermission {
     return new Promise((resolve) => {
       uni.getSetting({
         success: (res) => {
-          resolve(res.authSetting?.[scope] || false)
+          resolve((res.authSetting as unknown as Record<string, boolean>)?.[scope] || false)
         },
         fail: () => resolve(false)
       })
