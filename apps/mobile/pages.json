@@ -4,37 +4,202 @@
       "path": "pages/home/index",
       "style": {
         "navigationBarTitleText": "首页",
-        "enablePullDownRefresh": true,
-        "backgroundColor": "#f5f5f5"
+        "enablePullDownRefresh": false,
+        "backgroundColor": "#F8F9FA"
       }
     },
     {
       "path": "pages/accounting/index",
       "style": {
         "navigationBarTitleText": "记账",
-        "backgroundColor": "#f5f5f5"
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/accounting/quick",
+      "style": {
+        "navigationBarTitleText": "快速记账",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/accounting/voice",
+      "style": {
+        "navigationBarTitleText": "语音记账",
+        "navigationStyle": "custom",
+        "backgroundColor": "#0F4C5C"
+      }
+    },
+    {
+      "path": "pages/accounting/camera",
+      "style": {
+        "navigationBarTitleText": "拍照记账",
+        "navigationStyle": "custom",
+        "backgroundColor": "#111111"
+      }
+    },
+    {
+      "path": "pages/accounting/manual",
+      "style": {
+        "navigationBarTitleText": "手动记账",
+        "backgroundColor": "#F8F9FA"
       }
     },
     {
       "path": "pages/bills/index",
       "style": {
         "navigationBarTitleText": "账单",
-        "enablePullDownRefresh": true,
-        "backgroundColor": "#f5f5f5"
+        "enablePullDownRefresh": false,
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/bills/detail",
+      "style": {
+        "navigationBarTitleText": "账单详情",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/transactions/index",
+      "style": {
+        "navigationBarTitleText": "交易记录",
+        "enablePullDownRefresh": false,
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/transactions/detail",
+      "style": {
+        "navigationBarTitleText": "交易详情",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/transactions/edit",
+      "style": {
+        "navigationBarTitleText": "编辑交易",
+        "backgroundColor": "#F8F9FA"
       }
     },
     {
       "path": "pages/analysis/index",
       "style": {
         "navigationBarTitleText": "统计",
-        "backgroundColor": "#f5f5f5"
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/analysis/chart",
+      "style": {
+        "navigationBarTitleText": "图表分析",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/analysis/report",
+      "style": {
+        "navigationBarTitleText": "财务报告",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/accounts/index",
+      "style": {
+        "navigationBarTitleText": "账户管理",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/accounts/create",
+      "style": {
+        "navigationBarTitleText": "新增账户",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/accounts/detail",
+      "style": {
+        "navigationBarTitleText": "账户详情",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/categories/index",
+      "style": {
+        "navigationBarTitleText": "分类管理",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/categories/create",
+      "style": {
+        "navigationBarTitleText": "新增分类",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/budget/index",
+      "style": {
+        "navigationBarTitleText": "预算管理",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/budget/create",
+      "style": {
+        "navigationBarTitleText": "新增预算",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/books/index",
+      "style": {
+        "navigationBarTitleText": "我的账本",
+        "enablePullDownRefresh": false,
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/books/create",
+      "style": {
+        "navigationBarTitleText": "创建账本",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/books/detail",
+      "style": {
+        "navigationBarTitleText": "账本详情",
+        "backgroundColor": "#F8F9FA"
       }
     },
     {
       "path": "pages/profile/index",
       "style": {
         "navigationBarTitleText": "我的",
-        "backgroundColor": "#f5f5f5"
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/profile/edit",
+      "style": {
+        "navigationBarTitleText": "编辑资料",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/settings/index",
+      "style": {
+        "navigationBarTitleText": "设置",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/settings/theme",
+      "style": {
+        "navigationBarTitleText": "主题设置",
+        "backgroundColor": "#F8F9FA"
       }
     },
     {
@@ -44,36 +209,23 @@
         "navigationStyle": "custom",
         "backgroundColor": "#ffffff"
       }
-    },
-    {
-      "path": "pages/accounting/confirm",
-      "style": {
-        "navigationBarTitleText": "确认记账",
-        "backgroundColor": "#f5f5f5"
-      }
-    },
-    {
-      "path": "pages/bills/detail",
-      "style": {
-        "navigationBarTitleText": "账单详情",
-        "backgroundColor": "#f5f5f5"
-      }
     }
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "G-Zang",
-    "navigationBarBackgroundColor": "#ffffff",
-    "backgroundColor": "#f5f5f5",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#F8F9FA",
     "backgroundTextStyle": "dark",
     "enablePullDownRefresh": false,
     "onReachBottomDistance": 50
   },
   "tabBar": {
-    "color": "#7A7E83",
-    "selectedColor": "#1989fa",
+    "custom": true,
+    "color": "#6B7280",
+    "selectedColor": "#0F4C5C",
     "borderStyle": "black",
-    "backgroundColor": "#ffffff",
+    "backgroundColor": "#FFFFFF",
     "list": [
       {
         "pagePath": "pages/home/index",

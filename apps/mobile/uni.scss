@@ -328,15 +328,12 @@ body {
   background-color: var(--background-color);
 }
 
-.uni-tabbar {
-  background-color: var(--background-white);
-  border-top: 1px solid var(--border-color);
-}
-
-.uni-tabbar__item {
-  color: var(--text-secondary);
-}
-
-.uni-tabbar__item--active {
-  color: var(--primary-color);
+/* 隐藏原生 tabBar（使用自定义 AppleTabBar） */
+.uni-tabbar,
+.uni-tab-bar,
+uni-tabbar,
+uni-tab-bar,
+[class*="uni-tab"],
+[class*="uni-_tab"] {
+  display: none !important;
 }

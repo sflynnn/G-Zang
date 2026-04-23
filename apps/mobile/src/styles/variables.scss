@@ -1,38 +1,51 @@
-/* G-Zang 移动端 CSS 变量定义 */
+/* G-Zang 移动端 CSS 变量定义 - 品牌规范版 */
 
-// 主色调
-$primary-color: #1989fa;
-$primary-hover: #4da8ff;
-$primary-active: #0066cc;
+// ================== 品牌色 ==================
+// 归藏青 - 品牌主色
+$gzang-primary: #0F4C5C;
+$gzang-primary-light: #186a7d;
+$gzang-primary-dark: #0a3644;
 
-// 成功色
-$success-color: #07c160;
-$success-light: #e8f5e8;
+// 琉璃金 - 品牌辅色
+$gzang-secondary: #FB8B24;
+$gzang-secondary-light: #fca03d;
+$gzang-secondary-dark: #e67a1a;
 
-// 警告色
-$warning-color: #ff976a;
-$warning-light: #fff2e8;
+// ================== 功能色 ==================
+$gzang-success: #06D6A0;  // 利润绿
+$gzang-danger: #EF476F;   // 支出红
+$gzang-warning: #FFD166;  // 警示黄
+$gzang-info: #118AB2;     // 信息蓝
 
-// 错误色
-$error-color: #ff4d4f;
-$error-light: #ffebe9;
+// ================== 中性色 ==================
+$gzang-bg: #F8F9FA;       // 浅灰背景
+$gzang-surface: #FFFFFF;  // 卡片背景
+$gzang-text-primary: #1F2937;
+$gzang-text-secondary: #6B7280;
+$gzang-border: #E5E7EB;
 
-// 中性色
-$text-primary: #262626;
-$text-secondary: #595959;
+// ================== 兼容旧变量 ==================
+$primary-color: $gzang-primary;
+$primary-hover: $gzang-primary-light;
+$primary-active: $gzang-primary-dark;
+
+$success-color: $gzang-success;
+$warning-color: $gzang-warning;
+$error-color: $gzang-danger;
+
+$text-primary: $gzang-text-primary;
+$text-secondary: $gzang-text-secondary;
 $text-disabled: #bfbfbf;
 $text-placeholder: #d9d9d9;
 
-// 边框色
-$border-color: #e5e5e5;
+$border-color: $gzang-border;
 $border-light: #f0f0f0;
 
-// 背景色
-$background-color: #f5f5f5;
+$background-color: $gzang-bg;
 $background-light: #fafafa;
-$background-white: #ffffff;
+$background-white: $gzang-surface;
 
-// 间距系统
+// ================== 间距系统 ==================
 $spacing-xs: 4px;
 $spacing-sm: 8px;
 $spacing-md: 16px;
@@ -40,18 +53,19 @@ $spacing-lg: 24px;
 $spacing-xl: 32px;
 $spacing-xxl: 48px;
 
-// 圆角
+// ================== 圆角 ==================
 $border-radius-sm: 4px;
 $border-radius-md: 8px;
 $border-radius-lg: 12px;
 $border-radius-xl: 16px;
 
-// 阴影
-$shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
-$shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
-$shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
+// ================== 阴影 ==================
+$shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+$shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+$shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+$shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 
-// 字体大小
+// ================== 字体大小 ==================
 $font-size-xs: 12px;
 $font-size-sm: 14px;
 $font-size-md: 16px;
@@ -59,53 +73,58 @@ $font-size-lg: 18px;
 $font-size-xl: 20px;
 $font-size-xxl: 24px;
 
-// 字体重量
+// ================== 字体重量 ==================
 $font-weight-normal: 400;
 $font-weight-medium: 500;
 $font-weight-semibold: 600;
 $font-weight-bold: 700;
 
-// CSS 变量导出
+// ================== CSS 变量导出 ==================
 :root {
-  // 主色调
-  --primary-color: #{$primary-color};
-  --primary-hover: #{$primary-hover};
-  --primary-active: #{$primary-active};
+  // 归藏青
+  --gzang-primary: #{$gzang-primary};
+  --gzang-primary-light: #{$gzang-primary-light};
+  --gzang-primary-dark: #{$gzang-primary-dark};
 
-  // 成功色
-  --success-color: #{$success-color};
-  --success-light: #{$success-light};
+  // 琉璃金
+  --gzang-secondary: #{$gzang-secondary};
+  --gzang-secondary-light: #{$gzang-secondary-light};
+  --gzang-secondary-dark: #{$gzang-secondary-dark};
 
-  // 警告色
-  --warning-color: #{$warning-color};
-  --warning-light: #{$warning-light};
-
-  // 错误色
-  --error-color: #{$error-color};
-  --error-light: #{$error-light};
+  // 功能色
+  --gzang-success: #{$gzang-success};
+  --gzang-danger: #{$gzang-danger};
+  --gzang-warning: #{$gzang-warning};
+  --gzang-info: #{$gzang-info};
 
   // 中性色
+  --gzang-bg: #{$gzang-bg};
+  --gzang-surface: #{$gzang-surface};
+  --gzang-text-primary: #{$gzang-text-primary};
+  --gzang-text-secondary: #{$gzang-text-secondary};
+  --gzang-border: #{$gzang-border};
+
+  // 语义别名
+  --color-text: #{$gzang-text-primary};
+  --color-bg: #{$gzang-bg};
+  --color-cta: #{$gzang-secondary};
+
+  // 兼容旧变量
+  --primary-color: #{$primary-color};
+  --success-color: #{$success-color};
+  --warning-color: #{$warning-color};
+  --error-color: #{$error-color};
   --text-primary: #{$text-primary};
   --text-secondary: #{$text-secondary};
-  --text-disabled: #{$text-disabled};
-  --text-placeholder: #{$text-placeholder};
-
-  // 边框色
   --border-color: #{$border-color};
-  --border-light: #{$border-light};
-
-  // 背景色
   --background-color: #{$background-color};
-  --background-light: #{$background-light};
-  --background-white: #{$background-white};
 
-  // 间距系统
+  // 间距
   --spacing-xs: #{$spacing-xs};
   --spacing-sm: #{$spacing-sm};
   --spacing-md: #{$spacing-md};
   --spacing-lg: #{$spacing-lg};
   --spacing-xl: #{$spacing-xl};
-  --spacing-xxl: #{$spacing-xxl};
 
   // 圆角
   --border-radius-sm: #{$border-radius-sm};
@@ -131,4 +150,62 @@ $font-weight-bold: 700;
   --font-weight-medium: #{$font-weight-medium};
   --font-weight-semibold: #{$font-weight-semibold};
   --font-weight-bold: #{$font-weight-bold};
+
+  // 财务数字字体（等宽，确保垂直对齐）
+  --font-mono: 'Roboto Mono', 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
+
+  // Apple 风格 TabBar
+  --apple-tabbar-height: 84px;
+  --apple-glass-bg-strong: rgba(255, 255, 255, 0.85);
+  --apple-glass-bg-medium: rgba(255, 255, 255, 0.6);
+}
+
+// 深色主题
+[data-theme="dark"] {
+  // 归藏青
+  --gzang-primary: #0a3644;
+  --gzang-primary-light: #0F4C5C;
+  --gzang-primary-dark: #186a7d;
+
+  // 琉璃金
+  --gzang-secondary: #fca03d;
+  --gzang-secondary-light: #fb9d4e;
+  --gzang-secondary-dark: #FB8B24;
+
+  // 功能色
+  --gzang-success: #10e8a5;
+  --gzang-danger: #f16389;
+  --gzang-warning: #ffe066;
+  --gzang-info: #25a8cc;
+
+  // 中性色
+  --gzang-bg: #111827;
+  --gzang-surface: #1F2937;
+  --gzang-text-primary: #F9FAFB;
+  --gzang-text-secondary: #9CA3AF;
+  --gzang-border: #374151;
+
+  // 语义别名
+  --color-text: #F9FAFB;
+  --color-bg: #111827;
+
+  // 兼容旧变量
+  --primary-color: #0a3644;
+  --success-color: #10e8a5;
+  --warning-color: #ffe066;
+  --error-color: #f16389;
+  --text-primary: #F9FAFB;
+  --text-secondary: #9CA3AF;
+  --border-color: #374151;
+  --background-color: #111827;
+  --background-white: #1F2937;
+  --text-disabled: #6B7280;
+  --text-placeholder: #4B5563;
+
+  // 页面背景
+  background-color: var(--gzang-bg);
+
+  // Apple 风格 TabBar - 深色模式
+  --apple-glass-bg-strong: rgba(30, 30, 30, 0.85);
+  --apple-glass-bg-medium: rgba(30, 30, 30, 0.6);
 }
