@@ -59,6 +59,8 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/**").permitAll()
                 // 允许访问登录和注册接口
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/register").permitAll()
+                .requestMatchers("/api/admin/auth/**").permitAll()
+                .requestMatchers("/api/mobile/auth/login", "/api/mobile/auth/register").permitAll()
                 // 其他请求需要认证
                 .anyRequest().authenticated()
                 )

@@ -31,6 +31,12 @@ public class Transaction extends BaseEntity {
     private Long companyId;
 
     /**
+     * 账本ID
+     */
+    @TableField("book_id")
+    private Long bookId;
+
+    /**
      * 交易金额
      */
     @TableField("amount")

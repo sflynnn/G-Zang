@@ -27,6 +27,7 @@ public interface TransactionMapper extends BaseMapper<Transaction> {
      * @param endTime 结束时间
      * @param type 交易类型
      * @param categoryId 分类ID
+     * @param bookId 账本ID
      * @return 分页结果
      */
     IPage<Transaction> selectTransactionPage(
@@ -36,7 +37,8 @@ public interface TransactionMapper extends BaseMapper<Transaction> {
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime,
             @Param("type") Integer type,
-            @Param("categoryId") Long categoryId);
+            @Param("categoryId") Long categoryId,
+            @Param("bookId") Long bookId);
 
     /**
      * 统计用户交易汇总
@@ -45,13 +47,15 @@ public interface TransactionMapper extends BaseMapper<Transaction> {
      * @param companyId 公司ID（可选）
      * @param startTime 开始时间
      * @param endTime 结束时间
+     * @param bookId 账本ID
      * @return 汇总信息
      */
     TransactionSummary selectTransactionSummary(
             @Param("userId") Long userId,
             @Param("companyId") Long companyId,
             @Param("startTime") LocalDateTime startTime,
-            @Param("endTime") LocalDateTime endTime);
+            @Param("endTime") LocalDateTime endTime,
+            @Param("bookId") Long bookId);
 
     /**
      * 按分类统计交易金额
@@ -61,6 +65,7 @@ public interface TransactionMapper extends BaseMapper<Transaction> {
      * @param startTime 开始时间
      * @param endTime 结束时间
      * @param type 交易类型
+     * @param bookId 账本ID
      * @return 分类统计列表
      */
     List<CategorySummary> selectCategorySummary(
@@ -68,7 +73,8 @@ public interface TransactionMapper extends BaseMapper<Transaction> {
             @Param("companyId") Long companyId,
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime,
-            @Param("type") Integer type);
+            @Param("type") Integer type,
+            @Param("bookId") Long bookId);
 
     /**
      * 获取月度收支趋势

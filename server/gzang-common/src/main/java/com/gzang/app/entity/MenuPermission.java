@@ -32,10 +32,4 @@ public class MenuPermission {
      */
     @TableField("permission_id")
     private Long permissionId;
-
-    /**
-     * 角色ID（用于角色-菜单权限关联）
-     */
-    @TableField("role_id")
-    private Long roleId;
 }

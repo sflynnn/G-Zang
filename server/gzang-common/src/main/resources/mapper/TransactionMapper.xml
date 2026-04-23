@@ -19,6 +19,9 @@
         <if test="endTime != null">
             AND transaction_time &lt;= #{endTime}
         </if>
+        <if test="bookId != null">
+            AND book_id = #{bookId}
+        </if>
     </select>
 
     <!-- 分页查询交易记录 -->
@@ -40,6 +43,9 @@
         <if test="categoryId != null">
             AND category_id = #{categoryId}
         </if>
+        <if test="bookId != null">
+            AND book_id = #{bookId}
+        </if>
         ORDER BY transaction_time DESC
     </select>
 
@@ -59,6 +65,9 @@
         </if>
         <if test="type != null">
             AND type = #{type}
+        </if>
+        <if test="bookId != null">
+            AND book_id = #{bookId}
         </if>
         GROUP BY category_id ORDER BY totalAmount DESC
     </select>

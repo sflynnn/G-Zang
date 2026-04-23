@@ -33,6 +33,9 @@ public class CreateTransactionDTO {
     @NotNull(message = "账户ID不能为空")
     private Long accountId;
 
+    @Schema(description = "账本ID", example = "1")
+    private Long bookId;
+
     @Schema(description = "交易时间", example = "2026-03-28T10:30:00")
     private LocalDateTime transactionTime;
 
@@ -70,6 +73,14 @@ public class CreateTransactionDTO {
 
     public void setAccountId(Long accountId) {
         this.accountId = accountId;
+    }
+
+    public Long getBookId() {
+        return bookId;
+    }
+
+    public void setBookId(Long bookId) {
+        this.bookId = bookId;
     }
 
     public LocalDateTime getTransactionTime() {

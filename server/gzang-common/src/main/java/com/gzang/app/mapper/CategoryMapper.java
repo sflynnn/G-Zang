@@ -24,11 +24,11 @@ public interface CategoryMapper extends BaseMapper<Category> {
      * @param type 类型（可选）
      * @return 分类列表
      */
-    @Select("SELECT * FROM t_category WHERE " +
+    @Select("<script>SELECT * FROM t_category WHERE " +
             "(user_id = #{userId} OR (user_id IS NULL AND company_id IS NULL)) " +
-            "#{companyId != null ? 'OR (company_id IS NULL OR company_id = #{companyId})' : ''} " +
-            "#{type != null ? 'AND type = #{type}' : ''} " +
-            "ORDER BY parent_id ASC, id ASC")
+            "<if test='companyId != null'>OR company_id = #{companyId}</if> " +
+            "<if test='type != null'>AND type = #{type}</if> " +
+            "ORDER BY parent_id ASC, id ASC</script>")
     List<Category> selectCategoriesByUserId(@Param("userId") Long userId, @Param("companyId") Long companyId, @Param("type") Integer type);
 
     /**
@@ -66,11 +66,11 @@ public interface CategoryMapper extends BaseMapper<Category> {
      * @param excludeId 排除的分类ID（用于更新时）
      * @return 是否重复
      */
-    @Select("SELECT COUNT(*) FROM t_category WHERE category_name = #{categoryName} " +
+    @Select("<script>SELECT COUNT(*) FROM t_category WHERE category_name = #{categoryName} " +
             "AND ((user_id = #{userId} AND user_id IS NOT NULL) " +
             "OR (company_id = #{companyId} AND company_id IS NOT NULL) " +
             "OR (user_id IS NULL AND company_id IS NULL)) " +
-            "#{excludeId != null ? 'AND id != #{excludeId}' : ''}")
+            "<if test='excludeId != null'>AND id != #{excludeId}</if></script>")
     int countByNameAndOwner(@Param("categoryName") String categoryName,
                            @Param("userId") Long userId,
                            @Param("companyId") Long companyId,
@@ -82,8 +82,8 @@ public interface CategoryMapper extends BaseMapper<Category> {
      * @param type 类型（可选）
      * @return 系统预设分类列表
      */
-    @Select("SELECT * FROM t_category WHERE is_system = 1 " +
-            "#{type != null ? 'AND type = #{type}' : ''} " +
-            "ORDER BY type ASC, parent_id ASC, id ASC")
+    @Select("<script>SELECT * FROM t_category WHERE is_system = 1 " +
+            "<if test='type != null'>AND type = #{type}</if> " +
+            "ORDER BY type ASC, parent_id ASC, id ASC</script>")
     List<Category> selectSystemCategories(@Param("type") Integer type);
 }

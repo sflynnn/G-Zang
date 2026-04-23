@@ -23,9 +23,9 @@ public interface AccountMapper extends BaseMapper<Account> {
      * @param companyId 公司ID（可选）
      * @return 账户列表
      */
-    @Select("SELECT * FROM t_account WHERE user_id = #{userId} " +
-            "#{companyId != null ? 'AND (company_id IS NULL OR company_id = #{companyId})' : ''} " +
-            "ORDER BY create_time DESC")
+    @Select("<script>SELECT * FROM t_account WHERE user_id = #{userId} " +
+            "<if test='companyId != null'>AND (company_id IS NULL OR company_id = #{companyId})</if> " +
+            "ORDER BY create_time DESC</script>")
     List<Account> selectAccountsByUserId(@Param("userId") Long userId, @Param("companyId") Long companyId);
 
     /**
@@ -50,7 +50,7 @@ public interface AccountMapper extends BaseMapper<Account> {
      * @param companyId 公司ID（可选）
      * @return 总余额
      */
-    @Select("SELECT COALESCE(SUM(balance), 0) FROM t_account WHERE user_id = #{userId} " +
-            "#{companyId != null ? 'AND (company_id IS NULL OR company_id = #{companyId})' : ''}")
+    @Select("<script>SELECT COALESCE(SUM(balance), 0) FROM t_account WHERE user_id = #{userId} " +
+            "<if test='companyId != null'>AND (company_id IS NULL OR company_id = #{companyId})</if></script>")
     java.math.BigDecimal selectTotalBalance(@Param("userId") Long userId, @Param("companyId") Long companyId);
 }
