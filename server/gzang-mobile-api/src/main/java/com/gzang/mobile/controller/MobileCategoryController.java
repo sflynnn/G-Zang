@@ -1,21 +1,19 @@
 package com.gzang.mobile.controller;
 
-import com.gzang.app.util.JwtUtil;
+import com.gzang.app.util.TenantContextHolder;
 import com.gzang.app.dto.category.CreateCategoryDTO;
 import com.gzang.app.entity.Category;
 import com.gzang.app.exception.BusinessException;
-import com.gzang.app.service.CategoryService;
+import com.gzang.mobile.service.CategoryService;
 import com.gzang.app.vo.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
 
 /**
@@ -32,11 +30,9 @@ public class MobileCategoryController {
     private static final Logger log = LoggerFactory.getLogger(MobileCategoryController.class);
 
     private final CategoryService categoryService;
-    private final JwtUtil jwtUtil;
 
-    public MobileCategoryController(CategoryService categoryService, JwtUtil jwtUtil) {
+    public MobileCategoryController(CategoryService categoryService) {
         this.categoryService = categoryService;
-        this.jwtUtil = jwtUtil;
     }
 
     /**
@@ -45,11 +41,10 @@ public class MobileCategoryController {
     @GetMapping
     @Operation(summary = "获取分类列表", description = "获取用户的分类列表")
     public Result<List<Category>> getCategoryList(
-            @Parameter(description = "类型 (1:收入, 2:支出)") @RequestParam(required = false) Integer type,
-            Principal principal) {
+            @Parameter(description = "类型 (1:收入, 2:支出)") @RequestParam(name = "type", required = false) Integer type) {
 
-        Long userId = jwtUtil.getUserIdFromToken(principal.getName());
-        Long companyId = jwtUtil.getCompanyIdFromToken(principal.getName());
+        Long userId = TenantContextHolder.getUserId();
+        Long companyId = TenantContextHolder.getCompanyId();
 
         List<Category> categories = categoryService.getCategoriesByUserId(userId, companyId, type);
         return Result.success(categories);
@@ -74,11 +69,11 @@ public class MobileCategoryController {
      */
     @PostMapping
     @Operation(summary = "创建分类", description = "新增一个记账分类")
-    public Result<Void> createCategory(@Validated @RequestBody CreateCategoryDTO dto, Principal principal) {
-        log.info("创建分类请求: user={}, categoryName={}", principal.getName(), dto.getCategoryName());
-
-        Long userId = jwtUtil.getUserIdFromToken(principal.getName());
-        Long companyId = jwtUtil.getCompanyIdFromToken(principal.getName());
+    public Result<Void> createCategory(@Validated @RequestBody CreateCategoryDTO dto) {
+        Long userId = TenantContextHolder.getUserId();
+        Long companyId = TenantContextHolder.getCompanyId();
+        
+        log.info("创建分类请求: userId={}, categoryName={}", userId, dto.getCategoryName());
 
         Category category = new Category();
         category.setCategoryName(dto.getCategoryName());
@@ -103,10 +98,10 @@ public class MobileCategoryController {
     @Operation(summary = "更新分类", description = "更新指定分类信息")
     public Result<Void> updateCategory(
             @Parameter(description = "分类ID") @PathVariable Long id,
-            @RequestBody com.gzang.app.dto.category.UpdateCategoryDTO dto,
-            Principal principal) {
+            @RequestBody com.gzang.app.dto.category.UpdateCategoryDTO dto) {
 
-        log.info("更新分类请求: id={}, user={}", id, principal.getName());
+        Long userId = TenantContextHolder.getUserId();
+        log.info("更新分类请求: id={}, userId={}", id, userId);
 
         Category category = new Category();
         category.setId(id);
@@ -132,11 +127,10 @@ public class MobileCategoryController {
     @DeleteMapping("/{id}")
     @Operation(summary = "删除分类", description = "删除指定分类")
     public Result<Void> deleteCategory(
-            @Parameter(description = "分类ID") @PathVariable Long id,
-            Principal principal) {
+            @Parameter(description = "分类ID") @PathVariable Long id) {
 
-        log.info("删除分类请求: id={}, user={}", id, principal.getName());
-        Long userId = jwtUtil.getUserIdFromToken(principal.getName());
+        Long userId = TenantContextHolder.getUserId();
+        log.info("删除分类请求: id={}, userId={}", id, userId);
 
         boolean success = categoryService.deleteCategory(id, userId);
         if (!success) {
@@ -153,7 +147,7 @@ public class MobileCategoryController {
     @GetMapping("/system")
     @Operation(summary = "获取系统预设分类", description = "获取系统预设的分类列表")
     public Result<List<Category>> getSystemCategories(
-            @Parameter(description = "类型 (1:收入, 2:支出)") @RequestParam(required = false) Integer type) {
+            @Parameter(description = "类型 (1:收入, 2:支出)") @RequestParam(name = "type", required = false) Integer type) {
 
         List<Category> systemCategories = categoryService.getSystemCategories(type);
         return Result.success(systemCategories);
@@ -164,16 +158,16 @@ public class MobileCategoryController {
      */
     @PostMapping("/init")
     @Operation(summary = "初始化用户分类", description = "为用户初始化默认分类（复制系统预设分类）")
-    public Result<Void> initUserCategories(Principal principal) {
-        log.info("初始化用户分类请求: user={}", principal.getName());
-        Long userId = jwtUtil.getUserIdFromToken(principal.getName());
+    public Result<Void> initUserCategories() {
+        Long userId = TenantContextHolder.getUserId();
+        log.info("初始化用户分类请求: userId={}", userId);
 
         boolean success = categoryService.initUserCategories(userId);
         if (!success) {
             throw new BusinessException(500, "初始化用户分类失败");
         }
 
-        log.info("用户分类初始化成功: user={}", principal.getName());
+        log.info("用户分类初始化成功: userId={}", userId);
         return Result.success();
     }
 }

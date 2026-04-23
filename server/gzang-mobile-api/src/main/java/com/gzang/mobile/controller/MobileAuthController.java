@@ -1,6 +1,7 @@
 package com.gzang.mobile.controller;
 
 import com.gzang.app.util.JwtUtil;
+import com.gzang.app.util.TenantContextHolder;
 import com.gzang.app.dto.LoginRequest;
 import com.gzang.app.dto.RegisterRequest;
 import com.gzang.app.entity.User;
@@ -16,8 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.security.Principal;
 
 /**
  * 移动端认证控制器
@@ -81,11 +80,11 @@ public class MobileAuthController {
      */
     @GetMapping("/current-user")
     @Operation(summary = "获取当前用户", description = "获取当前登录用户信息")
-    public Result<MobileUserVO> getCurrentUser(Principal principal) {
-        if (principal == null) {
+    public Result<MobileUserVO> getCurrentUser() {
+        Long userId = TenantContextHolder.getUserId();
+        if (userId == null) {
             throw new BusinessException(401, "未登录");
         }
-        Long userId = jwtUtil.getUserIdFromToken(principal.getName());
         User user = userService.getById(userId);
         if (user == null) {
             throw new BusinessException(404, "用户不存在");
@@ -107,11 +106,11 @@ public class MobileAuthController {
      */
     @PostMapping("/refresh-token")
     @Operation(summary = "刷新Token", description = "刷新JWT Token")
-    public Result<MobileLoginVO> refreshToken(Principal principal) {
-        if (principal == null) {
+    public Result<MobileLoginVO> refreshToken() {
+        Long userId = TenantContextHolder.getUserId();
+        if (userId == null) {
             throw new BusinessException(401, "未登录");
         }
-        Long userId = jwtUtil.getUserIdFromToken(principal.getName());
         User user = userService.getById(userId);
         if (user == null) {
             throw new BusinessException(404, "用户不存在");

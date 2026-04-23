@@ -148,21 +148,22 @@ public class TransactionServiceImpl extends ServiceImpl<TransactionMapper, Trans
     @Override
     public IPage<Transaction> getTransactionPage(Page<Transaction> page, Long userId, Long companyId,
                                                 LocalDateTime startTime, LocalDateTime endTime,
-                                                Integer type, Long categoryId) {
-        return getBaseMapper().selectTransactionPage(page, userId, companyId, startTime, endTime, type, categoryId);
+                                                Integer type, Long categoryId, Long bookId) {
+        return getBaseMapper().selectTransactionPage(page, userId, companyId, startTime, endTime, type, categoryId, bookId);
     }
 
     @Override
     public TransactionMapper.TransactionSummary getTransactionSummary(Long userId, Long companyId,
-                                                                     LocalDateTime startTime, LocalDateTime endTime) {
-        return getBaseMapper().selectTransactionSummary(userId, companyId, startTime, endTime);
+                                                                     LocalDateTime startTime, LocalDateTime endTime,
+                                                                     Long bookId) {
+        return getBaseMapper().selectTransactionSummary(userId, companyId, startTime, endTime, bookId);
     }
 
     @Override
     public List<TransactionMapper.CategorySummary> getCategorySummary(Long userId, Long companyId,
                                                                      LocalDateTime startTime, LocalDateTime endTime,
-                                                                     Integer type) {
-        return getBaseMapper().selectCategorySummary(userId, companyId, startTime, endTime, type);
+                                                                     Integer type, Long bookId) {
+        return getBaseMapper().selectCategorySummary(userId, companyId, startTime, endTime, type, bookId);
     }
 
     /**

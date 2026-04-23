@@ -51,6 +51,7 @@ public interface TransactionService extends IService<Transaction> {
      * @param endTime 结束时间
      * @param type 交易类型
      * @param categoryId 分类ID
+     * @param bookId 账本ID
      * @return 分页结果
      */
     IPage<Transaction> getTransactionPage(
@@ -60,7 +61,8 @@ public interface TransactionService extends IService<Transaction> {
             LocalDateTime startTime,
             LocalDateTime endTime,
             Integer type,
-            Long categoryId);
+            Long categoryId,
+            Long bookId);
 
     /**
      * 获取交易汇总信息
@@ -69,13 +71,15 @@ public interface TransactionService extends IService<Transaction> {
      * @param companyId 公司ID（可选）
      * @param startTime 开始时间
      * @param endTime 结束时间
+     * @param bookId 账本ID
      * @return 汇总信息
      */
     TransactionMapper.TransactionSummary getTransactionSummary(
             Long userId,
             Long companyId,
             LocalDateTime startTime,
-            LocalDateTime endTime);
+            LocalDateTime endTime,
+            Long bookId);
 
     /**
      * 按分类统计交易金额
@@ -85,6 +89,7 @@ public interface TransactionService extends IService<Transaction> {
      * @param startTime 开始时间
      * @param endTime 结束时间
      * @param type 交易类型
+     * @param bookId 账本ID
      * @return 分类统计列表
      */
     List<TransactionMapper.CategorySummary> getCategorySummary(
@@ -92,5 +97,6 @@ public interface TransactionService extends IService<Transaction> {
             Long companyId,
             LocalDateTime startTime,
             LocalDateTime endTime,
-            Integer type);
+            Integer type,
+            Long bookId);
 }

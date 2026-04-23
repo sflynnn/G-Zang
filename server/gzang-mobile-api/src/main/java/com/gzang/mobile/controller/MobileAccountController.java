@@ -2,24 +2,22 @@ package com.gzang.mobile.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.gzang.app.util.JwtUtil;
+import com.gzang.app.util.TenantContextHolder;
 import com.gzang.app.dto.account.CreateAccountDTO;
 import com.gzang.app.dto.account.UpdateAccountDTO;
 import com.gzang.app.entity.Account;
 import com.gzang.app.exception.BusinessException;
-import com.gzang.app.service.AccountService;
+import com.gzang.mobile.service.AccountService;
 import com.gzang.app.vo.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.security.Principal;
 import java.util.List;
 
 /**
@@ -36,11 +34,9 @@ public class MobileAccountController {
     private static final Logger log = LoggerFactory.getLogger(MobileAccountController.class);
 
     private final AccountService accountService;
-    private final JwtUtil jwtUtil;
 
-    public MobileAccountController(AccountService accountService, JwtUtil jwtUtil) {
+    public MobileAccountController(AccountService accountService) {
         this.accountService = accountService;
-        this.jwtUtil = jwtUtil;
     }
 
     /**
@@ -48,9 +44,9 @@ public class MobileAccountController {
      */
     @GetMapping
     @Operation(summary = "获取账户列表", description = "获取当前用户的账户列表")
-    public Result<List<Account>> getAccountList(Principal principal) {
-        Long userId = jwtUtil.getUserIdFromToken(principal.getName());
-        Long companyId = jwtUtil.getCompanyIdFromToken(principal.getName());
+    public Result<List<Account>> getAccountList() {
+        Long userId = TenantContextHolder.getUserId();
+        Long companyId = TenantContextHolder.getCompanyId();
         List<Account> accounts = accountService.getAccountsByUserId(userId, companyId);
         return Result.success(accounts);
     }
@@ -74,11 +70,11 @@ public class MobileAccountController {
      */
     @PostMapping
     @Operation(summary = "创建账户", description = "新增一个账户")
-    public Result<Void> createAccount(@Validated @RequestBody CreateAccountDTO dto, Principal principal) {
-        log.info("创建账户请求: user={}, accountName={}", principal.getName(), dto.getAccountName());
-
-        Long userId = jwtUtil.getUserIdFromToken(principal.getName());
-        Long companyId = jwtUtil.getCompanyIdFromToken(principal.getName());
+    public Result<Void> createAccount(@Validated @RequestBody CreateAccountDTO dto) {
+        Long userId = TenantContextHolder.getUserId();
+        Long companyId = TenantContextHolder.getCompanyId();
+        
+        log.info("创建账户请求: userId={}, accountName={}", userId, dto.getAccountName());
 
         Account account = new Account();
         account.setAccountName(dto.getAccountName());
@@ -103,13 +99,12 @@ public class MobileAccountController {
     @Operation(summary = "更新账户", description = "更新指定账户信息")
     public Result<Void> updateAccount(
             @Parameter(description = "账户ID") @PathVariable Long id,
-            @Validated @RequestBody UpdateAccountDTO dto,
-            Principal principal) {
+            @Validated @RequestBody UpdateAccountDTO dto) {
 
-        log.info("更新账户请求: id={}, user={}", id, principal.getName());
-
-        Long userId = jwtUtil.getUserIdFromToken(principal.getName());
-        Long companyId = jwtUtil.getCompanyIdFromToken(principal.getName());
+        Long userId = TenantContextHolder.getUserId();
+        Long companyId = TenantContextHolder.getCompanyId();
+        
+        log.info("更新账户请求: id={}, userId={}", id, userId);
 
         Account account = new Account();
         account.setId(id);
@@ -137,11 +132,10 @@ public class MobileAccountController {
     @DeleteMapping("/{id}")
     @Operation(summary = "删除账户", description = "删除指定账户")
     public Result<Void> deleteAccount(
-            @Parameter(description = "账户ID") @PathVariable Long id,
-            Principal principal) {
+            @Parameter(description = "账户ID") @PathVariable Long id) {
 
-        log.info("删除账户请求: id={}, user={}", id, principal.getName());
-        Long userId = jwtUtil.getUserIdFromToken(principal.getName());
+        Long userId = TenantContextHolder.getUserId();
+        log.info("删除账户请求: id={}, userId={}", id, userId);
 
         boolean success = accountService.deleteAccount(id, userId);
         if (!success) {
@@ -157,9 +151,9 @@ public class MobileAccountController {
      */
     @GetMapping("/total-balance")
     @Operation(summary = "获取总余额", description = "获取用户所有账户的总余额")
-    public Result<BigDecimal> getTotalBalance(Principal principal) {
-        Long userId = jwtUtil.getUserIdFromToken(principal.getName());
-        Long companyId = jwtUtil.getCompanyIdFromToken(principal.getName());
+    public Result<BigDecimal> getTotalBalance() {
+        Long userId = TenantContextHolder.getUserId();
+        Long companyId = TenantContextHolder.getCompanyId();
         BigDecimal totalBalance = accountService.getTotalBalance(userId, companyId);
         return Result.success(totalBalance);
     }
@@ -171,11 +165,10 @@ public class MobileAccountController {
     @Operation(summary = "分页查询账户", description = "分页获取账户列表")
     public Result<IPage<Account>> getAccountPage(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer current,
-            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") Integer size,
-            Principal principal) {
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") Integer size) {
 
-        Long userId = jwtUtil.getUserIdFromToken(principal.getName());
-        Long companyId = jwtUtil.getCompanyIdFromToken(principal.getName());
+        Long userId = TenantContextHolder.getUserId();
+        Long companyId = TenantContextHolder.getCompanyId();
 
         Page<Account> page = new Page<>(current, size);
         IPage<Account> result = accountService.getAccountPage(page, userId, companyId, null);

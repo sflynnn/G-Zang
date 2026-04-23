@@ -1,8 +1,8 @@
 package com.gzang.mobile.controller;
 
-import com.gzang.app.util.JwtUtil;
 import com.gzang.app.mapper.TransactionMapper;
-import com.gzang.app.service.ReportService;
+import com.gzang.app.util.TenantContextHolder;
+import com.gzang.mobile.service.ReportService;
 import com.gzang.app.vo.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -27,11 +26,9 @@ import java.util.List;
 public class MobileReportController {
 
     private final ReportService reportService;
-    private final JwtUtil jwtUtil;
 
-    public MobileReportController(ReportService reportService, JwtUtil jwtUtil) {
+    public MobileReportController(ReportService reportService) {
         this.reportService = reportService;
-        this.jwtUtil = jwtUtil;
     }
 
     /**
@@ -44,12 +41,12 @@ public class MobileReportController {
             @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startTime,
             @Parameter(description = "结束时间") @RequestParam(required = false)
             @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime,
-            Principal principal) {
+            @Parameter(description = "账本ID") @RequestParam(required = false) Long bookId) {
 
-        Long userId = jwtUtil.getUserIdFromToken(principal.getName());
-        Long companyId = jwtUtil.getCompanyIdFromToken(principal.getName());
+        Long userId = TenantContextHolder.getUserId();
+        Long companyId = TenantContextHolder.getCompanyId();
 
-        var summary = reportService.getIncomeExpenseSummary(userId, companyId, startTime, endTime);
+        var summary = reportService.getIncomeExpenseSummary(userId, companyId, startTime, endTime, bookId);
         return Result.success(summary);
     }
 
@@ -60,12 +57,12 @@ public class MobileReportController {
     @Operation(summary = "月度趋势", description = "获取指定年份的月度收支趋势")
     public Result<List<TransactionMapper.MonthlyTrendData>> getMonthlyTrend(
             @Parameter(description = "年份") @RequestParam Integer year,
-            Principal principal) {
+            @Parameter(description = "账本ID") @RequestParam(required = false) Long bookId) {
 
-        Long userId = jwtUtil.getUserIdFromToken(principal.getName());
-        Long companyId = jwtUtil.getCompanyIdFromToken(principal.getName());
+        Long userId = TenantContextHolder.getUserId();
+        Long companyId = TenantContextHolder.getCompanyId();
 
-        List<TransactionMapper.MonthlyTrendData> trendData = reportService.getMonthlyTrend(userId, companyId, year);
+        List<TransactionMapper.MonthlyTrendData> trendData = reportService.getMonthlyTrend(userId, companyId, year, bookId);
         return Result.success(trendData);
     }
 
@@ -80,13 +77,13 @@ public class MobileReportController {
             @Parameter(description = "结束时间") @RequestParam(required = false)
             @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime,
             @Parameter(description = "交易类型 (1:收入, 2:支出)") @RequestParam(required = false) Integer type,
-            Principal principal) {
+            @Parameter(description = "账本ID") @RequestParam(required = false) Long bookId) {
 
-        Long userId = jwtUtil.getUserIdFromToken(principal.getName());
-        Long companyId = jwtUtil.getCompanyIdFromToken(principal.getName());
+        Long userId = TenantContextHolder.getUserId();
+        Long companyId = TenantContextHolder.getCompanyId();
 
         List<TransactionMapper.CategorySummary> reportData = reportService.getCategoryReport(
-                userId, companyId, startTime, endTime, type);
+                userId, companyId, startTime, endTime, type, bookId);
         return Result.success(reportData);
     }
 
@@ -95,11 +92,12 @@ public class MobileReportController {
      */
     @GetMapping("/account-balance")
     @Operation(summary = "账户余额", description = "获取账户余额统计")
-    public Result<List<ReportService.AccountBalanceData>> getAccountBalanceReport(Principal principal) {
-        Long userId = jwtUtil.getUserIdFromToken(principal.getName());
-        Long companyId = jwtUtil.getCompanyIdFromToken(principal.getName());
+    public Result<List<ReportService.AccountBalanceData>> getAccountBalanceReport(
+            @Parameter(description = "账本ID") @RequestParam(required = false) Long bookId) {
+        Long userId = TenantContextHolder.getUserId();
+        Long companyId = TenantContextHolder.getCompanyId();
 
-        List<ReportService.AccountBalanceData> balanceData = reportService.getAccountBalanceReport(userId, companyId);
+        List<ReportService.AccountBalanceData> balanceData = reportService.getAccountBalanceReport(userId, companyId, bookId);
         return Result.success(balanceData);
     }
 
@@ -108,20 +106,20 @@ public class MobileReportController {
      */
     @GetMapping("/yearly-comparison")
     @Operation(summary = "年度对比", description = "多年度收支对比分析")
-    public Result<List<TransactionMapper.YearlyComparisonData>> getYearlyComparison(
+    public Result<List<ReportService.YearlyComparisonVO>> getYearlyComparison(
             @Parameter(description = "年份列表，用逗号分隔") @RequestParam String years,
-            Principal principal) {
+            @Parameter(description = "账本ID") @RequestParam(required = false) Long bookId) {
 
-        Long userId = jwtUtil.getUserIdFromToken(principal.getName());
-        Long companyId = jwtUtil.getCompanyIdFromToken(principal.getName());
+        Long userId = TenantContextHolder.getUserId();
+        Long companyId = TenantContextHolder.getCompanyId();
 
         List<Integer> yearList = Arrays.stream(years.split(","))
                 .map(String::trim)
                 .map(Integer::parseInt)
                 .toList();
 
-        List<TransactionMapper.YearlyComparisonData> comparisonData = reportService.getYearlyComparison(
-                userId, companyId, yearList);
+        List<ReportService.YearlyComparisonVO> comparisonData = reportService.getYearlyComparison(
+                userId, companyId, yearList, bookId);
         return Result.success(comparisonData);
     }
 }
