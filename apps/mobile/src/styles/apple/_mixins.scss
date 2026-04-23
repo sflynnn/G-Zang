@@ -1,0 +1,485 @@
+/* ================================================
+   G-Zang Mobile - Apple Style Mixins
+   ================================================ */
+
+@use "sass:color";
+
+// ================== Layout Mixins ==================
+
+@mixin apple-flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin apple-flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin apple-flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+@mixin apple-safe-area-top {
+  padding-top: constant(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top);
+}
+
+@mixin apple-safe-area-bottom {
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+// ================== Typography Mixins ==================
+
+@mixin apple-text-large-title {
+  font-size: var(--apple-text-4xl);
+  font-weight: var(--apple-font-bold);
+  letter-spacing: var(--apple-tracking-tight);
+  line-height: 1.1;
+}
+
+@mixin apple-text-title-1 {
+  font-size: var(--apple-text-3xl);
+  font-weight: var(--apple-font-bold);
+  letter-spacing: var(--apple-tracking-tight);
+  line-height: 1.15;
+}
+
+@mixin apple-text-title-2 {
+  font-size: var(--apple-text-2xl);
+  font-weight: var(--apple-font-semibold);
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+
+@mixin apple-text-title-3 {
+  font-size: var(--apple-text-xl);
+  font-weight: var(--apple-font-semibold);
+  line-height: 1.25;
+}
+
+@mixin apple-text-headline {
+  font-size: var(--apple-text-lg);
+  font-weight: var(--apple-font-semibold);
+  line-height: 1.3;
+}
+
+@mixin apple-text-body {
+  font-size: var(--apple-text-base);
+  font-weight: var(--apple-font-regular);
+  line-height: 1.4;
+}
+
+@mixin apple-text-callout {
+  font-size: var(--apple-text-sm);
+  font-weight: var(--apple-font-regular);
+  line-height: 1.35;
+}
+
+@mixin apple-text-subheadline {
+  font-size: var(--apple-text-sm);
+  font-weight: var(--apple-font-medium);
+  line-height: 1.3;
+}
+
+@mixin apple-text-footnote {
+  font-size: var(--apple-text-xs);
+  font-weight: var(--apple-font-regular);
+  line-height: 1.3;
+}
+
+@mixin apple-text-caption {
+  font-size: var(--apple-text-2xs);
+  font-weight: var(--apple-font-regular);
+  line-height: 1.2;
+}
+
+// ================== Card Mixins ==================
+
+@mixin apple-card {
+  background: var(--gzang-surface);
+  border-radius: var(--apple-radius-lg);
+  box-shadow: var(--apple-shadow-sm);
+  overflow: hidden;
+}
+
+@mixin apple-card-elevated {
+  background: var(--gzang-surface);
+  border-radius: var(--apple-radius-lg);
+  box-shadow: var(--apple-shadow-md);
+  overflow: hidden;
+}
+
+@mixin apple-card-glass {
+  background: var(--apple-glass-bg);
+  backdrop-filter: blur(var(--apple-glass-blur));
+  -webkit-backdrop-filter: blur(var(--apple-glass-blur));
+  border-radius: var(--apple-radius-xl);
+  border: 1px solid var(--apple-glass-border);
+  box-shadow: var(--apple-shadow-sm);
+}
+
+@mixin apple-card-gradient($direction: 135deg, $start: var(--gzang-primary), $end: var(--gzang-primary-light)) {
+  background: linear-gradient($direction, $start 0%, $end 100%);
+  border-radius: var(--apple-radius-xl);
+  box-shadow: var(--apple-shadow-md);
+}
+
+// ================== Button Mixins ==================
+
+@mixin apple-button-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--apple-space-2);
+  padding: var(--apple-space-3) var(--apple-space-5);
+  border: none;
+  border-radius: var(--apple-radius-sm);
+  font-size: var(--apple-text-base);
+  font-weight: var(--apple-font-semibold);
+  cursor: pointer;
+  transition: all var(--apple-duration-fast) var(--apple-ease-out);
+  
+  &:active {
+    transform: scale(0.97);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+@mixin apple-button-primary {
+  @include apple-button-base;
+  background: var(--gzang-secondary);
+  color: white;
+  
+  &:hover:not(:disabled) {
+    background: var(--gzang-secondary-dark);
+  }
+}
+
+@mixin apple-button-secondary {
+  @include apple-button-base;
+  background: var(--gzang-primary);
+  color: white;
+  
+  &:hover:not(:disabled) {
+    background: var(--gzang-primary-dark);
+  }
+}
+
+@mixin apple-button-ghost {
+  @include apple-button-base;
+  background: transparent;
+  color: var(--gzang-primary);
+  
+  &:hover:not(:disabled) {
+    background: rgba(15, 76, 92, 0.08);
+  }
+}
+
+@mixin apple-button-rounded {
+  @include apple-button-base;
+  border-radius: var(--apple-radius-full);
+  padding: var(--apple-space-3) var(--apple-space-6);
+}
+
+@mixin apple-button-magic {
+  @include apple-button-rounded;
+  background: var(--gzang-secondary);
+  color: white;
+  width: var(--apple-tabbar-magic-size);
+  height: var(--apple-tabbar-magic-size);
+  border-radius: var(--apple-radius-full);
+  box-shadow: var(--apple-shadow-lg), 0 4px 12px rgba(251, 139, 36, 0.4);
+  
+  &:hover:not(:disabled) {
+    transform: scale(1.05);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+// ================== Input Mixins ==================
+
+@mixin apple-input {
+  width: 100%;
+  padding: var(--apple-space-3) var(--apple-space-4);
+  background: var(--gzang-bg);
+  border: none;
+  border-radius: var(--apple-radius-sm);
+  font-size: var(--apple-text-base);
+  color: var(--gzang-text-primary);
+  transition: all var(--apple-duration-fast) var(--apple-ease-out);
+  
+  &::placeholder {
+    color: var(--gzang-text-secondary);
+  }
+  
+  &:focus {
+    outline: none;
+    background: var(--gzang-surface);
+    box-shadow: 0 0 0 3px rgba(15, 76, 92, 0.15);
+  }
+}
+
+@mixin apple-input-search {
+  @include apple-input;
+  padding-left: calc(var(--apple-space-4) + 24px);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: var(--apple-space-4) center;
+  background-size: 20px;
+}
+
+// ================== List Mixins ==================
+
+@mixin apple-list {
+  background: var(--gzang-surface);
+  border-radius: var(--apple-radius-lg);
+  overflow: hidden;
+}
+
+@mixin apple-list-item {
+  display: flex;
+  align-items: center;
+  padding: var(--apple-space-4);
+  background: var(--gzang-surface);
+  transition: background-color var(--apple-duration-fast) var(--apple-ease-out);
+  
+  &:active {
+    background: var(--gzang-bg);
+  }
+  
+  &:not(:last-child) {
+    border-bottom: 0.5px solid var(--gzang-border);
+  }
+}
+
+@mixin apple-list-item-grouped {
+  @include apple-list-item;
+  padding-left: var(--apple-space-5);
+  
+  &:first-child {
+    border-radius: var(--apple-radius-lg) var(--apple-radius-lg) 0 0;
+  }
+  
+  &:last-child {
+    border-radius: 0 0 var(--apple-radius-lg) var(--apple-radius-lg);
+  }
+  
+  &:only-child {
+    border-radius: var(--apple-radius-lg);
+  }
+}
+
+// ================== Animation Mixins ==================
+
+@mixin apple-transition($properties: all) {
+  transition: $properties var(--apple-duration-normal) var(--apple-ease-out);
+}
+
+@mixin apple-hover-lift {
+  transition: transform var(--apple-duration-fast) var(--apple-ease-out),
+              box-shadow var(--apple-duration-fast) var(--apple-ease-out);
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--apple-shadow-md);
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: var(--apple-shadow-sm);
+  }
+}
+
+@mixin apple-press-scale {
+  transition: transform var(--apple-duration-fast) var(--apple-ease-out);
+  
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+// ================== Navigation Mixins ==================
+
+@mixin apple-navbar-large {
+  padding: var(--apple-space-2) var(--apple-space-4);
+  padding-top: calc(constant(safe-area-inset-top) + var(--apple-space-3));
+  padding-top: calc(env(safe-area-inset-top) + var(--apple-space-3));
+  background: var(--gzang-bg);
+  
+  .nav-title {
+    @include apple-text-large-title;
+    color: var(--gzang-text-primary);
+  }
+  
+  .nav-subtitle {
+    @include apple-text-footnote;
+    color: var(--gzang-text-secondary);
+    margin-top: var(--apple-space-1);
+  }
+}
+
+@mixin apple-navbar-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--apple-navbar-height);
+  padding: 0 var(--apple-space-4);
+  background: var(--gzang-surface);
+  border-bottom: 0.5px solid var(--gzang-border);
+}
+
+// ================== TabBar Mixins ==================
+
+@mixin apple-tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--apple-tabbar-height);
+  background: var(--apple-glass-bg-strong);
+  backdrop-filter: blur(var(--apple-glass-blur));
+  -webkit-backdrop-filter: blur(var(--apple-glass-blur));
+  border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: var(--apple-z-fixed);
+}
+
+@mixin apple-tabbar-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: var(--apple-space-2) 0;
+  color: var(--gzang-text-secondary);
+  transition: all var(--apple-duration-fast) var(--apple-ease-out);
+  
+  &.active {
+    color: var(--gzang-secondary);
+  }
+  
+  .icon {
+    width: var(--apple-tabbar-icon-size);
+    height: var(--apple-tabbar-icon-size);
+  }
+  
+  .label {
+    font-size: var(--apple-text-2xs);
+    font-weight: var(--apple-font-medium);
+  }
+}
+
+// ================== Badge Mixins ==================
+
+@mixin apple-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: var(--gzang-danger);
+  color: white;
+  font-size: var(--apple-text-2xs);
+  font-weight: var(--apple-font-semibold);
+  border-radius: var(--apple-radius-full);
+}
+
+@mixin apple-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: var(--gzang-bg);
+  border-radius: var(--apple-radius-full);
+  font-size: var(--apple-text-xs);
+  color: var(--gzang-text-secondary);
+}
+
+// ================== Segmented Control Mixins ==================
+
+@mixin apple-segmented-control {
+  display: inline-flex;
+  background: var(--gzang-bg);
+  border-radius: var(--apple-radius-sm);
+  padding: 2px;
+}
+
+@mixin apple-segmented-item {
+  flex: 1;
+  padding: var(--apple-space-2) var(--apple-space-4);
+  border-radius: calc(var(--apple-radius-sm) - 2px);
+  font-size: var(--apple-text-sm);
+  font-weight: var(--apple-font-medium);
+  color: var(--gzang-text-secondary);
+  transition: all var(--apple-duration-fast) var(--apple-ease-out);
+  
+  &.active {
+    background: var(--gzang-surface);
+    color: var(--gzang-text-primary);
+    box-shadow: var(--apple-shadow-xs);
+  }
+}
+
+// ================== Progress Mixins ==================
+
+@mixin apple-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--gzang-bg);
+  border-radius: var(--apple-radius-full);
+  overflow: hidden;
+  
+  .progress {
+    height: 100%;
+    border-radius: var(--apple-radius-full);
+    transition: width var(--apple-duration-slow) var(--apple-ease-out);
+  }
+}
+
+@mixin apple-progress-ring($size: 80px, $stroke-width: 8px) {
+  position: relative;
+  width: $size;
+  height: $size;
+  
+  svg {
+    transform: rotate(-90deg);
+  }
+  
+  .ring-bg {
+    fill: none;
+    stroke: var(--gzang-bg);
+    stroke-width: $stroke-width;
+  }
+  
+  .ring-progress {
+    fill: none;
+    stroke: var(--gzang-secondary);
+    stroke-width: $stroke-width;
+    stroke-linecap: round;
+    transition: stroke-dashoffset var(--apple-duration-slow) var(--apple-ease-out);
+  }
+  
+  .ring-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+}

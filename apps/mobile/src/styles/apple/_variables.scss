@@ -1,0 +1,135 @@
+/* ================================================
+   G-Zang Mobile - Apple Style Foundation
+   Apple Human Interface Guidelines + G-Zang Brand
+   ================================================ */
+
+// ================== Apple Style CSS Variables ==================
+
+// Apple Design Tokens
+:root {
+  // Apple Typography Scale
+  --apple-font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', sans-serif;
+  --apple-font-family-rounded: 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  // Font Sizes - Apple Large Title Style
+  --apple-text-2xs: 11px;
+  --apple-text-xs: 12px;
+  --apple-text-sm: 14px;
+  --apple-text-base: 16px;
+  --apple-text-lg: 18px;
+  --apple-text-xl: 20px;
+  --apple-text-2xl: 22px;
+  --apple-text-3xl: 28px;
+  --apple-text-4xl: 34px;
+  --apple-text-5xl: 40px;
+  
+  // Font Weights
+  --apple-font-regular: 400;
+  --apple-font-medium: 500;
+  --apple-font-semibold: 600;
+  --apple-font-bold: 700;
+  
+  // Letter Spacing
+  --apple-tracking-tight: -0.5px;
+  --apple-tracking-normal: 0;
+  --apple-tracking-wide: 0.5px;
+  
+  // Border Radius - Apple Style
+  --apple-radius-xs: 6px;
+  --apple-radius-sm: 10px;
+  --apple-radius-md: 14px;
+  --apple-radius-lg: 18px;
+  --apple-radius-xl: 24px;
+  --apple-radius-2xl: 30px;
+  --apple-radius-full: 9999px;
+  
+  // Shadows - Layered Apple Style
+  --apple-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --apple-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --apple-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --apple-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
+  --apple-shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.16), 0 8px 16px rgba(0, 0, 0, 0.08);
+  
+  // Glass Effect
+  --apple-glass-bg: rgba(255, 255, 255, 0.72);
+  --apple-glass-bg-strong: rgba(255, 255, 255, 0.85);
+  --apple-glass-border: rgba(255, 255, 255, 0.5);
+  --apple-glass-blur: 20px;
+  
+  // Spacing - Generous Apple Style
+  --apple-space-1: 4px;
+  --apple-space-2: 8px;
+  --apple-space-3: 12px;
+  --apple-space-4: 16px;
+  --apple-space-5: 20px;
+  --apple-space-6: 24px;
+  --apple-space-8: 32px;
+  --apple-space-10: 40px;
+  --apple-space-12: 48px;
+  --apple-space-16: 64px;
+  
+  // TabBar
+  --apple-tabbar-height: 84px;
+  --apple-tabbar-icon-size: 24px;
+  --apple-tabbar-magic-size: 52px;
+  
+  // NavBar
+  --apple-navbar-height: 44px;
+  --apple-navbar-large-height: 96px;
+  
+  // Animation - Spring Based
+  --apple-ease-default: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --apple-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --apple-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --apple-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --apple-ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  
+  // Duration
+  --apple-duration-fast: 150ms;
+  --apple-duration-normal: 250ms;
+  --apple-duration-slow: 350ms;
+  
+  // Z-Index Scale
+  --apple-z-dropdown: 100;
+  --apple-z-sticky: 200;
+  --apple-z-fixed: 300;
+  --apple-z-modal-backdrop: 400;
+  --apple-z-modal: 500;
+  --apple-z-popover: 600;
+  --apple-z-tooltip: 700;
+}
+
+// ================== Dark Mode (Apple Style) ==================
+@media (prefers-color-scheme: dark) {
+  :root {
+    --apple-glass-bg: rgba(30, 30, 30, 0.72);
+    --apple-glass-bg-strong: rgba(30, 30, 30, 0.85);
+    --apple-glass-border: rgba(255, 255, 255, 0.1);
+    
+    --apple-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --apple-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+    --apple-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
+    --apple-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5), 0 4px 8px rgba(0, 0, 0, 0.3);
+    --apple-shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.6), 0 8px 16px rgba(0, 0, 0, 0.4);
+  }
+}
+
+// Force Dark Mode
+[data-theme="dark"] {
+  --apple-glass-bg: rgba(30, 30, 30, 0.72);
+  --apple-glass-bg-strong: rgba(30, 30, 30, 0.85);
+  --apple-glass-border: rgba(255, 255, 255, 0.1);
+  
+  --apple-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --apple-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --apple-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
+  --apple-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5), 0 4px 8px rgba(0, 0, 0, 0.3);
+  --apple-shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.6), 0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+// Force Light Mode
+[data-theme="light"] {
+  --apple-glass-bg: rgba(255, 255, 255, 0.72);
+  --apple-glass-bg-strong: rgba(255, 255, 255, 0.85);
+  --apple-glass-border: rgba(255, 255, 255, 0.5);
+}

@@ -1,0 +1,367 @@
+/* ================================================
+   G-Zang Mobile - Apple Style Animations
+   ================================================ */
+
+// ================== Keyframes ==================
+
+// Fade In
+@keyframes apple-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// Fade In Up
+@keyframes apple-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Fade In Down
+@keyframes apple-fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Scale In
+@keyframes apple-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// Scale In Up
+@keyframes apple-scale-in-up {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// Slide In Right
+@keyframes apple-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// Slide In Left
+@keyframes apple-slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// Slide In Up
+@keyframes apple-slide-in-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+// Bounce In
+@keyframes apple-bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+// Pulse
+@keyframes apple-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+// Spin
+@keyframes apple-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Shimmer (Loading)
+@keyframes apple-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+// Breathe
+@keyframes apple-breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 0.9;
+  }
+}
+
+// Shake
+@keyframes apple-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-4px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(4px);
+  }
+}
+
+// Float
+@keyframes apple-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+// Progress
+@keyframes apple-progress {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+// Ring Progress
+@keyframes apple-ring-progress {
+  0% {
+    stroke-dashoffset: 283;
+  }
+  100% {
+    stroke-dashoffset: var(--progress-offset, 0);
+  }
+}
+
+// ================== Animation Classes ==================
+
+// Fade Animations
+.apple-animate-fade-in {
+  animation: apple-fade-in var(--apple-duration-normal) var(--apple-ease-out) forwards;
+}
+
+.apple-animate-fade-in-up {
+  animation: apple-fade-in-up var(--apple-duration-slow) var(--apple-ease-out) forwards;
+}
+
+.apple-animate-fade-in-down {
+  animation: apple-fade-in-down var(--apple-duration-slow) var(--apple-ease-out) forwards;
+}
+
+// Scale Animations
+.apple-animate-scale-in {
+  animation: apple-scale-in var(--apple-duration-normal) var(--apple-ease-spring) forwards;
+}
+
+.apple-animate-scale-in-up {
+  animation: apple-scale-in-up var(--apple-duration-normal) var(--apple-ease-spring) forwards;
+}
+
+// Slide Animations
+.apple-animate-slide-in-right {
+  animation: apple-slide-in-right var(--apple-duration-slow) var(--apple-ease-out) forwards;
+}
+
+.apple-animate-slide-in-left {
+  animation: apple-slide-in-left var(--apple-duration-slow) var(--apple-ease-out) forwards;
+}
+
+.apple-animate-slide-in-up {
+  animation: apple-slide-in-up var(--apple-duration-slow) var(--apple-ease-out) forwards;
+}
+
+// Bounce Animation
+.apple-animate-bounce-in {
+  animation: apple-bounce-in var(--apple-duration-slow) var(--apple-ease-spring) forwards;
+}
+
+// Continuous Animations
+.apple-animate-pulse {
+  animation: apple-pulse 2s ease-in-out infinite;
+}
+
+.apple-animate-spin {
+  animation: apple-spin 1s linear infinite;
+}
+
+.apple-animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--gzang-bg) 0%,
+    rgba(255, 255, 255, 0.5) 50%,
+    var(--gzang-bg) 100%
+  );
+  background-size: 200% 100%;
+  animation: apple-shimmer 1.5s ease-in-out infinite;
+}
+
+.apple-animate-breathe {
+  animation: apple-breathe 3s ease-in-out infinite;
+}
+
+.apple-animate-float {
+  animation: apple-float 3s ease-in-out infinite;
+}
+
+.apple-animate-shake {
+  animation: apple-shake 0.5s ease-in-out;
+}
+
+// ================== Transition Classes ==================
+
+.apple-transition {
+  transition: all var(--apple-duration-normal) var(--apple-ease-out);
+}
+
+.apple-transition-fast {
+  transition: all var(--apple-duration-fast) var(--apple-ease-out);
+}
+
+.apple-transition-slow {
+  transition: all var(--apple-duration-slow) var(--apple-ease-out);
+}
+
+.apple-transition-color {
+  transition: color var(--apple-duration-fast) var(--apple-ease-out),
+              background-color var(--apple-duration-fast) var(--apple-ease-out);
+}
+
+.apple-transition-transform {
+  transition: transform var(--apple-duration-fast) var(--apple-ease-out);
+}
+
+.apple-transition-opacity {
+  transition: opacity var(--apple-duration-fast) var(--apple-ease-out);
+}
+
+// ================== Stagger Animation ==================
+
+@for $i from 1 through 10 {
+  .apple-stagger-#{$i} {
+    animation-delay: #{$i * 50}ms;
+  }
+}
+
+// ================== Hover Effects ==================
+
+.apple-hover-lift {
+  transition: transform var(--apple-duration-fast) var(--apple-ease-out),
+              box-shadow var(--apple-duration-fast) var(--apple-ease-out);
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--apple-shadow-md);
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: var(--apple-shadow-sm);
+  }
+}
+
+.apple-hover-scale {
+  transition: transform var(--apple-duration-fast) var(--apple-ease-out);
+  
+  &:hover {
+    transform: scale(1.02);
+  }
+  
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.apple-hover-opacity {
+  transition: opacity var(--apple-duration-fast) var(--apple-ease-out);
+  
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+// ================== Reduced Motion ==================
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+// Force disable animations
+[data-reduce-motion="true"] *,
+[data-reduce-motion="true"] *::before,
+[data-reduce-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
