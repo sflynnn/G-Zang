@@ -1,314 +1,312 @@
 <template>
-  <view class="accounting-page">
-    <!-- 顶部导航 -->
-    <view class="nav-bar">
-      <view class="nav-left" @click="goBack">
-        <uni-icons type="left" size="20" color="#333"></uni-icons>
+  <view class="accounting-page apple-style">
+    <!-- Header with Segmented Control -->
+    <view class="page-header">
+      <view class="header-nav">
+        <view class="nav-left">
+          <view class="book-selector" @click="showBookPicker">
+            <text class="book-name">{{ currentBook?.name || t('accounting.selectCategory') }}</text>
+            <AppleIcon name="chevron-down" :size="12" color="var(--gzang-text-secondary)" />
+          </view>
+        </view>
       </view>
-      <view class="nav-title">记账</view>
-      <view class="nav-right">
-        <text class="nav-action" @click="saveAsTemplate">保存模板</text>
+      
+      <!-- Segmented Control - Type Selector -->
+      <view class="segmented-control">
+        <view 
+          v-for="type in transactionTypes" 
+          :key="type.key"
+          class="segment-item"
+          :class="{ active: form.type === type.key }"
+          @click="switchType(type.key)"
+        >
+          <AppleIcon 
+            :name="type.icon" 
+            :size="16" 
+            :color="form.type === type.key ? 'white' : 'text-secondary'" 
+          />
+          <text class="segment-label">{{ t('accounting.' + type.i18nKey) }}</text>
+        </view>
       </view>
     </view>
 
-    <!-- 主要内容 -->
+    <!-- Main Content -->
     <scroll-view class="main-content" scroll-y="true">
-      <!-- 记账类型切换 -->
-      <view class="type-selector">
-        <view class="type-tabs">
-          <view
-            v-for="type in transactionTypes"
-            :key="type.key"
-            class="type-tab"
-            :class="{ active: form.type === type.key }"
-            @click="switchType(type.key)"
-          >
-            <text class="type-text">{{ type.label }}</text>
+      <!-- Amount Display - Large & Center -->
+      <view class="amount-section">
+        <view class="amount-display">
+          <text class="currency">{{ currentCurrencySymbol }}</text>
+          <input
+            v-model="form.amount"
+            type="digit"
+            placeholder="0.00"
+            class="amount-input"
+            @blur="validateField('amount')"
+          />
+        </view>
+        <text v-if="errors.amount" class="error-text">{{ errors.amount }}</text>
+      </view>
+
+      <!-- Quick Amounts -->
+      <view class="quick-amounts">
+        <view 
+          v-for="amount in quickAmounts" 
+          :key="amount"
+          class="quick-amount-btn"
+          @click="setAmount(amount)"
+        >
+          {{ currentCurrencySymbol }}{{ amount }}
+        </view>
+      </view>
+
+      <!-- Info Row -->
+      <view class="info-row apple-list">
+        <!-- Date -->
+        <view class="info-item" @click="showDatePicker">
+          <view class="info-left">
+            <view class="info-icon" style="background: rgba(15, 76, 92, 0.1)">
+              <AppleIcon name="calendar" :size="18" color="var(--gzang-primary)" />
+            </view>
+            <text class="info-label">{{ t('accounting.date') }}</text>
+          </view>
+          <view class="info-right">
+            <text class="info-value">{{ formatDisplayDate(form.transactionDate) }}</text>
+            <AppleIcon name="chevron-right" :size="14" color="var(--gzang-text-tertiary)" />
+          </view>
+        </view>
+
+        <!-- Account -->
+        <view class="info-item" @click="showAccountPicker = true">
+          <view class="info-left">
+            <view class="info-icon" style="background: rgba(6, 214, 160, 0.1)">
+              <AppleIcon name="wallet" :size="18" color="var(--gzang-success)" />
+            </view>
+            <text class="info-label">{{ t('accounting.account') }}</text>
+          </view>
+          <view class="info-right">
+            <text class="info-value" :class="{ placeholder: !selectedAccount }">
+              {{ selectedAccount || t('accounting.selectAccount') }}
+            </text>
+            <AppleIcon name="chevron-right" :size="14" color="var(--gzang-text-tertiary)" />
+          </view>
+        </view>
+
+        <!-- Target Account (Transfer only) -->
+        <view v-if="form.type === 3" class="info-item" @click="showTargetAccountPicker = true">
+          <view class="info-left">
+            <view class="info-icon" style="background: rgba(251, 139, 36, 0.1)">
+              <AppleIcon name="transfer" :size="18" color="var(--gzang-secondary)" />
+            </view>
+            <text class="info-label">{{ t('accounting.selectTargetAccount') }}</text>
+          </view>
+          <view class="info-right">
+            <text class="info-value" :class="{ placeholder: !selectedTargetAccount }">
+              {{ selectedTargetAccount || t('accounting.selectTargetAccount') }}
+            </text>
+            <AppleIcon name="chevron-right" :size="14" color="var(--gzang-text-tertiary)" />
           </view>
         </view>
       </view>
 
-      <!-- 记账表单 -->
-      <view class="form-container">
-        <!-- 金额输入 -->
-        <view class="form-item">
-          <view class="amount-input">
-            <text class="currency">¥</text>
-            <input
-              v-model="form.amount"
-              type="digit"
-              placeholder="0.00"
-              class="amount-field"
-              @blur="validateField('amount')"
-            />
+      <!-- Category Selection -->
+      <view class="category-section">
+        <text class="section-title">{{ t('accounting.category') }}</text>
+        <view class="category-tabs">
+          <view 
+            class="category-tab"
+            :class="{ active: activeTab === 1 }"
+            @click="activeTab = 1"
+          >
+            <AppleIcon name="income" :size="14" :color="activeTab === 1 ? 'var(--gzang-secondary)' : 'var(--gzang-text-secondary)'" />
+            <text>{{ t('accounting.income') }}</text>
           </view>
-          <text v-if="errors.amount" class="error-text">{{ errors.amount }}</text>
-        </view>
-
-        <!-- 分类选择 -->
-        <view class="form-item">
-          <view class="field-item" @click="showCategoryPicker = true">
-            <view class="field-label">
-              <uni-icons type="bars" size="18" color="#666"></uni-icons>
-              <text class="label-text">分类</text>
-            </view>
-            <view class="field-value">
-              <text class="value-text" :class="{ placeholder: !selectedCategory }">
-                {{ selectedCategory || '请选择分类' }}
-              </text>
-              <uni-icons type="right" size="16" color="#ccc"></uni-icons>
-            </view>
-          </view>
-          <text v-if="errors.categoryId" class="error-text">{{ errors.categoryId }}</text>
-        </view>
-
-        <!-- 账户选择 -->
-        <view class="form-item">
-          <view class="field-item" @click="showAccountPicker = true">
-            <view class="field-label">
-              <uni-icons type="wallet" size="18" color="#666"></uni-icons>
-              <text class="label-text">账户</text>
-            </view>
-            <view class="field-value">
-              <text class="value-text" :class="{ placeholder: !selectedAccount }">
-                {{ selectedAccount || '请选择账户' }}
-              </text>
-              <uni-icons type="right" size="16" color="#ccc"></uni-icons>
-            </view>
-          </view>
-          <text v-if="errors.accountId" class="error-text">{{ errors.accountId }}</text>
-        </view>
-
-        <!-- 转账目标账户（仅转账时显示） -->
-        <view v-if="form.type === 3" class="form-item">
-          <view class="field-item" @click="showTargetAccountPicker = true">
-            <view class="field-label">
-              <uni-icons type="exchange" size="18" color="#666"></uni-icons>
-              <text class="label-text">转入账户</text>
-            </view>
-            <view class="field-value">
-              <text class="value-text" :class="{ placeholder: !selectedTargetAccount }">
-                {{ selectedTargetAccount || '请选择转入账户' }}
-              </text>
-              <uni-icons type="right" size="16" color="#ccc"></uni-icons>
-            </view>
-          </view>
-          <text v-if="errors.targetAccountId" class="error-text">{{ errors.targetAccountId }}</text>
-        </view>
-
-        <!-- 交易时间 -->
-        <view class="form-item">
-          <view class="field-item" @click="showTimePicker = true">
-            <view class="field-label">
-              <uni-icons type="clock" size="18" color="#666"></uni-icons>
-              <text class="label-text">时间</text>
-            </view>
-            <view class="field-value">
-              <text class="value-text">{{ form.transactionTime }}</text>
-              <uni-icons type="right" size="16" color="#ccc"></uni-icons>
-            </view>
+          <view 
+            class="category-tab"
+            :class="{ active: activeTab === 2 }"
+            @click="activeTab = 2"
+          >
+            <AppleIcon name="expense" :size="14" :color="activeTab === 2 ? 'var(--gzang-secondary)' : 'var(--gzang-text-secondary)'" />
+            <text>{{ t('accounting.expense') }}</text>
           </view>
         </view>
+        
+        <view class="category-grid">
+          <view 
+            v-for="category in currentCategories"
+            :key="category.id"
+            class="category-item"
+            :class="{ selected: form.categoryId === category.id }"
+            @click="selectCategory(category)"
+          >
+            <view class="category-icon" :style="{ background: category.color + '20' }">
+              <AppleIcon :name="category.icon" :size="20" :color="category.color" />
+            </view>
+            <text class="category-name">{{ category.name }}</text>
+            <text class="category-amount" v-if="category.amount">{{ formatAmount(category.amount) }}</text>
+          </view>
+        </view>
+        <text v-if="errors.categoryId" class="error-text">{{ errors.categoryId }}</text>
+      </view>
 
-        <!-- 备注 -->
-        <view class="form-item">
+      <!-- Remark -->
+      <view class="remark-section apple-list">
+        <view class="remark-item">
+          <view class="remark-icon">
+            <AppleIcon name="edit" :size="18" color="var(--gzang-text-secondary)" />
+          </view>
           <textarea
             v-model="form.remark"
-            placeholder="添加备注（可选）"
-            class="remark-field"
+            :placeholder="t('accounting.notePlaceholder')"
+            class="remark-input"
             :maxlength="200"
             auto-height
           />
-          <view class="remark-count">
-            <text class="count-text">{{ form.remark.length }}/200</text>
-          </view>
         </view>
-
-        <!-- 常用金额快捷选择 -->
-        <view class="quick-amounts">
-          <text class="section-label">常用金额</text>
-          <view class="amount-grid">
-            <view
-              v-for="amount in quickAmounts"
-              :key="amount"
-              class="amount-btn"
-              @click="setAmount(amount)"
-            >
-              <text class="amount-text">¥{{ amount }}</text>
-            </view>
-          </view>
-        </view>
-
-        <!-- 最近使用的分类 -->
-        <view v-if="recentCategories.length > 0" class="recent-categories">
-          <text class="section-label">最近分类</text>
-          <view class="category-grid">
-            <view
-              v-for="category in recentCategories"
-              :key="category.id"
-              class="category-item"
-              @click="selectCategory(category)"
-            >
-              <view class="category-icon">
-                <uni-icons :type="getCategoryIcon(category.id)" size="20" color="#666"></uni-icons>
-              </view>
-              <text class="category-name">{{ category.name }}</text>
-            </view>
-          </view>
-        </view>
-
-        <!-- 智能推荐（基于历史记录） -->
-        <view v-if="smartSuggestions.length > 0" class="smart-suggestions">
-          <text class="section-label">智能推荐</text>
-          <view class="suggestion-list">
-            <view
-              v-for="suggestion in smartSuggestions"
-              :key="suggestion.id"
-              class="suggestion-item"
-              @click="applySuggestion(suggestion)"
-            >
-              <view class="suggestion-icon">
-                <uni-icons :type="getCategoryIcon(suggestion.categoryId)" size="18" color="#666"></uni-icons>
-              </view>
-              <view class="suggestion-content">
-                <text class="suggestion-title">{{ suggestion.categoryName }}</text>
-                <text class="suggestion-amount">¥{{ suggestion.amount }}</text>
-              </view>
-              <uni-icons type="right" size="14" color="#ccc"></uni-icons>
-            </view>
-          </view>
+        <view class="remark-count">
+          <text>{{ form.remark.length }}/200</text>
         </view>
       </view>
-
-      <!-- 底部操作栏 -->
+      <!-- Bottom Action Bar -->
       <view class="action-bar">
-        <view class="action-buttons">
-          <button
-            class="action-btn secondary"
-            @click="resetForm"
-          >
-            重置
-          </button>
-          <button
-            class="action-btn primary"
-            :class="{ loading }"
-            :disabled="!isFormValid || loading"
-            @click="handleSubmit"
-          >
-            <text v-if="loading">保存中...</text>
-            <text v-else>确认记账</text>
-          </button>
-        </view>
+        <button 
+          class="action-btn secondary" 
+          @click="resetForm"
+        >
+          <AppleIcon name="refresh" :size="16" color="var(--gzang-text-secondary)" />
+          <text>{{ t('common.reset') }}</text>
+        </button>
+        <button 
+          class="action-btn primary"
+          :class="{ loading: submitting }"
+          :disabled="!isFormValid || submitting"
+          @click="handleSubmit"
+        >
+          <AppleIcon v-if="submitting" name="refresh" :size="16" color="white" class="spin" />
+          <text v-else>{{ t('common.confirm') }}</text>
+        </button>
       </view>
-
-      <!-- 底部安全区域 -->
-      <view class="bottom-safe-area" :style="{ height: safeAreaBottom + 'px' }"></view>
+      <!-- Bottom Safe Area -->
+      <view class="bottom-safe-area"></view>
     </scroll-view>
 
-    <!-- 分类选择弹窗 -->
-    <uni-popup ref="categoryPopup" type="bottom" :is-mask-click="true">
-      <view class="picker-container">
-        <view class="picker-header">
-          <text class="picker-cancel" @click="hideCategoryPicker">取消</text>
-          <text class="picker-title">选择分类</text>
-          <text class="picker-confirm" @click="confirmCategory">确定</text>
-        </view>
-        <picker-view
-          :value="categoryPickerValue"
-          @change="onCategoryChange"
-          class="category-picker"
-        >
-          <picker-view-column>
-            <view
-              v-for="category in availableCategories"
-              :key="category.id"
-              class="picker-item"
-            >
-              {{ category.name }}
-            </view>
-          </picker-view-column>
-        </picker-view>
-      </view>
-    </uni-popup>
-
-    <!-- 账户选择弹窗 -->
+    <!-- Account Picker Popup -->
     <uni-popup ref="accountPopup" type="bottom" :is-mask-click="true">
       <view class="picker-container">
         <view class="picker-header">
-          <text class="picker-cancel" @click="hideAccountPicker">取消</text>
-          <text class="picker-title">选择账户</text>
-          <text class="picker-confirm" @click="confirmAccount">确定</text>
+          <text class="picker-cancel" @click="hideAccountPicker">{{ t('common.cancel') }}</text>
+          <text class="picker-title">{{ t('accounting.selectAccount') }}</text>
+          <text class="picker-confirm" @click="confirmAccount">{{ t('common.confirm') }}</text>
         </view>
-        <picker-view
-          :value="accountPickerValue"
-          @change="onAccountChange"
-          class="account-picker"
-        >
+        <picker-view :value="accountPickerValue" @change="onAccountChange" class="account-picker">
           <picker-view-column>
-            <view
-              v-for="account in accounts"
-              :key="account.id"
-              class="picker-item"
-            >
-              {{ account.name }}
+            <view v-for="account in accounts" :key="account.id" class="picker-item">
+              {{ account.name }} ({{ currentCurrencySymbol }}{{ (account.balance || 0).toFixed(2) }})
             </view>
           </picker-view-column>
         </picker-view>
       </view>
     </uni-popup>
 
-    <!-- 时间选择弹窗 -->
-    <uni-popup ref="timePopup" type="bottom" :is-mask-click="true">
-      <view class="datetime-picker">
+    <!-- Date Picker Popup -->
+    <uni-popup ref="datePopup" type="bottom" :is-mask-click="true">
+      <view class="picker-container">
         <view class="picker-header">
-          <text class="picker-cancel" @click="hideTimePicker">取消</text>
-          <text class="picker-title">选择时间</text>
-          <text class="picker-confirm" @click="confirmTime">确定</text>
+          <text class="picker-cancel" @click="hideDatePicker">{{ t('common.cancel') }}</text>
+          <text class="picker-title">{{ t('accounting.selectDate') }}</text>
+          <text class="picker-confirm" @click="confirmDatePicker">{{ t('common.confirm') }}</text>
         </view>
-        <picker
-          mode="datetime"
-          :value="currentTime"
-          :start="minTime"
-          :end="maxTime"
-          @change="onTimeChange"
-          class="time-picker"
-        >
-          <view class="picker-placeholder">请选择时间</view>
-        </picker>
+        <view class="quick-date-btns">
+          <view 
+            v-for="quick in quickDates" 
+            :key="quick.key"
+            class="quick-date-btn"
+            :class="{ active: form.transactionDate === quick.date }"
+            @click="selectQuickDate(quick.date)"
+          >
+            {{ quick.label }}
+          </view>
+        </view>
+        <picker-view :value="datePickerValue" @change="onDateChange" class="date-picker">
+          <picker-view-column>
+            <view v-for="year in years" :key="year" class="picker-item">{{ year }}年</view>
+          </picker-view-column>
+          <picker-view-column>
+            <view v-for="month in months" :key="month" class="picker-item">{{ month }}月</view>
+          </picker-view-column>
+          <picker-view-column>
+            <view v-for="day in days" :key="day" class="picker-item">{{ day }}日</view>
+          </picker-view-column>
+        </picker-view>
       </view>
     </uni-popup>
+
+    <!-- Book Picker Popup -->
+    <uni-popup ref="bookPopup" type="bottom" :is-mask-click="true">
+      <view class="picker-container">
+        <view class="picker-header">
+          <text class="picker-cancel" @click="hideBookPicker">{{ t('common.cancel') }}</text>
+          <text class="picker-title">{{ t('book.switchBook') }}</text>
+          <text class="picker-confirm" @click="confirmBookPicker">{{ t('common.confirm') }}</text>
+        </view>
+        <picker-view :value="bookPickerValue" @change="onBookChange" class="book-picker">
+          <picker-view-column>
+            <view v-for="book in books" :key="book.id" class="picker-item">
+              {{ book.icon }} {{ book.name }}
+            </view>
+          </picker-view-column>
+        </picker-view>
+      </view>
+    </uni-popup>
+
+    <!-- 自定义 TabBar -->
+    <CustomTabBar />
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useAccountingStore } from '@/stores/accounting'
+import { useBookStore } from '@/stores/book'
 import { useAppStore } from '@/stores/app'
-import { formatAmount } from '@/utils/format'
-import { validateTransactionForm } from '@/utils/validate'
 import { DeviceUtils } from '@/utils/device'
-import { MoneyCalculator } from '@/utils/math'
+import AppleIcon from '@/components/common/AppleIcon/index.vue'
+import CustomTabBar from '@/components/CustomTabBar/index.vue'
 
-// 状态管理
+const { t } = useI18n()
+
+// Stores
 const accountingStore = useAccountingStore()
+const bookStore = useBookStore()
 const appStore = useAppStore()
 
-// 响应式数据
-const loading = ref(false)
-const safeAreaBottom = ref(0)
+// Refs
+const submitting = ref(false)
+const activeTab = ref<1 | 2>(2)
+const showAccountPicker = ref(false)
+const showTargetAccountPicker = ref(false)
+const bookPickerValue = ref([0])
+const accountPickerValue = ref([0])
+const datePickerValue = ref([0, 0, 0])
 
-// 表单数据
+// Popup refs
+const accountPopup = ref<any>(null)
+const bookPopup = ref<any>(null)
+const datePopup = ref<any>(null)
+
+// Form data
 const form = reactive({
-  type: 2, // 默认支出
+  type: 2 as 1 | 2 | 3,
   amount: '',
-  categoryId: 0,
+  categoryId: undefined as number | undefined,
   accountId: 0,
   targetAccountId: 0,
+  transactionDate: '',
   transactionTime: '',
   remark: ''
 })
 
-// 错误信息
+// Errors
 const errors = reactive({
   amount: '',
   categoryId: '',
@@ -316,153 +314,114 @@ const errors = reactive({
   targetAccountId: ''
 })
 
-// 弹窗状态
-const showCategoryPicker = ref(false)
-const showAccountPicker = ref(false)
-const showTargetAccountPicker = ref(false)
-const showTimePicker = ref(false)
-
-// 选择器值
-const categoryPickerValue = ref([0])
-const accountPickerValue = ref([0])
-const currentTime = ref('')
-
-// 交易类型
+// Transaction types
 const transactionTypes = [
-  { key: 1, label: '收入' },
-  { key: 2, label: '支出' },
-  { key: 3, label: '转账' }
+  { key: 1 as const, i18nKey: 'income', icon: 'income' },
+  { key: 2 as const, i18nKey: 'expense', icon: 'expense' },
+  { key: 3 as const, i18nKey: 'transfer', icon: 'transfer' }
 ]
 
-// 常用金额
-const quickAmounts = [10, 20, 50, 100, 200, 500]
+// Quick amounts
+const quickAmounts = [10, 50, 100, 200, 500, 1000]
 
-// 计算属性
-const isFormValid = computed(() => {
-  const validation = validateTransactionForm({
-    type: form.type,
-    amount: form.amount,
-    categoryId: form.categoryId,
-    accountId: form.accountId,
-    transactionTime: form.transactionTime
-  })
-
-  // 转账时需要目标账户
-  if (form.type === 3 && !form.targetAccountId) {
-    return false
-  }
-
-  return validation.isValid
-})
-
-const selectedCategory = computed(() => {
-  const category = availableCategories.value.find(c => c.id === form.categoryId)
-  return category?.name || ''
-})
+// Computed
+const currentBook = computed(() => bookStore.currentBook)
+const books = computed(() => bookStore.books)
+const currentCurrencySymbol = computed(() => bookStore.currentCurrencySymbol)
+const accounts = computed(() => accountingStore.accounts)
 
 const selectedAccount = computed(() => {
-  const account = accountingStore.accounts.find(a => a.id === form.accountId)
+  const account = accounts.value.find(a => a.id === form.accountId)
   return account?.name || ''
 })
 
 const selectedTargetAccount = computed(() => {
-  const account = accountingStore.accounts.find(a => a.id === form.targetAccountId)
+  const account = accounts.value.find(a => a.id === form.targetAccountId)
   return account?.name || ''
 })
 
-const availableCategories = computed(() => {
-  if (form.type === 1) {
-    return accountingStore.incomeCategories
-  } else if (form.type === 2) {
-    return accountingStore.expenseCategories
-  }
-  return []
+const currentCategories = computed(() => {
+  return getCategories(activeTab.value)
 })
 
-const recentCategories = computed(() => accountingStore.recentCategories.slice(0, 6))
+const isFormValid = computed(() => {
+  const hasAmount = form.amount && parseFloat(form.amount) > 0
+  const hasCategory = form.categoryId && form.categoryId > 0
+  const hasAccount = form.accountId && form.accountId > 0
+  const hasTarget = form.type !== 3 || (form.targetAccountId && form.targetAccountId > 0)
+  return hasAmount && hasCategory && hasAccount && hasTarget
+})
 
-// 智能推荐（模拟数据）
-const smartSuggestions = ref([
-  { id: 1, categoryId: 101, categoryName: '早餐', amount: 15 },
-  { id: 2, categoryId: 102, categoryName: '地铁', amount: 3 },
-  { id: 3, categoryId: 103, categoryName: '购物', amount: 120 }
-])
+// Quick dates
+const quickDates = computed(() => {
+  const today = new Date()
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+  return [
+    { key: 'today', label: t('datetime.today'), date: formatDate(today) },
+    { key: 'yesterday', label: t('datetime.yesterday'), date: formatDate(yesterday) },
+  ]
+})
 
-// 账户数据（从store获取）
-const accounts = computed(() => accountingStore.accounts)
+// Date picker data
+const years = computed(() => {
+  const current = new Date().getFullYear()
+  return Array.from({ length: 10 }, (_, i) => current - 5 + i)
+})
 
-// 获取分类图标
-const getCategoryIcon = (categoryId: number) => {
-  const iconMap: Record<number, string> = {
-    101: 'restaurant', // 餐饮
-    102: 'location-o', // 交通
-    103: 'shop-o'      // 购物
-  }
-  return iconMap[categoryId] || 'circle'
+const months = computed(() => Array.from({ length: 12 }, (_, i) => i + 1))
+
+const days = computed(() => {
+  const year = years.value[datePickerValue.value[0]] || new Date().getFullYear()
+  const month = months.value[datePickerValue.value[1]] || new Date().getMonth() + 1
+  return Array.from({ length: getDaysInMonth(year, month) }, (_, i) => i + 1)
+})
+
+// Methods
+const formatDate = (date: Date) => {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
 }
 
-// 切换交易类型
-const switchType = (type: number) => {
+const formatDisplayDate = (dateStr: string) => {
+  if (!dateStr) return t('accounting.selectDate')
+  const today = formatDate(new Date())
+  const yesterday = formatDate(new Date(Date.now() - 86400000))
+  if (dateStr === today) return t('datetime.today')
+  if (dateStr === yesterday) return t('datetime.yesterday')
+  return dateStr.replace(/-/g, '/')
+}
+
+const getDaysInMonth = (year: number, month: number) => {
+  return new Date(year, month, 0).getDate()
+}
+
+const switchType = (type: 1 | 2 | 3) => {
   form.type = type
-  // 重置分类选择
-  form.categoryId = 0
+  form.categoryId = undefined
   form.targetAccountId = 0
+  if (type === 1) activeTab.value = 1
+  else activeTab.value = 2
   validateForm()
 }
 
-// 设置金额
 const setAmount = (amount: number) => {
   form.amount = amount.toString()
   validateField('amount')
 }
 
-// 选择分类
 const selectCategory = (category: any) => {
   form.categoryId = category.id
   validateField('categoryId')
-  // 更新最近使用
-  accountingStore.updateRecentCategory(category.id)
 }
 
-// 验证字段
-const validateField = (field: keyof typeof errors) => {
-  const validation = validateTransactionForm({
-    type: form.type,
-    amount: form.amount,
-    categoryId: form.categoryId,
-    accountId: form.accountId,
-    transactionTime: form.transactionTime
-  })
-
-  errors[field] = validation.errors[field] || ''
+const formatAmount = (amount: number) => {
+  return currentCurrencySymbol.value + amount.toFixed(0)
 }
 
-// 验证整个表单
-const validateForm = () => {
-  Object.keys(errors).forEach(key => {
-    validateField(key as keyof typeof errors)
-  })
-}
-
-// 分类选择器
-const onCategoryChange = (e: any) => {
-  categoryPickerValue.value = e.detail.value
-}
-
-const confirmCategory = () => {
-  const index = categoryPickerValue.value[0]
-  const category = availableCategories.value[index]
-  if (category) {
-    selectCategory(category)
-  }
-  showCategoryPicker.value = false
-}
-
-const hideCategoryPicker = () => {
-  showCategoryPicker.value = false
-}
-
-// 账户选择器
+// Account picker
 const onAccountChange = (e: any) => {
   accountPickerValue.value = e.detail.value
 }
@@ -474,50 +433,101 @@ const confirmAccount = () => {
     form.accountId = account.id
     validateField('accountId')
   }
-  showAccountPicker.value = false
+  hideAccountPicker()
 }
 
 const hideAccountPicker = () => {
-  showAccountPicker.value = false
+  accountPopup.value?.close()
 }
 
-// 时间选择器
-const onTimeChange = (e: any) => {
-  currentTime.value = e.detail.value
+// Book picker
+const showBookPicker = () => {
+  const currentIndex = books.value.findIndex(b => b.id === currentBook.value?.id)
+  bookPickerValue.value = currentIndex >= 0 ? [currentIndex] : [0]
+  bookPopup.value?.open()
 }
 
-const confirmTime = () => {
-  form.transactionTime = currentTime.value
-  showTimePicker.value = false
+const onBookChange = (e: any) => {
+  bookPickerValue.value = e.detail.value
 }
 
-const hideTimePicker = () => {
-  showTimePicker.value = false
-}
-
-// 应用智能推荐
-const applySuggestion = (suggestion: any) => {
-  form.categoryId = suggestion.categoryId
-  form.amount = suggestion.amount.toString()
-  validateForm()
-  appStore.showSuccess('已应用智能推荐')
-}
-
-// 保存为模板
-const saveAsTemplate = () => {
-  if (!isFormValid.value) {
-    appStore.showError('请先完善记账信息')
-    return
+const confirmBookPicker = () => {
+  const index = bookPickerValue.value[0]
+  const book = books.value[index]
+  if (book) {
+    bookStore.switchBook(book.id)
   }
-
-  // 这里应该保存到模板存储
-  appStore.showSuccess('模板保存成功')
+  hideBookPicker()
 }
 
-// 重置表单
+const hideBookPicker = () => {
+  bookPopup.value?.close()
+}
+
+// Date picker
+const showDatePicker = () => {
+  const date = form.transactionDate ? new Date(form.transactionDate) : new Date()
+  const yearIndex = years.value.indexOf(date.getFullYear())
+  const monthIndex = date.getMonth()
+  const dayIndex = date.getDate() - 1
+  datePickerValue.value = [
+    yearIndex >= 0 ? yearIndex : 0,
+    monthIndex,
+    dayIndex >= 0 ? dayIndex : 0
+  ]
+  datePopup.value?.open()
+}
+
+const onDateChange = (e: any) => {
+  datePickerValue.value = e.detail.value
+}
+
+const selectQuickDate = (date: string) => {
+  form.transactionDate = date
+}
+
+const confirmDatePicker = () => {
+  const year = years.value[datePickerValue.value[0]] || new Date().getFullYear()
+  const month = months.value[datePickerValue.value[1]] || 1
+  const day = days.value[datePickerValue.value[2]] || 1
+  form.transactionDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+  form.transactionTime = `${form.transactionDate} ${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}:00`
+  hideDatePicker()
+}
+
+const hideDatePicker = () => {
+  datePopup.value?.close()
+}
+
+// Validation
+const validateField = (field: keyof typeof errors) => {
+  switch (field) {
+    case 'amount':
+      if (!form.amount) errors.amount = t('accounting.pleaseEnterAmount')
+      else if (parseFloat(form.amount) <= 0) errors.amount = '金额必须大于0'
+      else errors.amount = ''
+      break
+    case 'categoryId':
+      if (!form.categoryId) errors.categoryId = t('accounting.pleaseSelectCategory')
+      else errors.categoryId = ''
+      break
+    case 'accountId':
+      if (!form.accountId) errors.accountId = t('accounting.pleaseSelectAccount')
+      else errors.accountId = ''
+      break
+  }
+}
+
+const validateForm = () => {
+  validateField('amount')
+  validateField('categoryId')
+  validateField('accountId')
+}
+
+// Reset
 const resetForm = () => {
   form.amount = ''
-  form.categoryId = 0
+  form.categoryId = undefined
   form.accountId = 0
   form.targetAccountId = 0
   form.remark = ''
@@ -526,452 +536,487 @@ const resetForm = () => {
   })
 }
 
-// 处理提交
+// Submit
 const handleSubmit = async () => {
   if (!isFormValid.value) return
 
   try {
-    loading.value = true
-
+    submitting.value = true
     const transactionData = {
-      ...form,
+      type: form.type,
       amount: parseFloat(form.amount),
-      transactionTime: form.transactionTime || new Date().toISOString()
+      categoryId: form.categoryId!,
+      accountId: form.accountId,
+      targetAccountId: form.type === 3 ? form.targetAccountId : undefined,
+      transactionTime: form.transactionTime || new Date().toISOString(),
+      remark: form.remark,
+      bookId: currentBook.value?.id
     }
-
-    await accountingStore.createTransaction(transactionData)
-
-    appStore.showSuccess('记账成功')
-
-    // 重置表单
+    await accountingStore.createTransaction(transactionData as any)
+    appStore.showSuccess(t('accounting.recordSuccess'))
     resetForm()
-
-    // 返回上一页
     setTimeout(() => {
       uni.navigateBack()
     }, 1500)
-
   } catch (error: any) {
-    console.error('记账失败:', error)
-    appStore.showError(error.message || '记账失败，请重试')
+    appStore.showError(error.message || t('accounting.recordFailed'))
   } finally {
-    loading.value = false
+    submitting.value = false
   }
 }
 
-// 返回上一页
-const goBack = () => {
-  uni.navigateBack()
+// Mock categories
+const getCategories = (type: 1 | 2) => {
+  if (type === 1) {
+    return [
+      { id: 101, name: '工资', icon: 'income', color: '#06D6A0', amount: 15000 },
+      { id: 102, name: '奖金', icon: 'star', color: '#FFD166', amount: 3000 },
+      { id: 103, name: '兼职', icon: 'clock', color: '#118AB2', amount: 2000 },
+      { id: 104, name: '理财', icon: 'chart', color: '#3A86FF', amount: 500 },
+      { id: 105, name: '礼金', icon: 'heart', color: '#EF476F', amount: 1000 },
+      { id: 106, name: '退款', icon: 'refresh', color: '#9B59B6', amount: 0 },
+    ]
+  }
+  return [
+    { id: 201, name: '餐饮', icon: 'food', color: '#FB8B24', amount: 1234.5 },
+    { id: 202, name: '交通', icon: 'transport', color: '#0F4C5C', amount: 456 },
+    { id: 203, name: '购物', icon: 'shopping', color: '#EF476F', amount: 789 },
+    { id: 204, name: '娱乐', icon: 'entertainment', color: '#9B59B6', amount: 300 },
+    { id: 205, name: '居住', icon: 'housing', color: '#06D6A0', amount: 2500 },
+    { id: 206, name: '医疗', icon: 'medical', color: '#EF476F', amount: 0 },
+    { id: 207, name: '教育', icon: 'education', color: '#118AB2', amount: 500 },
+    { id: 208, name: '通讯', icon: 'communication', color: '#FFD166', amount: 100 },
+    { id: 209, name: '服饰', icon: 'shopping', color: '#3A86FF', amount: 0 },
+    { id: 210, name: '日用', icon: 'list', color: '#6B7280', amount: 0 },
+  ]
 }
 
-// 生命周期
+// Lifecycle
 onMounted(async () => {
-  // 获取设备信息
-  const deviceInfo = await DeviceUtils.getDeviceInfo()
-  safeAreaBottom.value = deviceInfo.safeAreaInsets.bottom
+  const today = new Date()
+  form.transactionDate = formatDate(today)
+  form.transactionTime = today.toISOString()
 
-  // 设置默认时间
-  form.transactionTime = new Date().toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-
-  currentTime.value = new Date().toISOString()
-
-  // 加载数据
   await Promise.all([
     accountingStore.loadCategories(),
-    accountingStore.loadAccounts()
+    accountingStore.loadAccounts(),
+    bookStore.loadBooks()
   ])
-
-  // 获取页面参数
-  const pages = getCurrentPages()
-  const currentPage = pages[pages.length - 1]
-  const options = currentPage.options || {}
-
-  // 如果有类型参数，设置默认类型
-  if (options.type) {
-    const type = parseInt(options.type as string)
-    if ([1, 2, 3].includes(type)) {
-      form.type = type
-    }
-  }
 })
 </script>
 
 <style lang="scss" scoped>
 .accounting-page {
-  height: 100vh;
-  background-color: #f5f5f5;
+  min-height: 100vh;
+  background: var(--gzang-bg);
   display: flex;
   flex-direction: column;
 }
 
-.nav-bar {
-  background-color: #fff;
+// ================== Header ==================
+.page-header {
+  background: var(--gzang-bg);
+  padding: var(--apple-space-4);
+  padding-top: calc(constant(safe-area-inset-top) + var(--apple-space-3));
+}
+
+.header-nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  border-bottom: 1px solid #e5e5e5;
-  position: relative;
-  z-index: 10;
-}
-
-.nav-left, .nav-right {
-  width: 60px;
-  display: flex;
-  align-items: center;
+  margin-bottom: var(--apple-space-4);
 }
 
 .nav-left {
-  justify-content: flex-start;
-}
-
-.nav-right {
-  justify-content: flex-end;
-}
-
-.nav-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-}
-
-.nav-action {
-  font-size: 14px;
-  color: #1989fa;
-  cursor: pointer;
-}
-
-.main-content {
   flex: 1;
-  background-color: #f5f5f5;
 }
 
-.type-selector {
-  background-color: #fff;
-  margin: 16px;
-  border-radius: 12px;
-  overflow: hidden;
+.book-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--apple-space-2);
+  padding: var(--apple-space-2) var(--apple-space-3);
+  background: var(--gzang-surface);
+  border-radius: var(--apple-radius-full);
+  box-shadow: var(--apple-shadow-xs);
+  
+  .book-name {
+    font-size: var(--apple-text-sm);
+    font-weight: var(--apple-font-medium);
+    color: var(--gzang-text-primary);
+  }
 }
 
-.type-tabs {
+// ================== Segmented Control ==================
+.segmented-control {
   display: flex;
+  background: var(--gzang-surface);
+  border-radius: var(--apple-radius-lg);
+  padding: 4px;
+  box-shadow: var(--apple-shadow-xs);
 }
 
-.type-tab {
+.segment-item {
   flex: 1;
-  padding: 16px;
-  text-align: center;
-  transition: all 0.2s;
-
-  &.active {
-    background-color: #1989fa;
-  }
-}
-
-.type-text {
-  font-size: 16px;
-  color: #333;
-
-  .active & {
-    color: white;
-    font-weight: 600;
-  }
-}
-
-.form-container {
-  background-color: #fff;
-  margin: 0 16px 16px 16px;
-  border-radius: 12px;
-  padding: 24px;
-}
-
-.form-item {
-  margin-bottom: 24px;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-}
-
-.amount-input {
   display: flex;
   align-items: center;
-  padding: 16px;
-  background-color: #f8f9fa;
-  border-radius: 12px;
+  justify-content: center;
+  gap: var(--apple-space-2);
+  padding: var(--apple-space-3);
+  border-radius: calc(var(--apple-radius-lg) - 4px);
+  transition: all var(--apple-duration-fast) var(--apple-ease-out);
+  
+  .segment-label {
+    font-size: var(--apple-text-sm);
+    font-weight: var(--apple-font-medium);
+    color: var(--gzang-text-secondary);
+  }
+  
+  &.active {
+    background: var(--gzang-secondary);
+    box-shadow: 0 2px 8px rgba(251, 139, 36, 0.3);
+    
+    .segment-label {
+      color: white;
+    }
+  }
+}
+
+// ================== Main Content ==================
+.main-content {
+  flex: 1;
+  padding: 0 var(--apple-space-4);
+}
+
+// ================== Amount Section ==================
+.amount-section {
+  text-align: center;
+  padding: var(--apple-space-6) 0;
+}
+
+.amount-display {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
 }
 
 .currency {
-  font-size: 24px;
-  font-weight: 600;
-  color: #1989fa;
-  margin-right: 8px;
+  font-size: var(--apple-text-2xl);
+  font-weight: var(--apple-font-semibold);
+  color: var(--gzang-primary);
+  margin-right: var(--apple-space-1);
 }
 
-.amount-field {
-  flex: 1;
-  font-size: 24px;
-  font-weight: 600;
-  color: #333;
+.amount-input {
+  font-size: 56px;
+  font-weight: var(--apple-font-bold);
+  color: var(--gzang-text-primary);
+  text-align: center;
+  background: transparent;
   border: none;
   outline: none;
-  background: transparent;
+  font-family: var(--font-mono);
+  letter-spacing: -1px;
+  min-width: 200px;
+  
+  &::placeholder {
+    color: var(--gzang-text-tertiary);
+  }
 }
 
-.field-item {
+// ================== Quick Amounts ==================
+.quick-amounts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--apple-space-2);
+  justify-content: center;
+  margin-bottom: var(--apple-space-5);
+}
+
+.quick-amount-btn {
+  padding: var(--apple-space-2) var(--apple-space-4);
+  background: var(--gzang-surface);
+  border-radius: var(--apple-radius-full);
+  font-size: var(--apple-text-sm);
+  font-weight: var(--apple-font-medium);
+  color: var(--gzang-text-secondary);
+  box-shadow: var(--apple-shadow-xs);
+  transition: all var(--apple-duration-fast) var(--apple-ease-out);
+  
+  &:active {
+    transform: scale(0.95);
+    background: var(--gzang-secondary);
+    color: white;
+  }
+}
+
+// ================== Info Row (Apple List Style) ==================
+.info-row {
+  margin-bottom: var(--apple-space-4);
+  border-radius: var(--apple-radius-xl);
+  overflow: hidden;
+}
+
+.info-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  background-color: #f8f9fa;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-
+  padding: var(--apple-space-4);
+  background: var(--gzang-surface);
+  transition: background-color var(--apple-duration-fast) var(--apple-ease-out);
+  
+  &:not(:last-child) {
+    border-bottom: 0.5px solid var(--gzang-border);
+  }
+  
   &:active {
-    background-color: #e9ecef;
+    background: var(--gzang-bg);
   }
 }
 
-.field-label {
+.info-left {
   display: flex;
   align-items: center;
+  gap: var(--apple-space-3);
 }
 
-.label-text {
-  font-size: 16px;
-  color: #333;
-  margin-left: 8px;
-}
-
-.field-value {
+.info-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--apple-radius-sm);
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
-.value-text {
-  font-size: 16px;
-  color: #333;
-  margin-right: 8px;
+.info-label {
+  font-size: var(--apple-text-base);
+  color: var(--gzang-text-primary);
+  font-weight: var(--apple-font-medium);
+}
 
+.info-right {
+  display: flex;
+  align-items: center;
+  gap: var(--apple-space-2);
+}
+
+.info-value {
+  font-size: var(--apple-text-sm);
+  color: var(--gzang-text-secondary);
+  
   &.placeholder {
-    color: #ccc;
+    color: var(--gzang-text-tertiary);
   }
 }
 
-.error-text {
-  font-size: 12px;
-  color: #ff4d4f;
-  margin-top: 4px;
+// ================== Category Section ==================
+.category-section {
+  margin-bottom: var(--apple-space-5);
 }
 
-.remark-field {
-  width: 100%;
-  padding: 16px;
-  background-color: #f8f9fa;
-  border-radius: 12px;
-  border: none;
-  outline: none;
-  font-size: 16px;
-  min-height: 80px;
-}
-
-.remark-count {
-  text-align: right;
-  margin-top: 4px;
-}
-
-.count-text {
-  font-size: 12px;
-  color: #999;
-}
-
-.section-label {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 12px;
+.section-title {
+  font-size: var(--apple-text-lg);
+  font-weight: var(--apple-font-semibold);
+  color: var(--gzang-text-primary);
   display: block;
+  margin-bottom: var(--apple-space-3);
 }
 
-.amount-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+.category-tabs {
+  display: flex;
+  gap: var(--apple-space-2);
+  margin-bottom: var(--apple-space-4);
 }
 
-.amount-btn {
-  padding: 12px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  text-align: center;
-  cursor: pointer;
-  transition: background-color 0.2s;
-
-  &:active {
-    background-color: #e9ecef;
+.category-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--apple-space-2);
+  padding: var(--apple-space-2) var(--apple-space-4);
+  background: var(--gzang-surface);
+  border-radius: var(--apple-radius-full);
+  font-size: var(--apple-text-sm);
+  color: var(--gzang-text-secondary);
+  box-shadow: var(--apple-shadow-xs);
+  transition: all var(--apple-duration-fast) var(--apple-ease-out);
+  
+  &.active {
+    background: var(--gzang-secondary);
+    color: white;
   }
-}
-
-.amount-text {
-  font-size: 14px;
-  color: #333;
 }
 
 .category-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--apple-space-3);
 }
 
 .category-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 16px 12px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-
+  padding: var(--apple-space-3);
+  background: var(--gzang-surface);
+  border-radius: var(--apple-radius-lg);
+  box-shadow: var(--apple-shadow-xs);
+  transition: all var(--apple-duration-fast) var(--apple-ease-out);
+  
+  &.selected {
+    background: var(--gzang-secondary);
+    box-shadow: 0 4px 12px rgba(251, 139, 36, 0.3);
+    
+    .category-name,
+    .category-amount {
+      color: white;
+    }
+    
+    .category-icon {
+      background: rgba(255, 255, 255, 0.2) !important;
+    }
+  }
+  
   &:active {
-    background-color: #e9ecef;
     transform: scale(0.95);
   }
 }
 
 .category-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background-color: #fff;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--apple-radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 8px;
+  margin-bottom: var(--apple-space-2);
 }
 
 .category-name {
-  font-size: 12px;
-  color: #666;
+  font-size: var(--apple-text-xs);
+  color: var(--gzang-text-primary);
+  font-weight: var(--apple-font-medium);
   text-align: center;
 }
 
-.suggestion-list {
-  background-color: #f8f9fa;
-  border-radius: 8px;
+.category-amount {
+  font-size: 10px;
+  color: var(--gzang-text-secondary);
+  font-family: var(--font-mono);
+  margin-top: 2px;
+}
+
+// ================== Remark Section ==================
+.remark-section {
+  border-radius: var(--apple-radius-xl);
   overflow: hidden;
+  margin-bottom: var(--apple-space-5);
 }
 
-.suggestion-item {
+.remark-item {
   display: flex;
-  align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid #e5e5e5;
-  cursor: pointer;
-  transition: background-color 0.2s;
-
-  &:last-child {
-    border-bottom: none;
-  }
-
-  &:active {
-    background-color: #e9ecef;
-  }
+  padding: var(--apple-space-4);
+  background: var(--gzang-surface);
 }
 
-.suggestion-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
-  background-color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 12px;
+.remark-icon {
+  margin-right: var(--apple-space-3);
+  margin-top: 2px;
 }
 
-.suggestion-content {
+.remark-input {
   flex: 1;
+  font-size: var(--apple-text-base);
+  color: var(--gzang-text-primary);
+  background: transparent;
+  border: none;
+  outline: none;
+  min-height: 60px;
+  
+  &::placeholder {
+    color: var(--gzang-text-tertiary);
+  }
 }
 
-.suggestion-title {
-  font-size: 15px;
-  color: #333;
-  display: block;
-  margin-bottom: 4px;
+.remark-count {
+  padding: 0 var(--apple-space-4) var(--apple-space-3);
+  background: var(--gzang-surface);
+  text-align: right;
+  
+  text {
+    font-size: var(--apple-text-xs);
+    color: var(--gzang-text-tertiary);
+  }
 }
 
-.suggestion-amount {
-  font-size: 13px;
-  color: #666;
-}
-
+// ================== Action Bar ==================
 .action-bar {
-  background-color: #fff;
-  padding: 16px;
-  border-top: 1px solid #e5e5e5;
-}
-
-.action-buttons {
   display: flex;
-  gap: 12px;
+  gap: var(--apple-space-3);
+  padding: var(--apple-space-4);
+  padding-bottom: calc(var(--apple-space-4) + env(safe-area-inset-bottom));
+  background: var(--gzang-surface);
+  border-top: 0.5px solid var(--gzang-border);
 }
 
 .action-btn {
   flex: 1;
-  height: 44px;
-  border-radius: 8px;
-  border: none;
-  font-size: 16px;
-  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-
+  gap: var(--apple-space-2);
+  height: 52px;
+  border: none;
+  border-radius: var(--apple-radius-lg);
+  font-size: var(--apple-text-base);
+  font-weight: var(--apple-font-semibold);
+  transition: all var(--apple-duration-fast) var(--apple-ease-out);
+  
   &.secondary {
-    background-color: #f8f9fa;
-    color: #666;
-
+    background: var(--gzang-bg);
+    color: var(--gzang-text-secondary);
+    
     &:active {
-      background-color: #e9ecef;
+      background: var(--gzang-border);
     }
   }
-
+  
   &.primary {
-    background-color: #1989fa;
+    background: var(--gzang-secondary);
     color: white;
-
+    box-shadow: 0 4px 12px rgba(251, 139, 36, 0.3);
+    
     &:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
+      background: var(--gzang-border);
+      box-shadow: none;
     }
-
-    &:not(:disabled):active {
-      background-color: #0066cc;
+    
+    &:active:not(:disabled) {
+      transform: scale(0.98);
     }
-
-    &.loading {
-      pointer-events: none;
-    }
+  }
+  
+  .spin {
+    animation: apple-spin 1s linear infinite;
   }
 }
 
-.bottom-safe-area {
-  background-color: #fff;
+@keyframes apple-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
+// ================== Error Text ==================
+.error-text {
+  font-size: var(--apple-text-xs);
+  color: var(--gzang-danger);
+  margin-top: var(--apple-space-2);
+}
+
+// ================== Picker ==================
 .picker-container {
-  background-color: #fff;
-  border-radius: 12px 12px 0 0;
+  background: var(--gzang-surface);
+  border-radius: var(--apple-radius-xl) var(--apple-radius-xl) 0 0;
   overflow: hidden;
 }
 
@@ -979,49 +1024,103 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid #e5e5e5;
+  padding: var(--apple-space-4);
+  border-bottom: 0.5px solid var(--gzang-border);
 }
 
-.picker-cancel, .picker-confirm {
-  font-size: 16px;
-  color: #1989fa;
-  cursor: pointer;
+.picker-cancel,
+.picker-confirm {
+  font-size: var(--apple-text-base);
+  font-weight: var(--apple-font-medium);
+}
+
+.picker-cancel {
+  color: var(--gzang-text-secondary);
+}
+
+.picker-confirm {
+  color: var(--gzang-secondary);
 }
 
 .picker-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-}
-
-.category-picker, .account-picker {
-  height: 200px;
+  font-size: var(--apple-text-lg);
+  font-weight: var(--apple-font-semibold);
+  color: var(--gzang-text-primary);
 }
 
 .picker-item {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 40px;
-  font-size: 16px;
-  color: #333;
+  height: 44px;
+  font-size: var(--apple-text-base);
+  color: var(--gzang-text-primary);
 }
 
-.datetime-picker {
-  background-color: #fff;
-  border-radius: 12px 12px 0 0;
-  overflow: hidden;
-}
-
-.time-picker {
+.account-picker,
+.book-picker,
+.date-picker {
   height: 200px;
 }
 
-.picker-placeholder {
-  padding: 20px;
+.quick-date-btns {
+  display: flex;
+  gap: var(--apple-space-3);
+  padding: var(--apple-space-3) var(--apple-space-4);
+  border-bottom: 0.5px solid var(--gzang-border);
+}
+
+.quick-date-btn {
+  flex: 1;
+  padding: var(--apple-space-2);
   text-align: center;
-  color: #999;
-  font-size: 16px;
+  background: var(--gzang-bg);
+  border-radius: var(--apple-radius-sm);
+  font-size: var(--apple-text-sm);
+  color: var(--gzang-text-secondary);
+  transition: all var(--apple-duration-fast) var(--apple-ease-out);
+  
+  &.active {
+    background: var(--gzang-secondary);
+    color: white;
+  }
+}
+
+// ================== Bottom Safe Area ==================
+.bottom-safe-area {
+  height: calc(var(--apple-space-4) + 84px);
+}
+
+// ================== Dark Mode ==================
+@media (prefers-color-scheme: dark) {
+  .page-header,
+  .main-content {
+    background: var(--gzang-bg, #000000);
+  }
+  
+  .amount-input {
+    color: var(--gzang-text-primary, #FFFFFF);
+  }
+  
+  .info-item,
+  .category-item,
+  .remark-item,
+  .remark-count,
+  .segment-item:not(.active),
+  .book-selector,
+  .quick-amount-btn {
+    background: var(--gzang-surface, #1C1C1E);
+  }
+}
+
+[data-theme="dark"] {
+  .page-header,
+  .main-content {
+    background: var(--gzang-bg, #000000);
+  }
+  
+  .amount-input {
+    color: var(--gzang-text-primary, #FFFFFF);
+  }
 }
 </style>
