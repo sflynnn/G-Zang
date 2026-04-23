@@ -125,6 +125,15 @@ const routes: RouteRecordRaw[] = [
           title: '系统设置',
           permission: 'SYSTEM_CONFIG'
         }
+      },
+      {
+        path: 'menu',
+        name: 'MenuManagement',
+        component: () => import('@/views/MenuManagement.vue'),
+        meta: {
+          title: '菜单管理',
+          permission: 'MENU_MANAGE'
+        }
       }
     ]
   },

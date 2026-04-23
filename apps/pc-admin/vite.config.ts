@@ -5,10 +5,17 @@ import { resolve } from 'path';
 export default defineConfig({
   plugins: [vue()],
   server: {
-    port: 8082,
+    port: 3000,
     cors: true,
     headers: {
       'Access-Control-Allow-Origin': '*'
+    },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8082',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '/api')
+      }
     }
   },
   resolve: {

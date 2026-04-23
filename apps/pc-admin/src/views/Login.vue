@@ -45,23 +45,35 @@
 
       <!-- 右上角工具栏 -->
       <div class="login-toolbar">
-        <n-space>
-          <!-- 语言切换 -->
-          <n-dropdown :options="languageOptions" @select="handleLanguageChange" trigger="click">
-            <n-button text :title="$t('common.language')">
-              <template #icon>
-                <n-icon :component="LanguageOutline" />
-              </template>
-            </n-button>
-          </n-dropdown>
+        <!-- 语言切换 -->
+        <n-dropdown
+          :options="languageOptions"
+          @select="handleLanguageChange"
+          trigger="click"
+        >
+          <button
+            class="flex items-center justify-center gap-1 px-2 h-9 rounded-lg transition-colors border"
+            :class="[
+              appStore.language === 'zh-CN'
+                ? isDark ? 'border-dark-border bg-dark-surface-elevated text-dark-text-primary' : 'border-gray-200 bg-gray-50 text-text-primary font-medium'
+                : isDark ? 'hover:bg-dark-surface-elevated text-dark-text-secondary hover:text-dark-text-primary border-transparent' : 'hover:bg-gray-100 text-text-secondary hover:text-text-primary border-transparent'
+            ]"
+            :title="$t('common.language')"
+          >
+            <n-icon :component="LanguageOutline" :size="16" />
+            <span class="text-xs font-semibold">{{ appStore.language === 'zh-CN' ? '中' : 'EN' }}</span>
+          </button>
+        </n-dropdown>
 
-          <!-- 主题切换 -->
-          <n-button text @click="handleThemeToggle" :title="$t('common.toggleTheme')">
-            <template #icon>
-              <n-icon :component="appStore.isDark ? SunnyOutline : MoonOutline" />
-            </template>
-          </n-button>
-        </n-space>
+        <!-- 主题切换 -->
+        <button
+          @click="handleThemeToggle"
+          class="p-2 rounded-lg transition-colors"
+          :class="isDark ? 'hover:bg-dark-surface-elevated text-dark-text-secondary hover:text-dark-text-primary' : 'hover:bg-gray-100 text-text-secondary hover:text-text-primary'"
+          :title="$t('common.toggleTheme')"
+        >
+          <n-icon :component="isDark ? SunnyOutline : MoonOutline" :size="18" />
+        </button>
       </div>
 
       <!-- 表单容器 -->
@@ -146,11 +158,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch, nextTick, computed } from 'vue';
+import { ref, reactive, onMounted, watch, nextTick, computed, h } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import { NIcon } from 'naive-ui';
 // Icons are no longer needed in the simplified Apple-style design
-import { LanguageOutline, SunnyOutline, MoonOutline } from '@vicons/ionicons5';
+import { LanguageOutline, SunnyOutline, MoonOutline, CheckmarkCircleSharp } from '@vicons/ionicons5';
 import { useAppStore } from '@/stores/app';
 import { login } from '@/api/auth';
 import SliderCaptcha from '@/components/SliderCaptcha.vue';
@@ -159,17 +172,25 @@ const router = useRouter();
 const appStore = useAppStore();
 const { t, locale } = useI18n();
 
-// 语言选项
-const languageOptions = [
+const isDark = computed(() => appStore.isDark);
+
+// 语言选项（动态计算，当前语言显示勾选）
+const languageOptions = computed(() => [
   {
-    label: computed(() => t('common.chinese')),
-    key: 'zh-CN'
+    label: t('common.chinese'),
+    key: 'zh-CN',
+    icon: appStore.language === 'zh-CN'
+      ? () => h(NIcon, { component: CheckmarkCircleSharp, size: 16, class: 'text-secondary' })
+      : undefined,
   },
   {
-    label: computed(() => t('common.english')),
-    key: 'en-US'
+    label: t('common.english'),
+    key: 'en-US',
+    icon: appStore.language === 'en-US'
+      ? () => h(NIcon, { component: CheckmarkCircleSharp, size: 16, class: 'text-secondary' })
+      : undefined,
   }
-];
+]);
 
 // 表单引用
 const formRef = ref();
@@ -259,19 +280,20 @@ const handleSubmit = async () => {
     if (response.code === 0) {
       // 保存token和用户信息（含角色和权限）
       const loginData = response.data;
+      const userInfo = loginData.user;
       appStore.setToken(loginData.token || '');
       appStore.setUser({
-        userId: loginData.userId,
-        username: loginData.username,
-        nickname: loginData.nickname || loginData.username,
-        avatar: loginData.avatar,
-        roleId: loginData.roleId,
-        roleCode: loginData.roleCode,
-        roleName: loginData.roleName,
-        companyId: loginData.companyId,
-        companyName: loginData.companyName,
-        status: loginData.status,
-        permissions: loginData.permissions || []
+        userId: userInfo.userId,
+        username: userInfo.username,
+        nickname: userInfo.nickname || userInfo.username,
+        avatar: userInfo.avatar,
+        roleId: userInfo.roleId,
+        roleCode: userInfo.roleCode || '',
+        roleName: userInfo.roleName || '',
+        companyId: userInfo.companyId,
+        companyName: userInfo.companyName,
+        status: userInfo.status,
+        permissions: userInfo.permissions || loginData.permissions || []
       });
 
       // 如果选择记住我，保存用户名
@@ -422,17 +444,33 @@ const handleSubmit = async () => {
   top: 1rem;
   right: 1rem;
   z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.login-toolbar .n-button {
-  background: transparent;
-  border: none;
+/* 深色主题下文字颜色 */
+.text-text-primary {
+  color: var(--color-gray-900);
+}
+
+.text-text-secondary {
+  color: var(--color-gray-500);
+}
+
+.bg-dark-surface-elevated {
+  background-color: #374151;
+}
+
+.border-dark-border {
+  border-color: #374151;
+}
+
+.text-dark-text-primary {
+  color: #F9FAFB;
+}
+
+.text-dark-text-secondary {
   color: #9CA3AF;
-  transition: all var(--transition-fast);
-}
-
-.login-toolbar .n-button:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-1px);
 }
 </style>

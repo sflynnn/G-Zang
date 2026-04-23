@@ -62,25 +62,25 @@ export interface ApiResponse<T> {
 
 // 获取公司列表
 export const getCompanyList = (params?: CompanyListParams): Promise<ApiResponse<PageResponse<CompanyResponse>>> => {
-  return api.get<ApiResponse<PageResponse<CompanyResponse>>>('/api/v1/companies', { params });
+  return api.get<ApiResponse<PageResponse<CompanyResponse>>>('/admin/companies', { params });
 };
 
 // 获取公司详情
 export const getCompanyDetail = (id: number) => {
-  return api.get<CompanyResponse>(`/api/v1/companies/${id}`);
+  return api.get<CompanyResponse>(`/admin/companies/${id}`);
 };
 
 // 创建公司
 export const createCompany = (data: CreateCompanyRequest) => {
-  return api.post('/api/v1/companies', data);
+  return api.post('/admin/companies', data);
 };
 
 // 更新公司
 export const updateCompany = (id: number, data: UpdateCompanyRequest) => {
-  return api.put(`/api/v1/companies/${id}`, data);
+  return api.put(`/admin/companies/${id}`, data);
 };
 
 // 删除公司
 export const deleteCompany = (id: number) => {
-  return api.delete(`/api/v1/companies/${id}`);
+  return api.delete(`/admin/companies/${id}`);
 };

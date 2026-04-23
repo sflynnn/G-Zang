@@ -41,35 +41,35 @@ export interface RoleResponse {
 
 // 获取角色列表
 export const getRoleList = (params?: RoleQueryParams): Promise<RoleResponse[]> => {
-  return api.get<RoleResponse[]>('/api/v1/roles', { params });
+  return api.get<RoleResponse[]>('/admin/roles', { params });
 };
 
 // 获取角色详情（含权限）
 export const getRoleDetail = (id: number) => {
-  return api.get<RoleResponse>(`/api/v1/roles/${id}`);
+  return api.get<RoleResponse>(`/admin/roles/${id}`);
 };
 
 // 创建角色
 export const createRole = (data: CreateRoleRequest) => {
-  return api.post('/api/v1/roles', data);
+  return api.post('/admin/roles', data);
 };
 
 // 更新角色
 export const updateRole = (id: number, data: UpdateRoleRequest) => {
-  return api.put(`/api/v1/roles/${id}`, data);
+  return api.put(`/admin/roles/${id}`, data);
 };
 
 // 删除角色
 export const deleteRole = (id: number) => {
-  return api.delete(`/api/v1/roles/${id}`);
+  return api.delete(`/admin/roles/${id}`);
 };
 
 // 获取角色权限ID列表
 export const getRolePermissions = (id: number) => {
-  return api.get<number[]>(`/api/v1/roles/${id}/permissions`);
+  return api.get<number[]>(`/admin/roles/${id}/permissions`);
 };
 
 // 更新角色权限
 export const updateRolePermissions = (id: number, permissionIds: number[]) => {
-  return api.put(`/api/v1/roles/${id}/permissions`, permissionIds);
+  return api.put(`/admin/roles/${id}/permissions`, permissionIds);
 };

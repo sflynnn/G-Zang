@@ -34,10 +34,10 @@ export interface AuditLogPageResponse {
 
 // 分页查询操作日志
 export const getAuditLogs = (params?: AuditLogQueryParams): Promise<AuditLogPageResponse> => {
-  return api.get<AuditLogPageResponse>('/api/v1/audit-logs', { params });
+  return api.get<AuditLogPageResponse>('/admin/operation-logs', { params });
 };
 
 // 获取日志详情
 export const getAuditLogDetail = (id: number) => {
-  return api.get<AuditLogResponse>(`/api/v1/audit-logs/${id}`);
+  return api.get<AuditLogResponse>(`/admin/operation-logs/${id}`);
 };

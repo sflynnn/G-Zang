@@ -3,7 +3,7 @@ import { useLoadingStore } from '@/stores/loading';
 
 // 创建axios实例
 const api: AxiosInstance = axios.create({
-  baseURL: (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8080',
+  baseURL: (import.meta as any).env?.VITE_API_BASE_URL || '/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
@@ -119,3 +119,4 @@ export * from './role';
 export * from './permission';
 export * from './audit-log';
 export * from './company';
+export * from './menu';

@@ -687,6 +687,7 @@ const menuIcons: Record<string, any> = {
   AuditLog: DocumentTextOutline,
   SystemSettings: SettingsOutline,
   Profile: PersonOutline,
+  MenuManagement: MenuOutline,
 };
 
 // 获取菜单图标
@@ -712,14 +713,19 @@ const allMenuOptions = [
     permission: 'ROLE_MANAGE'
   },
   {
-    labelKey: 'common.companyManagement',
-    key: 'CompanyManagement',
-    permission: 'COMPANY_MANAGE'
+    labelKey: 'menu.menuManagement',
+    key: 'MenuManagement',
+    permission: 'MENU_MANAGE'
   },
   {
     labelKey: 'common.permissionManagement',
     key: 'PermissionManagement',
     permission: 'ROLE_MANAGE'
+  },
+  {
+    labelKey: 'common.companyManagement',
+    key: 'CompanyManagement',
+    permission: 'COMPANY_MANAGE'
   },
   {
     labelKey: 'common.auditLog',
@@ -794,7 +800,6 @@ const handleLanguageChange = (lang: string) => {
 };
 
 const handleMenuClick = (key: string) => {
-  console.log('点击菜单:', key);
   const routeMap: Record<string, string> = {
     Dashboard: '/dashboard',
     UserManagement: '/users',
@@ -803,7 +808,8 @@ const handleMenuClick = (key: string) => {
     PermissionManagement: '/permissions',
     AuditLog: '/audit-logs',
     SystemSettings: '/system',
-    Profile: '/profile'
+    Profile: '/profile',
+    MenuManagement: '/system/menu'
   };
 
   if (routeMap[key]) {
