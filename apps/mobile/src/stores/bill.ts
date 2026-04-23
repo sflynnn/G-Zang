@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { reportApi } from '@shared/api'
+import * as transactionApi from '@/api/transaction'
 
 // 类型定义
 export interface Transaction {
@@ -45,11 +45,11 @@ export const useBillStore = defineStore('bill', () => {
   const size = ref(20)
   const total = ref(0)
   const filters = ref({
-    type: undefined,
-    categoryId: undefined,
-    accountId: undefined,
-    dateRange: undefined,
-    keyword: undefined
+    type: undefined as number | undefined,
+    categoryId: undefined as number | undefined,
+    accountId: undefined as number | undefined,
+    dateRange: undefined as string[] | undefined,
+    keyword: undefined as string | undefined
   })
 
   // 计算属性
@@ -102,24 +102,23 @@ export const useBillStore = defineStore('bill', () => {
         ...filters.value
       }
 
-      const response = await reportApi.getTransactions(params)
+      const data = await transactionApi.getTransactions(params)
 
       if (loadMore) {
-        transactions.value.push(...response.data.records)
+        transactions.value.push(...data.records as Transaction[])
       } else {
-        transactions.value = response.data.records
+        transactions.value = data.records as Transaction[]
       }
 
-      total.value = response.data.total
+      total.value = data.total
       finished.value = transactions.value.length >= total.value
 
       if (!finished.value) {
         page.value++
       }
 
-      return response
+      return data
     } catch (error) {
-      console.error('加载交易记录失败:', error)
       throw error
     } finally {
       loading.value = false
@@ -134,18 +133,24 @@ export const useBillStore = defineStore('bill', () => {
   }
 
   // 设置筛选条件
-  const setFilters = (newFilters: Partial<BillState['filters']>) => {
+  const setFilters = (newFilters: Partial<{
+    type?: number
+    categoryId?: number
+    accountId?: number
+    dateRange?: string[]
+    keyword?: string
+  }>) => {
     filters.value = { ...filters.value, ...newFilters }
   }
 
   // 清空筛选条件
   const clearFilters = () => {
     filters.value = {
-      type: undefined,
-      categoryId: undefined,
-      accountId: undefined,
-      dateRange: undefined,
-      keyword: undefined
+      type: undefined as number | undefined,
+      categoryId: undefined as number | undefined,
+      accountId: undefined as number | undefined,
+      dateRange: undefined as string[] | undefined,
+      keyword: undefined as string | undefined
     }
   }
 
@@ -153,7 +158,7 @@ export const useBillStore = defineStore('bill', () => {
   const deleteTransaction = async (id: number) => {
     try {
       loading.value = true
-      await reportApi.deleteTransaction(id)
+      await transactionApi.deleteTransaction(id)
 
       // 从列表中移除
       transactions.value = transactions.value.filter(t => t.id !== id)
@@ -161,7 +166,6 @@ export const useBillStore = defineStore('bill', () => {
 
       return true
     } catch (error) {
-      console.error('删除交易记录失败:', error)
       throw error
     } finally {
       loading.value = false
@@ -172,7 +176,7 @@ export const useBillStore = defineStore('bill', () => {
   const batchDelete = async (ids: number[]) => {
     try {
       loading.value = true
-      await reportApi.batchDeleteTransactions(ids)
+      await Promise.all(ids.map(id => transactionApi.deleteTransaction(id)))
 
       // 从列表中移除
       transactions.value = transactions.value.filter(t => !ids.includes(t.id))
@@ -180,7 +184,6 @@ export const useBillStore = defineStore('bill', () => {
 
       return true
     } catch (error) {
-      console.error('批量删除失败:', error)
       throw error
     } finally {
       loading.value = false
@@ -191,10 +194,9 @@ export const useBillStore = defineStore('bill', () => {
   const getTransactionDetail = async (id: number) => {
     try {
       loading.value = true
-      const response = await reportApi.getTransactionDetail(id)
-      return response.data
+      const data = await transactionApi.getTransaction(id)
+      return data
     } catch (error) {
-      console.error('获取交易详情失败:', error)
       throw error
     } finally {
       loading.value = false

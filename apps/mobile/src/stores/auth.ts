@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { authApi } from '@shared/api'
+import { login as loginApi, getCurrentUser as getCurrentUserApi } from '@/api/auth'
+import { saveToken, clearToken as clearTokenLocal } from '@/api/auth'
 
 // 类型定义
 export interface LoginParams {
@@ -14,9 +15,10 @@ export interface UserInfo {
   username: string
   nickname?: string
   avatar?: string
-  role: string
   companyId?: number
-  permissions: string[]
+  status?: number
+  role?: string
+  permissions?: string[]
 }
 
 export interface AuthState {
@@ -35,7 +37,9 @@ export const useAuthStore = defineStore('auth', () => {
   const loading = ref(false)
 
   // 计算属性
-  const isAuthenticated = computed(() => !!token.value)
+  const isAuthenticated = computed(() => {
+    return !!token.value && !checkTokenExpired()
+  })
   const isAdmin = computed(() => user.value?.role === 'ADMIN')
   const displayName = computed(() => {
     return user.value?.nickname || user.value?.username || '未登录'
@@ -45,21 +49,19 @@ export const useAuthStore = defineStore('auth', () => {
   const login = async (params: LoginParams) => {
     try {
       loading.value = true
-      const response = await authApi.login(params)
+      const response = await loginApi(params)
 
       // 更新状态
-      user.value = response.data.user
-      token.value = response.data.token
-      refreshToken.value = response.data.refreshToken
+      user.value = response.user
+      token.value = response.token
+      refreshToken.value = (response as any).refreshToken || ''
 
       // 本地存储
-      uni.setStorageSync('token', token.value)
-      uni.setStorageSync('refreshToken', refreshToken.value)
+      saveToken(token.value, refreshToken.value)
       uni.setStorageSync('user', JSON.stringify(user.value))
 
       return response
     } catch (error) {
-      console.error('登录失败:', error)
       throw error
     } finally {
       loading.value = false
@@ -70,7 +72,8 @@ export const useAuthStore = defineStore('auth', () => {
   const register = async (params: any) => {
     try {
       loading.value = true
-      const response = await authApi.register(params)
+      const { register: registerApi } = await import('@/api/auth')
+      await registerApi(params)
 
       // 自动登录
       await login({
@@ -78,9 +81,8 @@ export const useAuthStore = defineStore('auth', () => {
         password: params.password
       })
 
-      return response
+      return true
     } catch (error) {
-      console.error('注册失败:', error)
       throw error
     } finally {
       loading.value = false
@@ -88,37 +90,40 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   // 登出
-  const logout = () => {
-    user.value = null
-    token.value = ''
-    refreshToken.value = ''
+  const logout = async () => {
+    try {
+      const { logout: logoutApi } = await import('@/api/auth')
+      await logoutApi()
+    } catch (e) {
+      // ignore logout API error
+    } finally {
+      user.value = null
+      token.value = ''
+      refreshToken.value = ''
 
-    // 清除本地存储
-    uni.removeStorageSync('token')
-    uni.removeStorageSync('refreshToken')
-    uni.removeStorageSync('user')
+      // 清除本地存储
+      clearTokenLocal()
+      uni.removeStorageSync('user')
 
-    // 跳转到登录页
-    uni.reLaunch({
-      url: '/pages/login/index'
-    })
+      // 跳转到登录页
+      uni.reLaunch({
+        url: '/pages/login/index'
+      })
+    }
   }
 
   // 刷新token
   const refresh = async () => {
     try {
-      const response = await authApi.refresh({
-        refreshToken: refreshToken.value
-      })
+      const { refreshToken: refreshTokenApi } = await import('@/api/auth')
+      const response = await refreshTokenApi()
 
-      token.value = response.data.token
-      refreshToken.value = response.data.refreshToken
+      token.value = response.token
+      refreshToken.value = (response as any).refreshToken || ''
 
       // 更新本地存储
-      uni.setStorageSync('token', token.value)
-      uni.setStorageSync('refreshToken', refreshToken.value)
+      saveToken(token.value, refreshToken.value)
     } catch (error) {
-      console.error('刷新token失败:', error)
       logout() // 刷新失败，清除登录状态
       throw error
     }
@@ -128,15 +133,14 @@ export const useAuthStore = defineStore('auth', () => {
   const getUserInfo = async () => {
     try {
       loading.value = true
-      const response = await authApi.getCurrentUser()
-      user.value = response.data
+      const response = await getCurrentUserApi()
+      user.value = response
 
       // 更新本地存储
       uni.setStorageSync('user', JSON.stringify(user.value))
 
       return response
     } catch (error) {
-      console.error('获取用户信息失败:', error)
       throw error
     } finally {
       loading.value = false
@@ -150,17 +154,32 @@ export const useAuthStore = defineStore('auth', () => {
       const savedRefreshToken = uni.getStorageSync('refreshToken')
       const savedUser = uni.getStorageSync('user')
 
-      if (savedToken && savedRefreshToken) {
+      // 优先使用 token 判断是否登录（refreshToken 可能后端未返回）
+      if (savedToken) {
+        // 先设置 token（即使过期也保留，用于后续刷新）
         token.value = savedToken
-        refreshToken.value = savedRefreshToken
+        refreshToken.value = savedRefreshToken || ''
 
-        if (savedUser) {
-          user.value = JSON.parse(savedUser)
+        // 验证 token 是否过期
+        if (checkTokenExpired()) {
+          // Token 已过期，清除
+          token.value = ''
+          refreshToken.value = ''
+          clearTokenLocal()
+          uni.removeStorageSync('user')
+        } else {
+          // Token 有效，恢复用户信息
+          if (savedUser) {
+            user.value = JSON.parse(savedUser)
+          }
         }
       }
     } catch (error) {
-      console.error('初始化认证状态失败:', error)
-      logout()
+      // 解析失败，清除状态
+      token.value = ''
+      refreshToken.value = ''
+      clearTokenLocal()
+      uni.removeStorageSync('user')
     }
   }
 
@@ -174,7 +193,6 @@ export const useAuthStore = defineStore('auth', () => {
       const exp = payload.exp * 1000 // 转换为毫秒
       return Date.now() >= exp
     } catch (error) {
-      console.error('解析token失败:', error)
       return true
     }
   }

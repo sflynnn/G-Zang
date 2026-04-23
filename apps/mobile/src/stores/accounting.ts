@@ -1,27 +1,17 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { accountingApi } from '@shared/api'
+import { getAccounts as apiGetAccounts } from '@/api/account'
+import { getCategories as apiGetCategories, type CategoryVO } from '@/api/category'
+import { createTransaction as apiCreateTransaction } from '@/api/transaction'
+import type { Account, Category, TransactionType } from '@/types'
 
 // 类型定义
-export interface Category {
-  id: number
-  name: string
-  icon: string
-  type: 1 | 2 // 1: 收入, 2: 支出
-  parentId?: number
-  children?: Category[]
-}
+export type { Category, Account, TransactionType }
+export type { TransactionForm, TransactionFilters, TransactionSummary } from '@/types'
 
-export interface Account {
-  id: number
-  name: string
-  type: string
-  balance: number
-  currency: string
-}
-
-export interface TransactionForm {
-  type: 1 | 2 | 3 // 1: 收入, 2: 支出, 3: 转账
+// 交易表单类型（带 targetAccountId，用于转账）
+export interface AccountingTransactionForm {
+  type: TransactionType | 1 | 2 | 3 // 1: 收入, 2: 支出, 3: 转账
   amount: number
   categoryId: number
   accountId: number
@@ -37,6 +27,24 @@ export interface AccountingState {
   recentCategories: Category[]
   recentAccounts: Account[]
   loading: boolean
+}
+
+// 将后端分类数据转换为前端格式
+function transformCategory(category: CategoryVO): Category {
+  return {
+    ...category,
+    name: category.categoryName, // 前端用 name 方便展示
+  }
+}
+
+// 将后端账户数据转换为前端格式
+function transformAccount(account: Account): Account {
+  return {
+    ...account,
+    name: account.accountName, // 前端用 name 方便展示
+    type: String(account.accountType), // 前端用 string 类型
+    currency: account.currency || 'CNY', // 默认货币
+  }
 }
 
 // Store定义
@@ -58,20 +66,19 @@ export const useAccountingStore = defineStore('accounting', () => {
   )
 
   const activeAccounts = computed(() =>
-    accounts.value.filter(account => account.balance > 0)
+    accounts.value.filter(account => Number(account.balance) > 0)
   )
 
   // 加载分类
   const loadCategories = async () => {
     try {
       loading.value = true
-      const response = await accountingApi.getCategories()
-      categories.value = response.data
+      const data = await apiGetCategories()
+      categories.value = data.map(transformCategory)
 
       // 缓存最近使用的分类
       loadRecentCategories()
     } catch (error) {
-      console.error('加载分类失败:', error)
       throw error
     } finally {
       loading.value = false
@@ -82,13 +89,12 @@ export const useAccountingStore = defineStore('accounting', () => {
   const loadAccounts = async () => {
     try {
       loading.value = true
-      const response = await accountingApi.getAccounts()
-      accounts.value = response.data
+      const data = await apiGetAccounts({ skipLoading: true })
+      accounts.value = data.map(transformAccount)
 
       // 缓存最近使用的账户
       loadRecentAccounts()
     } catch (error) {
-      console.error('加载账户失败:', error)
       throw error
     } finally {
       loading.value = false
@@ -96,10 +102,17 @@ export const useAccountingStore = defineStore('accounting', () => {
   }
 
   // 创建交易
-  const createTransaction = async (form: TransactionForm) => {
+  const createTransaction = async (form: AccountingTransactionForm) => {
     try {
       loading.value = true
-      const response = await accountingApi.createTransaction(form)
+      await apiCreateTransaction({
+        amount: form.amount,
+        type: form.type as number,
+        categoryId: form.categoryId,
+        accountId: form.accountId,
+        transactionTime: form.transactionTime,
+        remark: form.remark,
+      })
 
       // 更新账户余额
       await loadAccounts()
@@ -107,10 +120,7 @@ export const useAccountingStore = defineStore('accounting', () => {
       // 更新最近使用的分类和账户
       updateRecentCategory(form.categoryId)
       updateRecentAccount(form.accountId)
-
-      return response
     } catch (error) {
-      console.error('创建交易失败:', error)
       throw error
     } finally {
       loading.value = false
@@ -124,7 +134,7 @@ export const useAccountingStore = defineStore('accounting', () => {
       try {
         recentCategories.value = JSON.parse(recent)
       } catch (error) {
-        console.error('解析最近分类失败:', error)
+        // ignore parse error
       }
     }
   }
@@ -136,7 +146,7 @@ export const useAccountingStore = defineStore('accounting', () => {
       try {
         recentAccounts.value = JSON.parse(recent)
       } catch (error) {
-        console.error('解析最近账户失败:', error)
+        // ignore parse error
       }
     }
   }
@@ -169,9 +179,21 @@ export const useAccountingStore = defineStore('accounting', () => {
     return category?.icon || 'circle'
   }
 
+  // 获取分类名称
+  const getCategoryName = (categoryId: number) => {
+    const category = categories.value.find(c => c.id === categoryId)
+    return category?.name || category?.categoryName || '未知分类'
+  }
+
   // 获取账户信息
   const getAccountInfo = (accountId: number) => {
     return accounts.value.find(a => a.id === accountId)
+  }
+
+  // 获取账户名称
+  const getAccountName = (accountId: number) => {
+    const account = getAccountInfo(accountId)
+    return account?.name || account?.accountName || '未知账户'
   }
 
   // 清空状态
@@ -180,6 +202,11 @@ export const useAccountingStore = defineStore('accounting', () => {
     accounts.value = []
     recentCategories.value = []
     recentAccounts.value = []
+  }
+
+  // 设置账户数据（用于模拟数据加载）
+  const setAccounts = (data: Account[]) => {
+    accounts.value = data
   }
 
   return {
@@ -204,7 +231,10 @@ export const useAccountingStore = defineStore('accounting', () => {
     updateRecentCategory,
     updateRecentAccount,
     getCategoryIcon,
+    getCategoryName,
     getAccountInfo,
-    clearState
+    getAccountName,
+    clearState,
+    setAccounts
   }
 })

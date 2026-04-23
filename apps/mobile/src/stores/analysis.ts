@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { reportApi } from '@shared/api'
+import * as reportApi from '@/api/report'
 
 // 类型定义
 export interface ChartData {
@@ -75,14 +75,9 @@ export const useAnalysisStore = defineStore('analysis', () => {
   const loadOverview = async () => {
     try {
       loading.value = true
-      const response = await reportApi.getOverview({
-        timeRange: timeRange.value
-      })
-
-      overview.value = response.data
-      return response
+      const data = await reportApi.getSummary()
+      overview.value = data
     } catch (error) {
-      console.error('加载统计概览失败:', error)
       throw error
     } finally {
       loading.value = false
@@ -93,18 +88,14 @@ export const useAnalysisStore = defineStore('analysis', () => {
   const loadCategoryChart = async () => {
     try {
       loading.value = true
-      const response = await reportApi.getCategoryStats({
-        timeRange: timeRange.value
-      })
+      const data = await reportApi.getCategoryReport()
 
-      categoryChart.value = response.data.map((item: any) => ({
-        ...item,
-        percentage: (item.value / overview.value.totalExpense) * 100
+      categoryChart.value = data.map((item) => ({
+        name: item.categoryName,
+        value: item.totalAmount,
+        percentage: item.percentage || 0
       }))
-
-      return response
     } catch (error) {
-      console.error('加载分类统计失败:', error)
       throw error
     } finally {
       loading.value = false
@@ -115,14 +106,16 @@ export const useAnalysisStore = defineStore('analysis', () => {
   const loadTrendChart = async () => {
     try {
       loading.value = true
-      const response = await reportApi.getTrendStats({
-        timeRange: timeRange.value
-      })
+      const year = new Date().getFullYear()
+      const data = await reportApi.getMonthlyTrend({ year })
 
-      trendChart.value = response.data
-      return response
+      trendChart.value = data.map(item => ({
+        date: `${item.month}`,
+        income: item.income,
+        expense: item.expense,
+        balance: item.balance || 0
+      }))
     } catch (error) {
-      console.error('加载趋势统计失败:', error)
       throw error
     } finally {
       loading.value = false
@@ -133,12 +126,14 @@ export const useAnalysisStore = defineStore('analysis', () => {
   const loadAccountChart = async () => {
     try {
       loading.value = true
-      const response = await reportApi.getAccountStats()
+      const data = await reportApi.getAccountBalance()
 
-      accountChart.value = response.data
-      return response
+      accountChart.value = data.map(item => ({
+        name: item.accountName,
+        value: item.balance,
+        percentage: item.percentage || 0
+      }))
     } catch (error) {
-      console.error('加载账户统计失败:', error)
       throw error
     } finally {
       loading.value = false
@@ -158,7 +153,6 @@ export const useAnalysisStore = defineStore('analysis', () => {
         loadAccountChart()
       ])
     } catch (error) {
-      console.error('加载统计数据失败:', error)
       throw error
     } finally {
       loading.value = false
@@ -171,25 +165,15 @@ export const useAnalysisStore = defineStore('analysis', () => {
     await loadAllStats()
   }
 
-  // 导出数据
+  // 导出数据（移动端暂不支持服务器端导出，提示用户使用本地功能）
   const exportData = async (format: 'excel' | 'pdf' = 'excel') => {
     try {
-      loading.value = true
-      const response = await reportApi.exportReport({
-        timeRange: timeRange.value,
-        format
+      uni.showToast({
+        title: '导出功能开发中，请稍候',
+        icon: 'none'
       })
-
-      // 处理文件下载
-      const fileName = `统计报告_${timeRange.value}_${new Date().toISOString().split('T')[0]}.${format}`
-      await downloadFile(response.data.url, fileName)
-
-      return response
     } catch (error) {
-      console.error('导出数据失败:', error)
       throw error
-    } finally {
-      loading.value = false
     }
   }
 
@@ -214,10 +198,9 @@ export const useAnalysisStore = defineStore('analysis', () => {
       })
 
       downloadTask.onProgressUpdate((res) => {
-        console.log('下载进度:', res.progress)
+        // 下载进度: res.progress
       })
     } catch (error) {
-      console.error('下载文件失败:', error)
       throw error
     }
   }

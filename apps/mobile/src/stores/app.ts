@@ -15,6 +15,7 @@ export interface AppState {
     title: string
     message: string
     timestamp: number
+    read?: boolean
   }>
 }
 
@@ -33,6 +34,7 @@ export const useAppStore = defineStore('app', () => {
     title: string
     message: string
     timestamp: number
+    read?: boolean
   }>>([])
 
   // 计算属性
@@ -63,6 +65,10 @@ export const useAppStore = defineStore('app', () => {
   const setLanguage = (newLanguage: string) => {
     language.value = newLanguage
     uni.setStorageSync('language', newLanguage)
+    // 同步 i18n
+    import('@/i18n').then(({ setLocale }) => {
+      setLocale(newLanguage as 'zh-CN' | 'en-US')
+    })
   }
 
   // 设置货币
@@ -178,6 +184,16 @@ export const useAppStore = defineStore('app', () => {
 
     if (savedLanguage) {
       language.value = savedLanguage
+      // 同步 i18n
+      import('@/i18n').then(({ setLocale }) => {
+        setLocale(savedLanguage as 'zh-CN' | 'en-US')
+      })
+    } else {
+      // 初始化时同步当前 i18n 语言到 appStore
+      import('@/i18n').then(({ getLocale }) => {
+        const currentLocale = getLocale()
+        language.value = currentLocale
+      })
     }
 
     if (savedCurrency) {
@@ -186,6 +202,15 @@ export const useAppStore = defineStore('app', () => {
 
     // 应用主题
     applyTheme()
+
+    // 监听系统主题变化 (auto 模式下)
+    if (typeof uni.onThemeChange !== 'undefined') {
+      uni.onThemeChange((res) => {
+        if (theme.value === 'auto') {
+          applyTheme()
+        }
+      })
+    }
 
     // 监听网络状态
     uni.onNetworkStatusChange((res) => {
