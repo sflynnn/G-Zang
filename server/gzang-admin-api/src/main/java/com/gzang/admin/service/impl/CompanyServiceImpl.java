@@ -26,7 +26,15 @@ public class CompanyServiceImpl extends ServiceImpl<CompanyMapper, Company> impl
 
     @Override
     public IPage<Company> getCompanyPage(Page<Company> page, String keyword, Integer status) {
-        return getBaseMapper().selectPageWithKeyword(page, keyword, status);
+        log.info("CompanyServiceImpl.getCompanyPage called, keyword={}, status={}", keyword, status);
+        try {
+            IPage<Company> result = getBaseMapper().selectPageWithKeyword(page, keyword, status);
+            log.info("selectPageWithKeyword returned, total={}", result.getTotal());
+            return result;
+        } catch (Exception e) {
+            log.error("Error in selectPageWithKeyword", e);
+            throw e;
+        }
     }
 
     @Override

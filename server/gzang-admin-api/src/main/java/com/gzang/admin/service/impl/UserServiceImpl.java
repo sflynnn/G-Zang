@@ -77,6 +77,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public IPage<User> getUsersByCompanyId(IPage<User> page, Long companyId) {
-        return getBaseMapper().selectPageByCompanyId((Page<User>) page, companyId);
+        log.info("UserServiceImpl.getUsersByCompanyId called, companyId={}", companyId);
+        try {
+            IPage<User> result = getBaseMapper().selectPageByCompanyId((Page<User>) page, companyId);
+            log.info("selectPageByCompanyId returned, total={}", result.getTotal());
+            return result;
+        } catch (Exception e) {
+            log.error("Error in selectPageByCompanyId", e);
+            throw e;
+        }
     }
 }

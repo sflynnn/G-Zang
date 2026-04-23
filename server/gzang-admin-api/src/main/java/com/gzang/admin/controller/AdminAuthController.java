@@ -1,11 +1,15 @@
 package com.gzang.admin.controller;
 
+import com.gzang.app.entity.Company;
+import com.gzang.app.entity.Role;
 import com.gzang.app.util.JwtUtil;
 import com.gzang.app.dto.LoginRequest;
 import com.gzang.app.dto.RegisterRequest;
 import com.gzang.app.entity.User;
 import com.gzang.app.exception.BusinessException;
-import com.gzang.app.service.UserService;
+import com.gzang.admin.service.UserService;
+import com.gzang.admin.service.RoleService;
+import com.gzang.admin.service.CompanyService;
 import com.gzang.app.vo.AdminUserVO;
 import com.gzang.app.vo.Result;
 import com.gzang.admin.vo.AdminLoginVO;
@@ -19,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * 管理端认证控制器
@@ -34,10 +39,15 @@ public class AdminAuthController {
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
+    private final RoleService roleService;
+    private final CompanyService companyService;
 
-    public AdminAuthController(UserService userService, JwtUtil jwtUtil) {
+    public AdminAuthController(UserService userService, JwtUtil jwtUtil,
+                               RoleService roleService, CompanyService companyService) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
+        this.roleService = roleService;
+        this.companyService = companyService;
     }
 
     /**
@@ -55,13 +65,19 @@ public class AdminAuthController {
 
         String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRoleId(), user.getCompanyId());
 
+        // 获取角色信息和权限列表
+        List<String> permissions = Collections.emptyList();
+        if (user.getRoleId() != null) {
+            permissions = roleService.getRolePermissionCodes(user.getRoleId());
+        }
+
         AdminLoginVO loginVO = new AdminLoginVO();
         loginVO.setToken(token);
         loginVO.setExpiresIn(7200000L);
         loginVO.setUser(buildAdminUserVO(user));
-        loginVO.setPermissions(Collections.emptyList());
+        loginVO.setPermissions(permissions);
 
-        log.info("管理端登录成功: {}", user.getUsername());
+        log.info("管理端登录成功: {}, 角色ID: {}, 权限数: {}", user.getUsername(), user.getRoleId(), permissions.size());
         return Result.success("登录成功", loginVO);
     }
 
@@ -103,6 +119,24 @@ public class AdminAuthController {
         vo.setRoleId(user.getRoleId());
         vo.setCompanyId(user.getCompanyId());
         vo.setStatus(user.getStatus());
+
+        // 填充角色信息
+        if (user.getRoleId() != null) {
+            Role role = roleService.findRoleById(user.getRoleId());
+            if (role != null) {
+                vo.setRoleCode(role.getRoleCode());
+                vo.setRoleName(role.getRoleName());
+            }
+        }
+
+        // 填充公司信息
+        if (user.getCompanyId() != null) {
+            Company company = companyService.getById(user.getCompanyId());
+            if (company != null) {
+                vo.setCompanyName(company.getCompanyName());
+            }
+        }
+
         return vo;
     }
 }

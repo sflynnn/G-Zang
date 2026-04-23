@@ -3,8 +3,8 @@ package com.gzang.admin.controller;
 import com.gzang.app.entity.Menu;
 import com.gzang.app.entity.User;
 import com.gzang.app.exception.BusinessException;
-import com.gzang.app.service.MenuService;
-import com.gzang.app.service.UserService;
+import com.gzang.admin.service.MenuService;
+import com.gzang.admin.service.UserService;
 import com.gzang.app.util.JwtUtil;
 import com.gzang.app.dto.menu.CreateMenuDTO;
 import com.gzang.app.dto.menu.UpdateMenuDTO;
@@ -13,6 +13,8 @@ import com.gzang.app.vo.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +33,8 @@ import static com.gzang.app.constant.ErrorCode.DATA_NOT_FOUND;
 @Tag(name = "管理端菜单管理", description = "菜单管理相关接口")
 public class AdminMenuController {
 
+    private static final Logger log = LoggerFactory.getLogger(AdminMenuController.class);
+
     private final MenuService menuService;
     private final UserService userService;
     private final JwtUtil jwtUtil;
@@ -39,6 +43,24 @@ public class AdminMenuController {
         this.menuService = menuService;
         this.userService = userService;
         this.jwtUtil = jwtUtil;
+    }
+
+    /**
+     * 获取菜单列表（树形）
+     */
+    @GetMapping
+    @PreAuthorize("hasAuthority('MENU_MANAGE')")
+    @Operation(summary = "获取菜单列表", description = "获取完整菜单树形结构")
+    public Result<List<MenuVO>> getMenuList() {
+        log.info("=== AdminMenuController.getMenuList called ===");
+        try {
+            List<MenuVO> menuTree = menuService.listMenuTree();
+            log.info("listMenuTree returned, menus={}", menuTree.size());
+            return Result.success(menuTree);
+        } catch (Exception e) {
+            log.error("Error in getMenuList", e);
+            throw e;
+        }
     }
 
     /**

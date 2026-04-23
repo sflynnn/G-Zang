@@ -1,6 +1,6 @@
 package com.gzang.admin.controller;
 
-import com.gzang.app.service.PermissionService;
+import com.gzang.admin.service.PermissionService;
 import com.gzang.app.vo.PermissionVO;
 import com.gzang.app.vo.Result;
 import io.swagger.v3.oas.annotations.Operation;

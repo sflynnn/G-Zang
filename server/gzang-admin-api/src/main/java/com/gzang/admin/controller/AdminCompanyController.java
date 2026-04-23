@@ -5,11 +5,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gzang.app.util.JwtUtil;
 import com.gzang.app.entity.Company;
 import com.gzang.app.exception.BusinessException;
-import com.gzang.app.service.CompanyService;
+import com.gzang.admin.service.CompanyService;
 import com.gzang.app.vo.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +29,8 @@ import static com.gzang.app.constant.ErrorCode.DATA_NOT_FOUND;
 @Tag(name = "管理端公司管理", description = "公司管理相关接口")
 public class AdminCompanyController {
 
+    private static final Logger log = LoggerFactory.getLogger(AdminCompanyController.class);
+
     private final CompanyService companyService;
     private final JwtUtil jwtUtil;
 
@@ -42,10 +46,11 @@ public class AdminCompanyController {
     @PreAuthorize("hasAuthority('COMPANY_MANAGE')")
     @Operation(summary = "获取公司列表", description = "分页获取公司列表")
     public Result<IPage<Company>> getCompanyList(
-            @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer current,
-            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") Integer size,
-            @Parameter(description = "关键词") @RequestParam(required = false) String keyword,
-            @Parameter(description = "状态") @RequestParam(required = false) Integer status) {
+            @Parameter(description = "页码") @RequestParam(name = "current", defaultValue = "1") Integer current,
+            @Parameter(description = "每页大小") @RequestParam(name = "size", defaultValue = "10") Integer size,
+            @Parameter(description = "关键词") @RequestParam(name = "keyword", required = false) String keyword,
+            @Parameter(description = "状态") @RequestParam(name = "status", required = false) Integer status) {
+        log.debug("获取公司列表: current={}, size={}, keyword={}, status={}", current, size, keyword, status);
         Page<Company> page = new Page<>(current, size);
         IPage<Company> companyPage = companyService.getCompanyPage(page, keyword, status);
         return Result.success(companyPage);

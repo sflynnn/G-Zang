@@ -12,6 +12,8 @@ import com.gzang.app.mapper.MenuMapper;
 import com.gzang.app.mapper.MenuPermissionMapper;
 import com.gzang.admin.service.MenuService;
 import com.gzang.app.vo.MenuVO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +29,8 @@ import java.util.stream.Collectors;
 @Service
 public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements MenuService {
 
+    private static final Logger log = LoggerFactory.getLogger(MenuServiceImpl.class);
+
     private final MenuPermissionMapper menuPermissionMapper;
 
     public MenuServiceImpl(MenuPermissionMapper menuPermissionMapper) {
@@ -35,10 +39,19 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
 
     @Override
     public List<MenuVO> listMenuTree() {
-        LambdaQueryWrapper<Menu> wrapper = new LambdaQueryWrapper<>();
-        wrapper.orderByAsc(Menu::getSortOrder).orderByAsc(Menu::getCreateTime);
-        List<Menu> menus = list(wrapper);
-        return buildMenuTree(menus);
+        log.info("MenuServiceImpl.listMenuTree called");
+        try {
+            LambdaQueryWrapper<Menu> wrapper = new LambdaQueryWrapper<>();
+            wrapper.orderByAsc(Menu::getSortOrder).orderByAsc(Menu::getCreateTime);
+            List<Menu> menus = list(wrapper);
+            log.info("list returned, menus count={}", menus.size());
+            List<MenuVO> result = buildMenuTree(menus);
+            log.info("buildMenuTree returned, tree size={}", result.size());
+            return result;
+        } catch (Exception e) {
+            log.error("Error in listMenuTree", e);
+            throw e;
+        }
     }
 
     @Override
@@ -246,26 +259,9 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
 
     @Override
     public List<MenuVO> getRoleMenus(Long roleId) {
-        // 获取角色拥有的所有菜单
-        LambdaQueryWrapper<MenuPermission> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MenuPermission::getRoleId, roleId);
-        List<MenuPermission> menuPermissions = menuPermissionMapper.selectList(wrapper);
-
-        if (menuPermissions.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        // 获取对应的菜单
-        List<Long> menuIds = menuPermissions.stream()
-                .map(MenuPermission::getMenuId)
-                .collect(Collectors.toList());
-
-        LambdaQueryWrapper<Menu> menuWrapper = new LambdaQueryWrapper<>();
-        menuWrapper.in(Menu::getId, menuIds);
-        menuWrapper.orderByAsc(Menu::getSortOrder);
-        List<Menu> menus = list(menuWrapper);
-
-        return buildMenuTree(menus);
+        // 注意：t_menu_permission 表没有 role_id 字段，此功能暂不支持
+        // 返回空列表，后续可以通过角色权限关联间接实现
+        return new ArrayList<>();
     }
 
     @Override

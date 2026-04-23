@@ -2,7 +2,7 @@ package com.gzang.admin.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.gzang.app.service.OperationLogService;
+import com.gzang.admin.service.OperationLogService;
 import com.gzang.app.vo.OperationLogVO;
 import com.gzang.app.vo.Result;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,10 +34,10 @@ public class AdminOperationLogController {
     @PreAuthorize("hasAuthority('LOG_VIEW')")
     @Operation(summary = "获取操作日志", description = "分页获取操作日志列表")
     public Result<IPage<OperationLogVO>> getOperationLogList(
-            @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer current,
-            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") Integer size,
-            @Parameter(description = "操作人") @RequestParam(required = false) String operator,
-            @Parameter(description = "操作类型") @RequestParam(required = false) String action) {
+            @Parameter(description = "页码") @RequestParam(name = "current", defaultValue = "1") Integer current,
+            @Parameter(description = "每页大小") @RequestParam(name = "size", defaultValue = "20") Integer size,
+            @Parameter(description = "操作人") @RequestParam(name = "operator", required = false) String operator,
+            @Parameter(description = "操作类型") @RequestParam(name = "action", required = false) String action) {
 
         Page<OperationLogVO> page = new Page<>(current, size);
         IPage<OperationLogVO> logPage = operationLogService.pageQuery(page, null, null, operator, action);

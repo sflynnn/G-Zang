@@ -6,13 +6,15 @@ import com.gzang.app.util.JwtUtil;
 import com.gzang.app.dto.user.AssignRoleDTO;
 import com.gzang.app.entity.User;
 import com.gzang.app.exception.BusinessException;
-import com.gzang.app.service.UserService;
+import com.gzang.admin.service.UserService;
 import com.gzang.app.util.TenantContextHolder;
 import com.gzang.app.vo.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +33,8 @@ import static com.gzang.app.constant.ErrorCode.PERMISSION_DENIED;
 @Tag(name = "管理端用户管理", description = "用户管理相关接口")
 public class AdminUserController {
 
+    private static final Logger log = LoggerFactory.getLogger(AdminUserController.class);
+
     private final UserService userService;
     private final JwtUtil jwtUtil;
 
@@ -46,12 +50,21 @@ public class AdminUserController {
     @PreAuthorize("hasAuthority('USER_MANAGE')")
     @Operation(summary = "获取用户列表", description = "分页获取用户列表")
     public Result<IPage<User>> getUserList(
-            @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer current,
-            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") Integer size) {
+            @Parameter(description = "页码") @RequestParam(name = "current", defaultValue = "1") Integer current,
+            @Parameter(description = "每页大小") @RequestParam(name = "size", defaultValue = "10") Integer size) {
+        log.info("=== AdminUserController.getUserList called ===");
+        log.info("current={}, size={}", current, size);
         Long companyId = TenantContextHolder.getCurrentCompanyId();
-        Page<User> page = new Page<>(current, size);
-        IPage<User> userPage = userService.getUsersByCompanyId(page, companyId);
-        return Result.success(userPage);
+        log.info("TenantContextHolder companyId={}", companyId);
+        try {
+            Page<User> page = new Page<>(current, size);
+            IPage<User> userPage = userService.getUsersByCompanyId(page, companyId);
+            log.info("getUsersByCompanyId returned, records={}", userPage.getRecords().size());
+            return Result.success(userPage);
+        } catch (Exception e) {
+            log.error("Error in getUserList", e);
+            throw e;
+        }
     }
 
     /**

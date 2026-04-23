@@ -2,8 +2,8 @@ package com.gzang.admin.controller;
 
 import com.gzang.app.entity.User;
 import com.gzang.app.exception.BusinessException;
-import com.gzang.app.service.RoleService;
-import com.gzang.app.service.UserService;
+import com.gzang.admin.service.RoleService;
+import com.gzang.admin.service.UserService;
 import com.gzang.app.util.JwtUtil;
 import com.gzang.app.dto.role.CreateRoleDTO;
 import com.gzang.app.dto.role.UpdateRoleDTO;
