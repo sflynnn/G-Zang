@@ -590,9 +590,329 @@ Authorization: Bearer <access_token>
 
 ---
 
-## 12. SDK 使用示例
+## 12. 预算管理模块 (`/budget`)
 
-### 12.1 JavaScript SDK
+### GET /budget/budgets — 获取预算列表
+
+>**描述**: 获取用户的预算列表，支持按账本和周期类型筛选
+
+**查询参数：**
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `bookId` | integer | 否 | 账本 ID |
+| `periodType` | integer | 否 | 周期类型：1=月预算，2=年预算，3=周预算 |
+
+**响应示例：**
+
+```json
+{
+  "code": 0,
+  "message": "获取成功",
+  "data": [
+    {
+      "id": 1,
+      "userId": 100,
+      "bookId": 1,
+      "categoryId": 101,
+      "categoryName": "餐饮",
+      "categoryIcon": "restaurant",
+      "categoryColor": "#FB8B24",
+      "name": "餐饮预算",
+      "amount": 3000.00,
+      "usedAmount": 1500.00,
+      "remainingAmount": 1500.00,
+      "usageRate": 50.00,
+      "periodType": 1,
+      "periodTypeName": "月预算",
+      "periodStart": "2024-01-01T00:00:00Z",
+      "periodEnd": "2024-01-31T23:59:59Z",
+      "warningThreshold": 80,
+      "warningEnabled": true,
+      "isWarning": false,
+      "remark": "每月餐饮预算",
+      "createTime": "2024-01-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+### GET /budget/budgets/{id} — 获取预算详情
+
+>**描述**: 获取指定预算的详细信息
+
+**路径参数：** `id` — 预算 ID
+
+**响应示例：**
+
+```json
+{
+  "code": 0,
+  "message": "获取成功",
+  "data": {
+    "id": 1,
+    "userId": 100,
+    "bookId": 1,
+    "bookName": "我的账本",
+    "categoryId": 101,
+    "categoryName": "餐饮",
+    "categoryIcon": "restaurant",
+    "categoryColor": "#FB8B24",
+    "name": "餐饮预算",
+    "amount": 3000.00,
+    "usedAmount": 1500.00,
+    "remainingAmount": 1500.00,
+    "usageRate": 50.00,
+    "periodType": 1,
+    "periodTypeName": "月预算",
+    "periodStart": "2024-01-01T00:00:00Z",
+    "periodEnd": "2024-01-31T23:59:59Z",
+    "warningThreshold": 80,
+    "warningEnabled": true,
+    "isWarning": false,
+    "remark": "每月餐饮预算",
+    "createTime": "2024-01-01T00:00:00Z",
+    "updateTime": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+### POST /budget/budgets — 创建预算
+
+>**描述**: 创建新的预算
+
+**请求参数：**
+
+```json
+{
+  "name": "餐饮预算",           // 预算名称（必填）
+  "bookId": 1,                  // 账本 ID（可选）
+  "categoryId": 101,            // 分类 ID（必填）
+  "amount": 3000.00,           // 预算金额（必填）
+  "periodType": 1,             // 周期类型：1=月，2=年，3=周（必填）
+  "periodStart": "2024-01-01", // 周期开始日期（可选）
+  "periodEnd": "2024-01-31",   // 周期结束日期（可选）
+  "warningThreshold": 80,       // 预警阈值百分比（可选，默认 80）
+  "warningEnabled": true,       // 是否启用预警（可选，默认 true）
+  "remark": "每月餐饮预算"      // 备注（可选）
+}
+```
+
+**响应示例：**
+
+```json
+{
+  "code": 0,
+  "message": "创建成功",
+  "data": {
+    "id": 2,
+    "name": "餐饮预算",
+    "amount": 3000.00,
+    "periodType": 1,
+    "createTime": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+### PUT /budget/budgets/{id} — 更新预算
+
+>**描述**: 更新指定的预算
+
+**路径参数：** `id` — 预算 ID
+
+**请求参数：**
+
+```json
+{
+  "name": "更新后的预算",       // 预算名称（可选）
+  "amount": 3500.00,           // 预算金额（可选）
+  "periodStart": "2024-02-01", // 周期开始日期（可选）
+  "periodEnd": "2024-02-29",   // 周期结束日期（可选）
+  "warningThreshold": 90,       // 预警阈值（可选）
+  "warningEnabled": false,      // 是否启用预警（可选）
+  "remark": "更新后的备注"      // 备注（可选）
+}
+```
+
+---
+
+### DELETE /budget/budgets/{id} — 删除预算
+
+>**描述**: 删除指定的预算
+
+**路径参数：** `id` — 预算 ID
+
+**响应示例：**
+
+```json
+{
+  "code": 0,
+  "message": "删除成功",
+  "data": null
+}
+```
+
+---
+
+### GET /budget/budgets/warnings — 获取预警预算列表
+
+>**描述**: 获取所有触发预警的预算
+
+**响应示例：**
+
+```json
+{
+  "code": 0,
+  "message": "获取成功",
+  "data": [
+    {
+      "id": 3,
+      "name": "购物预算",
+      "amount": 2000.00,
+      "usedAmount": 2100.00,
+      "usageRate": 105.00,
+      "isWarning": true,
+      "warningThreshold": 80
+    }
+  ]
+}
+```
+
+---
+
+### POST /budget/budgets/{id}/refresh-used — 刷新预算已用金额
+
+>**描述**: 重新计算预算已使用金额
+
+**路径参数：** `id` — 预算 ID
+
+**响应示例：**
+
+```json
+{
+  "code": 0,
+  "message": "刷新成功",
+  "data": {
+    "id": 1,
+    "usedAmount": 1600.00,
+    "usageRate": 53.33
+  }
+}
+```
+
+---
+
+## 13. 移动端专用 API (`/mobile`)
+
+### 13.1 设备管理
+
+#### POST /mobile/device/register — 注册设备
+
+>**描述**: 注册移动设备，用于推送通知和多设备管理
+
+**请求参数：**
+
+```json
+{
+  "deviceId": "uuid-device-id",     // 设备唯一标识（必填）
+  "deviceType": "iOS",              // 设备类型：iOS/Android（必填）
+  "deviceModel": "iPhone 14 Pro",   // 设备型号（可选）
+  "osVersion": "17.0",             // 系统版本（可选）
+  "appVersion": "1.0.0"            // APP 版本（可选）
+}
+```
+
+**响应示例：**
+
+```json
+{
+  "code": 0,
+  "message": "注册成功",
+  "data": {
+    "sessionId": "session-uuid",
+    "expiresIn": 2592000
+  }
+}
+```
+
+---
+
+### 13.2 语音记账
+
+#### POST /mobile/voice/intent — 语音意图识别
+
+>**描述**: 解析语音输入，提取记账意图
+
+**请求参数：**
+
+```json
+{
+  "audio": "base64-encoded-audio",  // 音频数据（必填）
+  "format": "wav"                    // 音频格式（必填）
+}
+```
+
+**响应示例：**
+
+```json
+{
+  "code": 0,
+  "message": "识别成功",
+  "data": {
+    "amount": 100.50,
+    "type": 2,
+    "categoryName": "餐饮",
+    "categoryId": 101,
+    "confidence": 0.95,
+    "rawText": "花了100块5毛买午餐"
+  }
+}
+```
+
+---
+
+### 13.3 OCR 识别
+
+#### POST /mobile/ocr/receipt — 小票识别
+
+>**描述**: 识别小票图片，提取消费信息
+
+**请求参数：** `multipart/form-data`
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `image` | File | 必填 | 小票图片 |
+
+**响应示例：**
+
+```json
+{
+  "code": 0,
+  "message": "识别成功",
+  "data": {
+    "merchantName": "星巴克",
+    "totalAmount": 45.00,
+    "items": [
+      { "name": "拿铁", "price": 30.00, "quantity": 1 },
+      { "name": "蛋糕", "price": 15.00, "quantity": 1 }
+    ],
+    "transactionTime": "2024-01-15T14:30:00Z",
+    "confidence": 0.92
+  }
+}
+```
+
+---
+
+## 14. SDK 使用示例
+
+### 14.1 JavaScript SDK
 
 ```javascript
 // 初始化 API 客户端
@@ -621,9 +941,21 @@ const createTransaction = async (transaction) => {
   const response = await apiClient.post('/accounting/transaction', transaction);
   return response.data;
 };
+
+// 获取预算列表
+const getBudgets = async (params = {}) => {
+  const response = await apiClient.get('/budget/budgets', { params });
+  return response.data;
+};
+
+// 创建预算
+const createBudget = async (budget) => {
+  const response = await apiClient.post('/budget/budgets', budget);
+  return response.data;
+};
 ```
 
-### 12.2 React Native SDK
+### 14.2 React Native SDK
 
 ```typescript
 import GZangAPI from 'gzang-api-react-native';
@@ -642,8 +974,16 @@ const recognizeReceipt = async (imageUri: string) => {
     type: 'image/jpeg',
     name: 'receipt.jpg'
   });
-  return await api.post('/ocr/recognize', formData, {
+  return await api.post('/mobile/ocr/receipt', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
+  });
+};
+
+// 语音意图识别
+const recognizeVoice = async (audioBase64: string) => {
+  return await api.post('/mobile/voice/intent', {
+    audio: audioBase64,
+    format: 'wav'
   });
 };
 ```
@@ -662,10 +1002,11 @@ const recognizeReceipt = async (imageUri: string) => {
 |------|----------|----------|
 | 1.0.0 | 2024-01-14 | 初始版本发布 |
 | 1.1.0 | 2026-03-27 | 规范化响应结构，新增字段级错误详情 |
+| 1.2.0 | 2026-05-22 | 新增预算管理模块 API、移动端专用 API |
 | 2.0.0 | 计划中 | 支持企业 ERP 集成 |
 
 ---
 
-**文档版本**：1.0.0
-**最后更新**：2026-03-27
+**文档版本**：1.2.0
+**最后更新**：2026-05-22
 **维护人员**：后端架构师 / API 开发团队

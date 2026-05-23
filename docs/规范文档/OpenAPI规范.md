@@ -1,7 +1,7 @@
 # G-Zang OpenAPI 规范
 
-> **文档版本**：1.0.0
-> **最后更新**：2026-03-27
+> **文档版本**：1.2.0
+> **最后更新**：2026-05-22
 > **维护人员**：后端架构师 / API 开发团队
 > **关联规则**：`technical-writing.mdc`
 
@@ -27,8 +27,26 @@
 | 分类 | `/category` | 分类管理 |
 | 交易 | `/accounting` | 交易记录管理 |
 | 报表 | `/report` | 收支汇总、趋势分析、分类统计 |
+| **预算** | `/budget` | 预算管理、预警 |
+| **移动端** | `/mobile` | 设备管理、语音记账、OCR 识别 |
 | 企业 | `/company` | 公司管理、员工邀请 |
 | 系统 | `/system` | 系统配置 |
+
+### 新增 API 端点
+
+#### 预算管理 (`/budget`)
+- `GET /budget/budgets` - 获取预算列表
+- `GET /budget/budgets/{id}` - 获取预算详情
+- `POST /budget/budgets` - 创建预算
+- `PUT /budget/budgets/{id}` - 更新预算
+- `DELETE /budget/budgets/{id}` - 删除预算
+- `GET /budget/budgets/warnings` - 获取预警预算列表
+- `POST /budget/budgets/{id}/refresh-used` - 刷新已用金额
+
+#### 移动端专用 (`/mobile`)
+- `POST /mobile/device/register` - 注册设备
+- `POST /mobile/voice/intent` - 语音意图识别
+- `POST /mobile/ocr/receipt` - 小票识别
 
 ### 规范链接
 
@@ -38,6 +56,6 @@
 
 ---
 
-**文档版本**：1.0.0
-**最后更新**：2026-03-27
+**文档版本**：1.2.0
+**最后更新**：2026-05-22
 **维护人员**：后端架构师 / API 开发团队
