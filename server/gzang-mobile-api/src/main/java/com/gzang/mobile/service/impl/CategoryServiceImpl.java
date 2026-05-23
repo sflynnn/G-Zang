@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gzang.app.entity.Category;
+import com.gzang.app.entity.Transaction;
 import com.gzang.app.mapper.CategoryMapper;
+import com.gzang.app.mapper.TransactionMapper;
 import com.gzang.mobile.service.CategoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +24,12 @@ import java.util.List;
 public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> implements CategoryService {
 
     private static final Logger log = LoggerFactory.getLogger(CategoryServiceImpl.class);
+
+    private final TransactionMapper transactionMapper;
+
+    public CategoryServiceImpl(TransactionMapper transactionMapper) {
+        this.transactionMapper = transactionMapper;
+    }
 
     @Override
     public boolean createCategory(Category category) {
@@ -184,5 +192,74 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
         return (category.getUserId() == null && category.getCompanyId() == null) ||
                (category.getUserId() != null && category.getUserId().equals(userId)) ||
                (category.getCompanyId() != null && category.getCompanyId().equals(userId)); // 暂时用userId作为companyId
+    }
+
+    /**
+     * 检查分类是否有关联的交易记录
+     * BR017: 删除分类前检查是否有交易关联
+     *
+     * @param categoryId 分类ID
+     * @return 关联的交易数量
+     */
+    public long countTransactionsByCategory(Long categoryId) {
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Transaction> wrapper =
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        wrapper.eq(Transaction::getCategoryId, categoryId);
+        return transactionMapper.selectCount(wrapper);
+    }
+
+    /**
+     * 检查分类是否可以安全删除
+     * BR017: 系统分类和个人分类有不同的删除限制
+     *
+     * @param categoryId 分类ID
+     * @param userId 用户ID
+     * @return 删除检查结果
+     */
+    public DeleteCheckResult canDeleteCategory(Long categoryId, Long userId) {
+        Category category = getById(categoryId);
+        if (category == null) {
+            return new DeleteCheckResult(false, "分类不存在");
+        }
+
+        // 检查是否为系统预设分类
+        if (category.getIsSystem() != null && category.getIsSystem() == 1) {
+            return new DeleteCheckResult(false, "系统预设分类不能删除");
+        }
+
+        // 检查是否有子分类
+        List<Category> children = getChildrenByParentId(categoryId);
+        if (!children.isEmpty()) {
+            return new DeleteCheckResult(false, "分类还有子分类，请先删除子分类");
+        }
+
+        // 检查是否有交易关联 (BR017)
+        long transactionCount = countTransactionsByCategory(categoryId);
+        if (transactionCount > 0) {
+            return new DeleteCheckResult(false, "该分类已有 " + transactionCount + " 笔交易关联，不能直接删除");
+        }
+
+        return new DeleteCheckResult(true, "可以删除");
+    }
+
+    /**
+     * 删除检查结果
+     */
+    public static class DeleteCheckResult {
+        private final boolean canDelete;
+        private final String message;
+
+        public DeleteCheckResult(boolean canDelete, String message) {
+            this.canDelete = canDelete;
+            this.message = message;
+        }
+
+        public boolean canDelete() {
+            return canDelete;
+        }
+
+        public String getMessage() {
+            return message;
+        }
     }
 }

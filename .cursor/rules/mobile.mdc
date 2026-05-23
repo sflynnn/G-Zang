@@ -71,7 +71,9 @@ apps/mobile/
 │   │   │   ├── CameraCapture/   # 相机拍摄组件
 │   │   │   ├── OfflineIndicator/ # 离线状态指示器
 │   │   │   ├── SyncStatus/      # 同步状态组件
-│   │   │   └── LoadingSpinner/  # 加载动画
+│   │   │   ├── LoadingSpinner/  # 加载动画（spinner/dots/wave 三种）
+│   │   │   ├── PageLoading/     # 全局路由 Loading 遮罩
+│   │   │   └── AppStartup/      # 应用冷启动全屏页
 │   │   └── business/          # 业务组件
 │   │       ├── QuickRecord/     # 快速记账组件
 │   │       ├── TransactionList/ # 交易列表组件
@@ -84,7 +86,9 @@ apps/mobile/
 │   │   ├── useOfflineSync.ts  # 离线同步 hooks
 │   │   ├── useBiometric.ts    # 生物识别 hooks
 │   │   ├── useDevice.ts      # 设备信息 hooks
-│   │   └── usePush.ts        # 推送通知 hooks
+│   │   ├── usePush.ts        # 推送通知 hooks
+│   │   ├── usePageTransition.ts # 统一页面转场动画
+│   │   └── useLoading.ts     # 全局 Loading 状态管理
 │   ├── pages/                # 页面目录
 │   │   ├── index/            # 首页
 │   │   │   ├── index.vue     # 首页页面
@@ -168,6 +172,66 @@ apps/mobile/
 ### 5.2 移动端样式规范
 
 使用 rpx 单位和条件编译，确保在不同设备上的一致性显示效果。
+
+### 5.3 页面转场与 Loading 规范
+
+#### 5.3.1 全局页面转场动画
+
+`pages.json` 已配置 `animationType: "fade"` + `animationDuration: 280`，所有页面切换默认使用淡入淡出效果。uni-app 支持的原生动画类型：
+
+| animationType | 效果 | 适用场景 |
+|---|---|---|
+| `fade` | 淡入淡出 | 全局默认 |
+| `slide-in-right` | 从右滑入 | push |
+| `zoom-fade-out` | 缩放淡出 | 详情页/弹窗页 |
+| `slide-up` | 从底部滑入 | 底部表单 |
+
+#### 5.3.2 统一转场 Composable
+
+```typescript
+// src/composables/usePageTransition.ts
+import { usePageTransition } from '@/composables/usePageTransition'
+
+const { navigateTo, switchTab, showLoading, hideLoading } = usePageTransition()
+
+// 带 loading 的页面跳转
+navigateTo('/pages/bills/detail', { id: 1 }, {
+  type: 'fade',
+  loading: true,
+  loadingText: '加载中...'
+})
+
+// TabBar 切换
+switchTab('/pages/home/index')
+
+// 全屏 loading
+showLoading('保存中...')
+hideLoading()
+```
+
+#### 5.3.3 全局 Loading 组件
+
+| 组件 | 用途 | 触发时机 |
+|---|---|---|
+| `AppStartup` | 应用冷启动全屏启动页 | 首次打开应用（一次性） |
+| `PageLoading` | 路由转场遮罩 + 异步操作 | 所有 `showLoading()` 调用 |
+
+#### 5.3.4 骨架屏动画
+
+```scss
+// 加载占位骨架屏闪烁
+.g-skeleton {
+  animation: g-skeleton-shimmer 1.5s ease-in-out infinite;
+}
+```
+
+#### 5.3.5 CSS 动画变量
+
+| 变量 | 默认值 | 用途 |
+|---|---|---|
+| `--gzang-transition-duration` | 280ms | 全局页面转场时长 |
+| `--gzang-transition-type` | fade | 默认转场类型 |
+| `--gzang-loading-zindex` | 99999 | Loading 层级 |
 
 ---
 

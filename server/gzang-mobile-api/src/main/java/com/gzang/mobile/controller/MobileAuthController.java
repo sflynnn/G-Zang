@@ -127,6 +127,48 @@ public class MobileAuthController {
     }
 
     /**
+     * 发送重置密码验证码
+     * POST /api/mobile/auth/send-reset-code
+     */
+    @PostMapping("/send-reset-code")
+    @Operation(summary = "发送重置密码验证码", description = "向指定手机号发送验证码")
+    public Result<Void> sendResetCode(@RequestParam String phone) {
+        log.info("发送重置密码验证码请求: phone={}", phone);
+        userService.sendResetCode(phone);
+        return Result.successWithMessage("验证码已发送");
+    }
+
+    /**
+     * 验证重置密码验证码
+     * POST /api/mobile/auth/verify-reset-code
+     */
+    @PostMapping("/verify-reset-code")
+    @Operation(summary = "验证重置密码验证码", description = "验证验证码是否正确")
+    public Result<Void> verifyResetCode(@RequestParam String phone, @RequestParam String code) {
+        log.info("验证重置密码验证码请求: phone={}", phone);
+        boolean valid = userService.verifyResetCode(phone, code);
+        if (!valid) {
+            throw new BusinessException(400, "验证码错误或已过期");
+        }
+        return Result.successWithMessage("验证成功");
+    }
+
+    /**
+     * 重置密码
+     * POST /api/mobile/auth/reset-password
+     */
+    @PostMapping("/reset-password")
+    @Operation(summary = "重置密码", description = "使用验证码重置密码")
+    public Result<Void> resetPassword(
+            @RequestParam String phone,
+            @RequestParam String code,
+            @RequestParam String newPassword) {
+        log.info("重置密码请求: phone={}", phone);
+        userService.resetPassword(phone, code, newPassword);
+        return Result.successWithMessage("密码重置成功");
+    }
+
+    /**
      * 转换用户信息
      */
     private MobileUserVO convertToMobileUserVO(User user) {
