@@ -1,0 +1,31 @@
+// G-Zang Design System - CSS Variables
+:root {
+  --gzang-primary: #0F4C5C;
+  --gzang-primary-light: #186a7d;
+  --gzang-primary-dark: #0a3644;
+  --gzang-secondary: #FB8B24;
+  --gzang-secondary-light: #fca03d;
+  --gzang-secondary-dark: #e67a1a;
+  --gzang-success: #06D6A0;
+  --gzang-danger: #EF476F;
+  --gzang-warning: #FFD166;
+  --gzang-info: #118AB2;
+  --gzang-bg: #F8F9FA;
+  --gzang-surface: #FFFFFF;
+  --gzang-text-primary: #1F2937;
+  --gzang-text-secondary: #6B7280;
+  --gzang-border: #E5E7EB;
+
+  /* 字体 */
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-cn: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'Roboto Mono', 'JetBrains Mono', monospace;
+}
+
+[data-theme="dark"] {
+  --gzang-bg: #111827;
+  --gzang-surface: #1F2937;
+  --gzang-text-primary: #F9FAFB;
+  --gzang-text-secondary: #9CA3AF;
+  --gzang-border: #374151;
+}

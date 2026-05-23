@@ -1,0 +1,13 @@
+@mixin card {
+  background-color: $gzang-surface;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+@mixin card-hover {
+  transition: all 0.2s ease;
+  &:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+}
