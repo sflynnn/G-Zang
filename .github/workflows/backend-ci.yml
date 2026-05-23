@@ -1,0 +1,108 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  JAVA_VERSION: '21'
+  MAVEN_VERSION: '3.9.6'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root123
+          MYSQL_DATABASE: gzang_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Setup Maven
+        uses: actions/checkout@v3
+        with:
+          repository: apache/maven-tutorial
+          ref: refs/heads/master
+          path: maven-home
+
+      - name: Build with Maven
+        working-directory: ./server
+        run: mvn clean compile -q
+
+      - name: Run unit tests with coverage
+        working-directory: ./server
+        run: mvn test jacoco:report
+        env:
+          SPRING_PROFILES_ACTIVE: test
+          DB_URL: jdbc:mysql://localhost:3306/gzang_test?useSSL=false&serverTimezone=UTC
+          DB_USERNAME: root
+          DB_PASSWORD: root123
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./server/**/target/site/jacoco/jacoco.xml
+          flags: unittests
+          name: backend-coverage
+          fail_ci_if_error: false
+
+      - name: Build JAR
+        working-directory: ./server
+        run: mvn package -DskipTests -q
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: server/**/target/*.jar
+          retention-days: 7
+
+  checkstyle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run Checkstyle
+        working-directory: ./server
+        run: mvn checkstyle:check -q || true
