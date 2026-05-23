@@ -5,6 +5,7 @@ import { createDiscreteApi } from 'naive-ui';
 import App from './App.vue';
 import routes from './router';
 import { setupMicroApps } from './micro-apps';
+import { initGlobalState, createStateProxy } from './composables/useMicroState';
 
 // 样式
 import './styles/main.scss';
@@ -31,6 +32,12 @@ app.config.globalProperties.$message = message;
 app.config.globalProperties.$notification = notification;
 app.config.globalProperties.$dialog = dialog;
 app.config.globalProperties.$loadingBar = loadingBar;
+
+// 初始化微前端全局状态
+initGlobalState();
+
+// 将状态代理挂载到全局
+app.config.globalProperties.$microState = createStateProxy();
 
 // 使用插件
 app.use(router);

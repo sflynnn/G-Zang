@@ -1,10 +1,12 @@
 import { RouteRecordRaw } from 'vue-router';
-import Dashboard from '../views/Dashboard.vue';
-import TransactionList from '../views/TransactionList.vue';
-import TransactionForm from '../views/TransactionForm.vue';
-import AccountList from '../views/AccountList.vue';
-import CategoryList from '../views/CategoryList.vue';
-import Report from '../views/Report.vue';
+
+// 使用 Vue 的 defineAsyncComponent 实现路由懒加载
+const Dashboard = () => import('../views/Dashboard.vue');
+const TransactionList = () => import('../views/TransactionList.vue');
+const TransactionForm = () => import('../views/TransactionForm.vue');
+const AccountList = () => import('../views/AccountList.vue');
+const CategoryList = () => import('../views/CategoryList.vue');
+const Report = () => import('../views/Report.vue');
 
 const routes: RouteRecordRaw[] = [
   {

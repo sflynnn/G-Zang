@@ -4,9 +4,13 @@ import api from './index';
 export interface AuditLogQueryParams {
   current?: number;
   size?: number;
+  keyword?: string;
   action?: string;
   targetType?: string;
   userId?: number;
+  status?: number;
+  startDate?: number;
+  endDate?: number;
 }
 
 /** 审计日志响应 */
@@ -21,6 +25,7 @@ export interface AuditLogResponse {
   description?: string;
   ip?: string;
   userAgent?: string;
+  status?: number;
   createTime: string;
 }
 

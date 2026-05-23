@@ -508,7 +508,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
 import { useAppStore } from '@/stores/app';
 import {
   PersonOutline,
@@ -521,13 +520,11 @@ import {
   SettingsOutline,
   MailOutline,
   NotificationsOutline,
-  BusinessOutline
 } from '@vicons/ionicons5';
 import { markRaw } from 'vue';
 import { useMessage } from 'naive-ui';
 
 const { t, locale } = useI18n();
-const router = useRouter();
 const appStore = useAppStore();
 const message = useMessage();
 

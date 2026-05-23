@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import qiankun from 'vite-plugin-qiankun';
 import { resolve } from 'path';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig({
   plugins: [
@@ -13,7 +14,14 @@ export default defineConfig({
   server: {
     port: 8081,
     cors: true,
-    origin: 'http://localhost:8081'
+    origin: 'http://localhost:8081',
+    proxy: {
+      '/api/v1': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/v1/, '/api/mobile')
+      }
+    }
   },
   resolve: {
     alias: {
@@ -23,7 +31,7 @@ export default defineConfig({
   css: {
     preprocessorOptions: {
       scss: {
-        api: 'modern-compiler',  // 使用新版 Sass API，消除 legacy JS API 警告
+        api: 'modern-compiler',
         additionalData: `@use "@/styles/variables.scss" as *;`
       }
     }
@@ -42,8 +50,32 @@ export default defineConfig({
         globals: {
           vue: 'Vue',
           'vue-router': 'VueRouter'
+        },
+        // 手动分包配置
+        manualChunks: {
+          'vendor-vue': ['vue', 'vue-router', 'pinia'],
+          'vendor-ui': ['naive-ui'],
+          'vendor-echarts': ['echarts']
         }
       }
+    },
+    // 启用 gzip 压缩
+    reportCompressedSize: true,
+    // 压缩算法
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true
+      }
     }
+  },
+  // 依赖预构建
+  optimizeDeps: {
+    include: ['vue', 'vue-router', 'pinia', 'naive-ui', 'echarts', 'axios']
+  },
+  // 生产环境构建分析
+  preview: {
+    port: 8081
   }
 });

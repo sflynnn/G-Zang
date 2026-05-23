@@ -383,16 +383,6 @@ const totalMenus = computed(() => allMenus.value.length);
 const dirCount = computed(() => allMenus.value.filter(m => m.menuType === 1).length);
 const systemMenus = computed(() => allMenus.value.filter(m => m.isSystem === 1).length);
 
-// Naive UI 主题配置
-const dataTableThemeOverrides = computed(() => ({
-  thColor: isDark.value ? '#374151' : '#F8F9FA',
-  tdColor: isDark.value ? '#1F2937' : '#FFFFFF',
-  tdColorStriped: isDark.value ? '#252D3B' : '#F8F9FA',
-  borderColor: isDark.value ? '#374151' : '#E5E7EB',
-  thTextColor: isDark.value ? '#F9FAFB' : '#1F2937',
-  tdTextColor: isDark.value ? '#E5E7EB' : '#374451',
-}));
-
 // 菜单类型选项
 const menuTypeOptions = computed(() => [
   { label: t('menu.typeDir'), value: 1 },

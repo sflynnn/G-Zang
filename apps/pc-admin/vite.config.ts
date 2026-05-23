@@ -1,15 +1,17 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
+import qiankun from 'vite-plugin-qiankun';
 import { resolve } from 'path';
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    qiankun('pc-admin', { useDevMode: true })
+  ],
   server: {
     port: 3000,
     cors: true,
-    headers: {
-      'Access-Control-Allow-Origin': '*'
-    },
+    origin: 'http://localhost:3000',
     proxy: {
       '/api': {
         target: 'http://localhost:8082',
@@ -24,12 +26,28 @@ export default defineConfig({
     }
   },
   build: {
-    target: 'esnext'
+    target: 'esnext',
+    lib: {
+      entry: resolve(__dirname, 'src/main.ts'),
+      name: 'pc-admin',
+      fileName: 'pc-admin',
+      formats: ['umd']
+    },
+    rollupOptions: {
+      external: ['vue', 'vue-router', 'pinia'],
+      output: {
+        globals: {
+          vue: 'Vue',
+          'vue-router': 'VueRouter',
+          pinia: 'Pinia'
+        }
+      }
+    }
   },
   css: {
     preprocessorOptions: {
       scss: {
-        api: 'modern-compiler'  // 使用新版 Sass API，消除了 legacy JS API 警告
+        api: 'modern-compiler'
       }
     }
   }
