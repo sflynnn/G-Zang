@@ -97,8 +97,9 @@
 
     <!-- 确认按钮 -->
     <view class="submit-bar" v-if="recognizedText">
-      <view class="submit-btn" @click="confirmTransaction">
-        <text>确认记账</text>
+      <view class="submit-btn" :class="{ loading: submitting }" @click="confirmTransaction">
+        <text v-if="submitting">保存中...</text>
+        <text v-else>确认记账</text>
       </view>
     </view>
   </view>
@@ -108,21 +109,32 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useVoiceRecord } from '@/composables/useVoiceRecord'
+import { useTransactionStore } from '@/stores/transaction'
+import { useBookStore } from '@/stores/book'
+import { useCategoryStore } from '@/stores/category'
+import { uploadVoice, type VoiceIntentResult } from '@/api/voice'
 
 // 状态管理
 const appStore = useAppStore()
-const { startRecording, stopRecording, recordingState, audioPath } = useVoiceRecord()
+const transactionStore = useTransactionStore()
+const bookStore = useBookStore()
+const categoryStore = useCategoryStore()
+const { startRecording, stopRecording, recordResult } = useVoiceRecord()
 
 // 录音状态
 const recording = ref(false)
 const recordingDuration = ref(0)
 let recordingTimer: ReturnType<typeof setInterval> | null = null
 
-// 识别结果
+// 识别状态
 const recognizedText = ref('')
 const resultText = computed(() => recognizedText.value || '正在聆听...')
 const resultCategory = ref('')
 const resultAmount = ref(0)
+const submitting = ref(false)
+
+// 解析后的语音结果
+const voiceResult = ref<VoiceIntentResult | null>(null)
 
 // 快捷金额
 const quickAmounts = [10, 50, 100, 200, 500]
@@ -163,7 +175,6 @@ const formatDuration = (seconds: number) => {
 const toggleRecording = async () => {
   if (recording.value) {
     // 停止录音
-    stopRecording()
     recording.value = false
     if (recordingTimer) {
       clearInterval(recordingTimer)
@@ -173,13 +184,29 @@ const toggleRecording = async () => {
       clearInterval(waveformAnimation)
       waveformAnimation = null
     }
-    // 模拟语音识别
-    simulateRecognition()
+
+    // 调用语音识别 API
+    const recordRes = await stopRecording()
+    recognizedText.value = '正在识别...'
+    try {
+      if (recordRes?.filePath) {
+        // 上传语音文件进行识别
+        await recognizeVoice(recordRes.filePath)
+      } else {
+        recognizedText.value = ''
+        appStore.showWarning('未获取到录音，请重试')
+      }
+    } catch (error) {
+      recognizedText.value = ''
+      appStore.showError('识别失败，请重试')
+    }
   } else {
     // 开始录音
     try {
       await startRecording()
       recording.value = true
+      recognizedText.value = ''
+      voiceResult.value = null
       recordingDuration.value = 0
       // 开始计时
       recordingTimer = setInterval(() => {
@@ -198,31 +225,32 @@ const toggleRecording = async () => {
   }
 }
 
-// 模拟语音识别
-const simulateRecognition = () => {
-  // 模拟识别结果
-  const sampleTexts = [
-    '今天中午吃饭花了50块钱',
-    '打车用了30元',
-    '网购了一件衣服200块',
-    '周末看了场电影花了80',
-    '给手机充了50话费'
-  ]
-  const randomText = sampleTexts[Math.floor(Math.random() * sampleTexts.length)]
-  
-  // 解析金额
-  const amountMatch = randomText.match(/(\d+(?:\.\d{1,2})?)/)
-  resultAmount.value = amountMatch ? parseFloat(amountMatch[1]) : 0
-  
-  // 解析分类
-  const matchedCategory = categories.find(cat =>
-    cat.keywords.some(keyword => randomText.includes(keyword))
-  ) || categories[0]
-  selectedCategory.value = matchedCategory
-  resultCategory.value = matchedCategory.name
-  
-  // 设置识别文字
-  recognizedText.value = randomText
+// 语音识别（调用后端 API）
+const recognizeVoice = async (filePath: string) => {
+  try {
+    // 上传语音文件到后端进行识别
+    const result: VoiceIntentResult = await uploadVoice(filePath, 'voice.mp3')
+    voiceResult.value = result
+
+    if (result.success) {
+      recognizedText.value = result.originalText
+
+      if (result.amount !== null) {
+        resultAmount.value = result.amount
+      }
+
+      if (result.categoryName) {
+        resultCategory.value = result.categoryName
+        selectedCategory.value = categories.find(c => c.name === result.categoryName) || null
+      }
+    } else {
+      recognizedText.value = result.originalText || '未识别到有效信息'
+      appStore.showWarning(result.errorMessage || '未能识别记账意图，请手动输入')
+    }
+  } catch (error) {
+    recognizedText.value = '识别服务暂不可用'
+    appStore.showError('语音识别失败，请重试')
+  }
 }
 
 // 选择快捷金额
@@ -238,27 +266,42 @@ const selectCategory = (cat: typeof categories[0]) => {
 }
 
 // 确认记账
-const confirmTransaction = () => {
+const confirmTransaction = async () => {
   if (!resultAmount.value || resultAmount.value <= 0) {
     appStore.showError('请输入正确的金额')
     return
   }
-  
+
   if (!selectedCategory.value) {
     appStore.showError('请选择分类')
     return
   }
 
-  // 调用实际记账API
-  appStore.showSuccess('记账成功')
-  
-  // 重置状态
-  resetState()
-  
-  // 返回上一页
-  setTimeout(() => {
-    uni.navigateBack()
-  }, 1000)
+  submitting.value = true
+  try {
+    await transactionStore.create({
+      type: 2, // 支出
+      amount: resultAmount.value,
+      categoryId: selectedCategory.value.id,
+      accountId: 1, // 默认账户，后续优化
+      transactionTime: new Date().toISOString().replace('T', ' ').slice(0, 19),
+      remark: `语音记账: ${recognizedText.value}`
+    })
+
+    appStore.showSuccess('记账成功')
+
+    // 重置状态
+    resetState()
+
+    // 返回上一页
+    setTimeout(() => {
+      uni.navigateBack()
+    }, 1000)
+  } catch (error) {
+    appStore.showError('记账失败，请重试')
+  } finally {
+    submitting.value = false
+  }
 }
 
 // 重置状态
@@ -268,6 +311,7 @@ const resetState = () => {
   selectedCategory.value = null
   selectedQuickAmount.value = null
   recordingDuration.value = 0
+  voiceResult.value = null
   waveformBars.value = Array.from({ length: 25 }, () => ({
     baseHeight: Math.random() * 20 + 10,
     currentHeight: 8
@@ -276,7 +320,7 @@ const resetState = () => {
 
 // 返回上一页
 const goBack = () => {
-  if (recording) {
+  if (recording.value) {
     stopRecording()
     recording.value = false
   }
@@ -284,12 +328,25 @@ const goBack = () => {
 }
 
 // 生命周期
-onMounted(() => {
+onMounted(async () => {
   // 初始化波形
   waveformBars.value = Array.from({ length: 25 }, (_, i) => ({
     baseHeight: 12 + Math.sin(i * 0.5) * 8,
     currentHeight: 8
   }))
+
+  // 预加载分类数据
+  await categoryStore.fetchCategories()
+  const cats = categoryStore.expenseCategories
+  if (cats.length > 0) {
+    categories.splice(0, categories.length, ...cats.map(c => ({
+      id: c.id,
+      name: c.categoryName || c.name || '未分类',
+      icon: c.icon || '📂',
+      bgColor: '#F8F9FA',
+      keywords: []
+    })))
+  }
 })
 
 onUnmounted(() => {

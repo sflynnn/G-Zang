@@ -229,13 +229,22 @@ function showAccountPicker() {
 }
 
 function showDatePicker() {
-  const current = new Date(formData.value.transactionTime)
-  uni.showDatePicker({
-    current: current,
+  const current = formData.value.transactionTime || toDateString(new Date())
+  ;(uni as any).showDatePicker({
+    currentDate: current,
     success: (res: any) => {
-      formData.value.transactionTime = res.dateValue
+      if (res.dateValue) {
+        formData.value.transactionTime = res.dateValue
+      }
     }
   })
+}
+
+function toDateString(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
 }
 
 function formatDate(dateStr: string): string {

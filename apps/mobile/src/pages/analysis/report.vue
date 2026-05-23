@@ -149,8 +149,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useReportStore } from '@/stores/report'
+import { useBookStore } from '@/stores/book'
 
 const reportStore = useReportStore()
+const bookStore = useBookStore()
 
 const currentPeriod = ref('month')
 const timeTabs = [
@@ -195,7 +197,7 @@ const yAxisValues = computed(() => {
   ]
 })
 
-const currentCurrency = '¥'
+const currentCurrency = computed(() => bookStore.currentCurrencySymbol)
 
 onMounted(async () => {
   await loadData()
@@ -203,30 +205,35 @@ onMounted(async () => {
 
 async function loadData() {
   try {
-    await reportStore.fetchSummary()
-    await reportStore.fetchMonthlyTrend({ year: new Date().getFullYear() })
-    await reportStore.fetchCategoryReport({ type: 2 })
+    const currentYear = new Date().getFullYear()
+
+    await Promise.all([
+      reportStore.fetchSummary().catch(() => {}),
+      reportStore.fetchMonthlyTrend(currentYear).catch(() => {}),
+      reportStore.fetchCategoryReport({ type: 2 }).catch(() => {}),
+    ])
     
-    const report = reportStore
+    const s = reportStore.summary
     summary.value = {
-      totalIncome: report.summary?.totalIncome || 0,
-      totalExpense: report.summary?.totalExpense || 0,
-      balance: (report.summary?.totalIncome || 0) - (report.summary?.totalExpense || 0)
+      totalIncome: s?.totalIncome || 0,
+      totalExpense: s?.totalExpense || 0,
+      balance: (s?.totalIncome || 0) - (s?.totalExpense || 0)
     }
     
-    monthlyTrend.value = (report.monthlyTrend || []).slice(0, 6).map((item: any, index: number) => ({
+    const trend = reportStore.monthlyTrend || []
+    monthlyTrend.value = trend.slice(0, 6).map((item: any, index: number) => ({
       month: item.month || index + 1,
-      income: parseFloat(item.income) || 0,
-      expense: parseFloat(item.expense) || 0
+      income: parseFloat(String(item.income)) || 0,
+      expense: parseFloat(String(item.expense)) || 0
     }))
     
-    const categories = report.categoryReport || []
-    const total = categories.reduce((sum: number, c: any) => sum + (parseFloat(c.totalAmount) || 0), 0)
+    const categories = reportStore.categoryReport || []
+    const total = categories.reduce((sum: number, c: any) => sum + (parseFloat(String(c.totalAmount)) || 0), 0)
     
     topCategories.value = categories.slice(0, 5).map((item: any, index: number) => ({
       name: item.categoryName || '未分类',
-      amount: parseFloat(item.totalAmount) || 0,
-      percent: total > 0 ? Math.round((parseFloat(item.totalAmount) / total) * 100) : 0,
+      amount: parseFloat(String(item.totalAmount)) || 0,
+      percent: total > 0 ? Math.round((parseFloat(String(item.totalAmount)) / total) * 100) : 0,
       icon: icons[index % icons.length],
       iconBg: ['#FFF3E0', '#E3F2FD', '#FCE4EC', '#F3E5F5', '#FFEBEE'][index % 5],
       color: colors[index % colors.length]
@@ -263,7 +270,21 @@ function goToChart() {
 }
 
 function exportReport() {
-  uni.showToast({ title: '导出功能开发中', icon: 'none' })
+  uni.showActionSheet({
+    itemList: ['导出为 CSV', '分享报告'],
+    success: (res: any) => {
+      if (res.tapIndex === 0) {
+        reportStore.exportData('csv')
+      } else if (res.tapIndex === 1) {
+        uni.share({
+          title: '归藏财务报告',
+          summary: `收入 ${currentCurrency}${formatAmount(summary.value.totalIncome)} | 支出 ${currentCurrency}${formatAmount(summary.value.totalExpense)} | 结余 ${currentCurrency}${formatAmount(summary.value.balance)}`,
+          success: () => uni.showToast({ title: '分享成功', icon: 'success' }),
+          fail: () => uni.showToast({ title: '分享失败', icon: 'none' })
+        })
+      }
+    }
+  })
 }
 </script>
 

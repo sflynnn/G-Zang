@@ -16,7 +16,7 @@ type SizeValue = SizeString | number
 interface Props {
   name: string
   size?: SizeValue
-  color?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'text' | 'text-secondary' | 'text-tertiary' | 'white' | 'inherit'
+  color?: string
   strokeWidth?: number
 }
 
@@ -168,7 +168,7 @@ const iconSize = computed(() => {
 })
 
 const iconColor = computed(() => {
-  return colorMap[props.color] || colorMap.text
+  return colorMap[props.color] || props.color || colorMap.text
 })
 
 const svgPaths = computed(() => {

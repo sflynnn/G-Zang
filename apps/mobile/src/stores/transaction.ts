@@ -1,332 +1,232 @@
 /**
  * Transaction Store - 交易记录状态管理
+ * 替代页面内的 mock 数据，使用真实 API
  */
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
-import type {
-  Transaction,
-  TransactionForm,
-  TransactionFilters,
-  TransactionGroup,
-  TransactionSummary,
-} from '@/types/transaction';
-import { TransactionType } from '@/types/transaction';
-import * as transactionApi from '@/api/transaction';
-
-// G-Zang 品牌色
-const BRAND_COLORS = {
-  primary: '#0F4C5C',
-  accent: '#FB8B24',
-  success: '#06D6A0',
-  danger: '#EF476F',
-  warning: '#FFD166',
-};
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import {
+  getTransactions,
+  getTransaction,
+  createTransaction as apiCreateTransaction,
+  updateTransaction as apiUpdateTransaction,
+  deleteTransaction as apiDeleteTransaction,
+  getCalendarTransactions,
+  type TransactionQueryParams,
+} from '@/api/transaction'
+import type { Transaction } from '@/types/transaction'
 
 export interface TransactionState {
-  transactionList: Transaction[];
-  currentTransaction: Transaction | null;
-  summary: TransactionSummary | null;
-  categorySummary: Array<{
-    categoryId: number;
-    categoryName: string;
-    categoryIcon: string;
-    totalAmount: number;
-    count: number;
-    percentage: number;
-  }>;
-  loading: boolean;
-  page: number;
-  pageSize: number;
-  hasMore: boolean;
+  transactions: Transaction[]
+  recentTransactions: Transaction[]
+  calendarData: Record<string, { income: number; expense: number; count: number }>
+  total: number
+  loading: boolean
+  current: number
+  pageSize: number
 }
 
 export const useTransactionStore = defineStore('transaction', () => {
-  // 状态
-  const transactionList = ref<Transaction[]>([]);
-  const currentTransaction = ref<Transaction | null>(null);
-  const summary = ref<TransactionSummary | null>(null);
-  const categorySummary = ref<TransactionState['categorySummary']>([]);
-  const loading = ref(false);
-  const page = ref(1);
-  const pageSize = ref(20);
-  const hasMore = ref(true);
-  const currentFilters = ref<TransactionFilters>({});
+  const transactions = ref<Transaction[]>([])
+  const recentTransactions = ref<Transaction[]>([])
+  const calendarData = ref<Record<string, { income: number; expense: number; count: number }>>({})
+  const total = ref(0)
+  const loading = ref(false)
+  const current = ref(1)
+  const pageSize = ref(20)
 
-  // 计算属性
-  const incomeTransactions = computed(() =>
-    transactionList.value.filter((t) => t.type === TransactionType.Income)
-  );
+  const hasMore = computed(() => transactions.value.length < total.value)
 
-  const expenseTransactions = computed(() =>
-    transactionList.value.filter((t) => t.type === TransactionType.Expense)
-  );
-
-  const transferTransactions = computed(() =>
-    transactionList.value // 后端 Transaction 无 Transfer 类型
-  );
-
-  // 按日期分组
-  const groupedTransactions = computed((): TransactionGroup[] => {
-    const groups: Record<string, TransactionGroup> = {};
-
-    transactionList.value.forEach((t) => {
-      const date = t.transactionTime.split('T')[0];
-      if (!groups[date]) {
-        groups[date] = {
-          date,
-          transactions: [],
-          totalIncome: 0,
-          totalExpense: 0,
-        };
-      }
-      groups[date].transactions.push(t);
-      if (t.type === TransactionType.Income) {
-        groups[date].totalIncome += t.amount;
-      } else if (t.type === TransactionType.Expense) {
-        groups[date].totalExpense += t.amount;
-      }
-    });
-
-    return Object.values(groups).sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-  });
-
-  // 获取交易类型颜色
-  const getTransactionColor = (type: TransactionType) => {
-    switch (type) {
-      case TransactionType.Income:
-        return BRAND_COLORS.success;
-      case TransactionType.Expense:
-        return BRAND_COLORS.danger;
-      default:
-        return BRAND_COLORS.primary;
+  const groupedTransactions = computed(() => {
+    const groups: Record<string, Transaction[]> = {}
+    for (const tx of transactions.value) {
+      const date = tx.transactionTime?.split('T')[0] || ''
+      if (!groups[date]) groups[date] = []
+      groups[date].push(tx)
     }
-  };
+    return groups
+  })
 
-  // 获取交易类型名称
-  const getTransactionTypeName = (type: TransactionType) => {
-    switch (type) {
-      case TransactionType.Income:
-        return '收入';
-      case TransactionType.Expense:
-        return '支出';
-      default:
-        return '未知';
-    }
-  };
-
-  // 获取交易列表
-  const fetchTransactions = async (filters?: TransactionFilters, resetPage = true) => {
+  // 加载近期交易（首页用）
+  const fetchRecent = async (limit = 5) => {
     try {
-      loading.value = true;
-
-      if (resetPage) {
-        page.value = 1;
-        hasMore.value = true;
-        transactionList.value = [];
-      }
-
-      currentFilters.value = { ...currentFilters.value, ...filters };
-
-      const params = {
-        current: page.value,
-        size: pageSize.value,
-        startTime: currentFilters.value.dateRange?.[0],
-        endTime: currentFilters.value.dateRange?.[1],
-        type: currentFilters.value.type,
-        categoryId: currentFilters.value.categoryId,
-      };
-
-      const result = await transactionApi.getTransactions(params);
-
-      if (resetPage) {
-        transactionList.value = result.records;
-      } else {
-        transactionList.value.push(...result.records);
-      }
-
-      hasMore.value = transactionList.value.length < result.total;
-      page.value += 1;
-
-      return result;
-    } catch (error) {
-      throw error;
+      loading.value = true
+      const data = await getTransactions({ size: limit })
+      recentTransactions.value = data.records
+      return data.records
     } finally {
-      loading.value = false;
+      loading.value = false
     }
-  };
+  }
+
+  // 加载日历视图数据
+  const fetchCalendarData = async (year: number, month: number, bookId?: number) => {
+    try {
+      loading.value = true
+      const data = await getCalendarTransactions({ year, month, bookId })
+      const map: Record<string, { income: number; expense: number; count: number }> = {}
+      for (const item of data) {
+        map[item.date] = { income: item.income, expense: item.expense, count: item.count }
+      }
+      calendarData.value = map
+      return map
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 加载交易列表（账单页用）
+  const fetchPage = async (params: TransactionQueryParams = {}) => {
+    try {
+      loading.value = true
+      const pageParams = {
+        ...params,
+        current: params.current || current.value,
+        size: params.size || pageSize.value,
+      }
+      const data = await getTransactions(pageParams)
+      if ((pageParams.current || 1) > 1) {
+        transactions.value.push(...data.records)
+      } else {
+        transactions.value = data.records
+      }
+      total.value = data.total
+      current.value = pageParams.current || 1
+      return data
+    } finally {
+      loading.value = false
+    }
+  }
 
   // 加载更多
-  const loadMore = async () => {
-    if (!hasMore.value || loading.value) return;
-    await fetchTransactions(currentFilters.value, false);
-  };
+  const loadMore = async (params: TransactionQueryParams = {}) => {
+    return fetchPage({ ...params, current: (current.value || 1) + 1 })
+  }
 
-  // 创建交易（后端 DTO 不支持 targetAccountId/tags）
-  const createTransaction = async (form: TransactionForm) => {
+  // 获取单条详情
+  const fetchById = async (id: number) => {
     try {
-      loading.value = true;
-      const newTransaction = await transactionApi.createTransaction({
-        type: form.type,
-        amount: form.amount,
-        categoryId: form.categoryId,
-        accountId: form.accountId,
-        remark: form.remark,
-        transactionTime: form.transactionTime,
-      });
-
-      // 添加到列表开头
-      transactionList.value.unshift(newTransaction);
-
-      // 更新统计
-      await fetchSummary();
-      await fetchCategorySummary();
-
-      return newTransaction;
-    } catch (error) {
-      throw error;
+      loading.value = true
+      return await getTransaction(id)
     } finally {
-      loading.value = false;
+      loading.value = false
     }
-  };
+  }
 
-  // 更新交易
-  const updateTransaction = async (id: number, form: Partial<TransactionForm>) => {
-    try {
-      loading.value = true;
-      const updatedTransaction = await transactionApi.updateTransaction({
-        id,
-        ...form,
-      });
-
-      const index = transactionList.value.findIndex((t) => t.id === id);
-      if (index !== -1) {
-        transactionList.value[index] = updatedTransaction;
-      }
-
-      if (currentTransaction.value?.id === id) {
-        currentTransaction.value = updatedTransaction;
-      }
-
-      return updatedTransaction;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
-    }
-  };
-
-  // 删除交易
-  const deleteTransaction = async (id: number) => {
-    try {
-      loading.value = true;
-      await transactionApi.deleteTransaction(id);
-
-      transactionList.value = transactionList.value.filter((t) => t.id !== id);
-
-      if (currentTransaction.value?.id === id) {
-        currentTransaction.value = null;
-      }
-
-      return true;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
-    }
-  };
-
-  const fetchSummary = async (params?: { startDate?: string; endDate?: string }) => {
-    try {
-      const data = await transactionApi.getTransactionSummary({
-        startTime: params?.startDate,
-        endTime: params?.endDate
-      });
-      summary.value = data;
-      return data;
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  // 获取分类统计
-  const fetchCategorySummary = async (params?: {
-    startDate?: string;
-    endDate?: string;
-    type?: TransactionType;
+  // 创建交易
+  const create = async (data: {
+    amount: number
+    type: number
+    categoryId: number
+    accountId: number
+    transactionTime?: string
+    remark?: string
   }) => {
     try {
-      const data = await transactionApi.getCategorySummary({
-        startTime: params?.startDate,
-        endTime: params?.endDate,
-        type: params?.type
-      });
-      categorySummary.value = data.map(item => ({
-        categoryId: item.categoryId,
-        categoryName: item.categoryName,
-        categoryIcon: '',
-        totalAmount: item.totalAmount,
-        count: item.count,
-        percentage: item.percentage || 0
-      }));
-      return categorySummary.value;
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  // 获取交易详情
-  const fetchTransaction = async (id: number) => {
-    try {
-      loading.value = true;
-      const data = await transactionApi.getTransaction(id);
-      currentTransaction.value = data;
-      return data;
-    } catch (error) {
-      throw error;
+      loading.value = true
+      const created = await apiCreateTransaction(data)
+      // 新增记录插入到列表头部
+      transactions.value.unshift(created)
+      recentTransactions.value.unshift(created)
+      if (recentTransactions.value.length > 5) {
+        recentTransactions.value.pop()
+      }
+      total.value++
+      return created
     } finally {
-      loading.value = false;
+      loading.value = false
     }
-  };
+  }
+
+  // 更新交易
+  const update = async (id: number, data: Partial<{
+    amount: number
+    type: number
+    categoryId: number
+    accountId: number
+    transactionTime?: string
+    remark?: string
+  }>) => {
+    try {
+      loading.value = true
+      const updated = await apiUpdateTransaction({ id, ...data })
+      const idx = transactions.value.findIndex(t => t.id === id)
+      if (idx !== -1) transactions.value[idx] = updated
+      return updated
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 更新交易（兼容页面调用方式）
+  const updateTransaction = async (data: {
+    id: number
+    amount?: number
+    type?: number
+    categoryId?: number
+    accountId?: number
+    transactionTime?: string
+    remark?: string
+  }) => {
+    return update(data.id, data)
+  }
+
+  // 删除交易
+  const remove = async (id: number) => {
+    try {
+      loading.value = true
+      await apiDeleteTransaction(id)
+      transactions.value = transactions.value.filter(t => t.id !== id)
+      recentTransactions.value = recentTransactions.value.filter(t => t.id !== id)
+      total.value = Math.max(0, total.value - 1)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 重置分页状态
+  const resetPagination = () => {
+    current.value = 1
+    transactions.value = []
+    total.value = 0
+  }
 
   // 清空状态
   const clearState = () => {
-    transactionList.value = [];
-    currentTransaction.value = null;
-    summary.value = null;
-    categorySummary.value = [];
-    page.value = 1;
-    hasMore.value = true;
-    currentFilters.value = {};
-  };
+    transactions.value = []
+    recentTransactions.value = []
+    calendarData.value = {}
+    total.value = 0
+    current.value = 1
+  }
 
   return {
     // 状态
-    transactionList: computed(() => transactionList.value),
-    currentTransaction: computed(() => currentTransaction.value),
-    summary: computed(() => summary.value),
-    categorySummary: computed(() => categorySummary.value),
+    transactions: computed(() => transactions.value),
+    recentTransactions: computed(() => recentTransactions.value),
+    calendarData: computed(() => calendarData.value),
+    total: computed(() => total.value),
     loading: computed(() => loading.value),
-    hasMore: computed(() => hasMore.value),
+    current: computed(() => current.value),
+    pageSize: computed(() => pageSize.value),
+    hasMore,
 
     // 计算属性
-    incomeTransactions,
-    expenseTransactions,
-    transferTransactions,
     groupedTransactions,
 
     // 方法
-    fetchTransactions,
+    fetchRecent,
+    fetchCalendarData,
+    fetchPage,
+    fetchTransactions: fetchPage, // alias
     loadMore,
-    createTransaction,
+    fetchById,
+    create,
+    createTransaction: create,
+    update,
     updateTransaction,
-    deleteTransaction,
-    fetchSummary,
-    fetchCategorySummary,
-    fetchTransaction,
-    getTransactionColor,
-    getTransactionTypeName,
+    remove,
+    deleteTransaction: remove,
+    resetPagination,
     clearState,
-  };
-});
+  }
+})

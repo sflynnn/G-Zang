@@ -12,8 +12,6 @@ import { ref, onMounted, onUnmounted } from 'vue'
 const isOffline = ref(false)
 const pendingCount = ref(0)
 
-let unsubscribe: (() => void) | null = null
-
 const checkNetworkStatus = () => {
   uni.getNetworkType({
     success: (res) => {
@@ -24,9 +22,10 @@ const checkNetworkStatus = () => {
 
 onMounted(() => {
   checkNetworkStatus()
-  uni.onNetworkStatusChange((res) => {
+  const networkCallback = (res: { isConnected: boolean }) => {
     isOffline.value = !res.isConnected
-  })
+  }
+  uni.onNetworkStatusChange(networkCallback)
 
   // 监听待同步数量变化
   try {
@@ -40,7 +39,9 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  unsubscribe?.()
+  uni.offNetworkStatusChange(() => {
+    isOffline.value = false
+  })
 })
 </script>
 

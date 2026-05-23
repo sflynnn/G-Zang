@@ -27,6 +27,8 @@ export interface Category {
   name?: string;
   /** 后端 Category 实体无 icon，后端可能通过其他字段扩展 */
   icon?: string;
+  /** 分类颜色（从 t_category_icon 表返回） */
+  color?: string;
   children?: Category[];
   amount?: number;
   sortOrder?: number;
@@ -53,6 +55,8 @@ export interface Transaction {
   categoryName?: string;
   /** 分类图标 */
   categoryIcon?: string;
+  /** 分类颜色 */
+  categoryColor?: string;
   /** 账户名称 */
   accountName?: string;
   /** 目标账户ID（后端 DTO 不支持） */

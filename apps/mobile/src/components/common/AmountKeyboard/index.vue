@@ -1,10 +1,30 @@
 <template>
-  <view class="amount-keyboard" :class="{ 'amount-keyboard--fixed': fixed }">
+  <view class="amount-keyboard" :class="{ 'amount-keyboard--fixed': fixed, 'amount-keyboard--simple': simple }">
+    <!-- Amount Display -->
     <view class="keyboard-display">
-      <text class="keyboard-currency">¥</text>
-      <text class="keyboard-amount font-mono tabular-nums">{{ displayAmount }}</text>
+      <text class="keyboard-currency">{{ currencySymbol }}</text>
+      <text class="keyboard-amount">{{ displayAmount }}</text>
     </view>
-    <view class="keyboard-grid">
+
+    <!-- Quick Amount Buttons (Optional) -->
+    <view v-if="!simple && quickAmounts.length > 0" class="quick-amounts">
+      <view 
+        v-for="amount in quickAmounts" 
+        :key="amount"
+        class="quick-amount-btn"
+        :class="{ active: inputValue === String(amount) }"
+        @click="handleQuickAmount(amount)"
+      >
+        {{ currencySymbol }}{{ amount }}
+      </view>
+      <view class="quick-amount-btn custom" @click="toggleKeyboard">
+        <AppleIcon name="edit" :size="14" />
+        <text>{{ customLabel }}</text>
+      </view>
+    </view>
+
+    <!-- Number Keyboard -->
+    <view v-show="showKeyboard || simple" class="keyboard-grid">
       <view
         v-for="key in keys"
         :key="key.value"
@@ -19,7 +39,7 @@
         <uni-icons
           v-if="key.value === 'delete'"
           type="scan"
-          :size="24"
+          :size="20"
           color="currentColor"
         />
         <text v-else-if="key.action === 'confirm'" class="key-text key-text--confirm">
@@ -33,19 +53,28 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import AppleIcon from '@/components/common/AppleIcon/index.vue'
 
 interface Props {
   modelValue?: string | number
   maxLength?: number
   maxAmount?: number
   fixed?: boolean
+  simple?: boolean
+  currencySymbol?: string
+  quickAmounts?: number[]
+  customLabel?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: '0',
   maxLength: 10,
   maxAmount: 999999999,
-  fixed: false
+  fixed: false,
+  simple: false,
+  currencySymbol: '¥',
+  quickAmounts: () => [10, 50, 100, 200],
+  customLabel: '自定义'
 })
 
 const emit = defineEmits<{
@@ -53,6 +82,8 @@ const emit = defineEmits<{
   'confirm': [value: string]
   'cancel': []
 }>()
+
+const showKeyboard = ref(false)
 
 const keys = [
   { label: '1', value: '1' },
@@ -80,15 +111,22 @@ const displayAmount = computed(() => {
   const val = inputValue.value
   if (val === '' || val === '0') return '0.00'
 
-  // 格式化金额显示
   const parts = val.split('.')
   const intPart = parts[0] || '0'
   const decPart = parts[1] || ''
 
-  // 添加千分位
   const formatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   return decPart ? `${formatted}.${decPart}` : `${formatted}.00`
 })
+
+const handleQuickAmount = (amount: number) => {
+  inputValue.value = String(amount)
+  emit('update:modelValue', String(amount))
+}
+
+const toggleKeyboard = () => {
+  showKeyboard.value = !showKeyboard.value
+}
 
 const handleKeyClick = (key: typeof keys[0]) => {
   if (key.action === 'delete') {
@@ -103,7 +141,6 @@ const handleKeyClick = (key: typeof keys[0]) => {
 const handleInput = (value: string) => {
   let current = inputValue.value
 
-  // 处理小数点
   if (value === '.') {
     if (current.includes('.')) return
     current += '.'
@@ -118,18 +155,14 @@ const handleInput = (value: string) => {
       current += '00'
     }
   } else {
-    // 普通数字
     if (current === '0' && value !== '.') {
       current = value
     } else {
-      // 限制长度
       if (current.replace('.', '').length >= props.maxLength) return
-      // 限制小数位数
       if (current.includes('.')) {
         const parts = current.split('.')
         if (parts[1].length >= 2) return
       }
-      // 限制最大金额
       const newVal = parseFloat(current + value)
       if (newVal > props.maxAmount) return
       current += value
@@ -154,6 +187,7 @@ const handleConfirm = () => {
   const val = parseFloat(inputValue.value) || 0
   if (val > 0) {
     emit('confirm', inputValue.value)
+    showKeyboard.value = false
   } else {
     uni.showToast({ title: '请输入金额', icon: 'none' })
   }
@@ -186,15 +220,60 @@ const handleConfirm = () => {
   font-size: 32rpx;
   color: var(--gzang-text-secondary);
   margin-right: 8rpx;
+  font-weight: 500;
 }
 
 .keyboard-amount {
   font-size: 64rpx;
   font-weight: 600;
   color: var(--gzang-primary);
-  font-family: 'Roboto Mono', monospace;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -1px;
 }
 
+// Quick Amounts
+.quick-amounts {
+  display: flex;
+  gap: 16rpx;
+  padding: 16rpx 24rpx;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.quick-amount-btn {
+  flex-shrink: 0;
+  padding: 16rpx 28rpx;
+  background: var(--gzang-bg);
+  border-radius: var(--apple-radius-full);
+  font-size: var(--apple-text-sm);
+  font-weight: var(--apple-font-medium);
+  color: var(--gzang-text-secondary);
+  transition: all var(--apple-duration-fast) var(--apple-ease-out);
+  
+  &.active {
+    background: var(--gzang-secondary);
+    color: white;
+  }
+  
+  &.custom {
+    display: flex;
+    align-items: center;
+    gap: 8rpx;
+    background: var(--gzang-surface);
+    border: 1.5rpx dashed var(--gzang-border);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+// Keyboard Grid
 .keyboard-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

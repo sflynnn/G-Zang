@@ -102,7 +102,7 @@
           <switch
             :checked="form.isDefault"
             color="#0F4C5C"
-            @change="form.isDefault = $event.detail.value"
+            @change="form.isDefault = ($event as any).detail.value"
           />
         </label>
       </view>
@@ -272,14 +272,14 @@ onMounted(async () => {
   // 获取页面参数
   const pages = getCurrentPages()
   const currentPage = pages[pages.length - 1]
-  const options = currentPage.options || {}
+  const options = (currentPage as any).options || {}
 
   // 如果有 id 参数，则是编辑模式
   if (options.id) {
-    editBookId.value = parseInt(options.id as string)
+    editBookId.value = parseInt(String(options.id))
     await bookStore.loadBooks()
 
-    const book = bookStore.books.find(b => b.id === editBookId.value)
+    const book = bookStore.bookList.find(b => b.id === editBookId.value)
     if (book) {
       form.name = book.name
       form.icon = book.icon

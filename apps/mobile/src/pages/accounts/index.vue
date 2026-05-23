@@ -1,4 +1,5 @@
 <template>
+  <PageTransition>
   <view class="accounts-page apple-style">
     <!-- Large Title Navigation -->
     <view class="nav-large-title">
@@ -86,37 +87,39 @@
       <view class="bottom-safe-area"></view>
     </scroll-view>
   </view>
+  </PageTransition>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useAccountingStore } from '@/stores/accounting'
+import { useAccountStore } from '@/stores/account'
 import { useBookStore } from '@/stores/book'
 import type { Account } from '@/types/account'
 import { AccountType } from '@/types/account'
+import PageTransition from '@/components/common/PageTransition/index.vue'
 import AppleIcon from '@/components/common/AppleIcon/index.vue'
 
 const { t } = useI18n()
 
-const accountingStore = useAccountingStore()
+const accountStore = useAccountStore()
 const bookStore = useBookStore()
 
 const loading = ref(false)
 
-const accounts = computed(() => accountingStore.accounts)
+const accounts = computed(() => accountStore.accountList)
 const currencySymbol = computed(() => bookStore.currentCurrencySymbol)
 
 const totalAssets = computed(() =>
   accounts.value
-    .filter(a => a.balance > 0 && a.type !== AccountType.CreditCard && a.type !== AccountType.Debt)
-    .reduce((sum, a) => sum + a.balance, 0)
+    .filter(a => Number(a.balance) > 0 && a.type !== AccountType.CreditCard && a.type !== AccountType.Debt)
+    .reduce((sum, a) => sum + (Number(a.balance) || 0), 0)
 )
 
 const totalLiabilities = computed(() =>
   accounts.value
-    .filter(a => a.balance < 0 || a.type === AccountType.CreditCard || a.type === AccountType.Debt)
-    .reduce((sum, a) => sum + Math.abs(a.balance), 0)
+    .filter(a => Number(a.balance) < 0 || a.type === AccountType.CreditCard || a.type === AccountType.Debt)
+    .reduce((sum, a) => sum + Math.abs(Number(a.balance) || 0), 0)
 )
 
 const netAssets = computed(() => totalAssets.value - totalLiabilities.value)
@@ -128,29 +131,29 @@ const accountGroups = computed(() => {
   const groups: Array<{ type: string; label: string; total: number; accounts: Account[] }> = []
 
   const assetAccounts = accounts.value.filter(a =>
-    a.type === AccountType.Cash ||
-    a.type === AccountType.BankCard ||
-    a.type === AccountType.EWallet ||
-    a.type === AccountType.Investment
+    a.type === String(AccountType.Cash) ||
+    a.type === String(AccountType.BankCard) ||
+    a.type === String(AccountType.EWallet) ||
+    a.type === String(AccountType.Investment)
   )
   if (assetAccounts.length > 0) {
     groups.push({
       type: 'asset',
       label: '资产',
-      total: assetAccounts.reduce((sum, a) => sum + a.balance, 0),
+      total: assetAccounts.reduce((sum, a) => sum + (Number(a.balance) || 0), 0),
       accounts: assetAccounts,
     })
   }
 
   const liabilityAccounts = accounts.value.filter(a =>
-    a.type === AccountType.CreditCard ||
-    a.type === AccountType.Debt
+    a.type === String(AccountType.CreditCard) ||
+    a.type === String(AccountType.Debt)
   )
   if (liabilityAccounts.length > 0) {
     groups.push({
       type: 'liability',
       label: '负债',
-      total: liabilityAccounts.reduce((sum, a) => sum + Math.abs(a.balance), 0),
+      total: liabilityAccounts.reduce((sum, a) => sum + Math.abs(Number(a.balance) || 0), 0),
       accounts: liabilityAccounts,
     })
   }
@@ -166,68 +169,68 @@ const formatAmount = (amount: number) => {
 }
 
 const formatBalance = (account: Account) => {
-  const prefix = account.balance >= 0 ? '' : '-'
-  return `${prefix}${currencySymbol.value}${formatAmount(account.balance)}`
+  const balance = Number(account.balance) || 0
+  const prefix = balance >= 0 ? '' : '-'
+  return `${prefix}${currencySymbol.value}${formatAmount(balance)}`
 }
 
 const getBalanceClass = (account: Account) => {
-  if (account.balance < 0) return 'negative'
+  const balance = Number(account.balance) || 0
+  if (balance < 0) return 'negative'
   return 'positive'
 }
 
-const getAccountIcon = (type: string) => {
+const getAccountIcon = (type: string | number | undefined) => {
   const iconMap: Record<string, string> = {
-    [AccountType.Cash]: 'wallet',
-    [AccountType.BankCard]: 'bank',
-    [AccountType.CreditCard]: 'credit-card',
-    [AccountType.EWallet]: 'wallet',
-    [AccountType.Investment]: 'chart',
-    [AccountType.Debt]: 'flag',
-    [AccountType.Other]: 'book',
+    [String(AccountType.Cash)]: 'wallet',
+    [String(AccountType.BankCard)]: 'bank',
+    [String(AccountType.CreditCard)]: 'credit-card',
+    [String(AccountType.EWallet)]: 'wallet',
+    [String(AccountType.Investment)]: 'chart',
+    [String(AccountType.Debt)]: 'flag',
+    [String(AccountType.Other)]: 'book',
   }
-  return iconMap[type] || 'wallet'
+  return iconMap[String(type)] || 'wallet'
 }
 
-const getAccountColor = (type: string) => {
+const getAccountColor = (type: string | number | undefined) => {
   const colorMap: Record<string, string> = {
-    [AccountType.Cash]: '#06D6A0',
-    [AccountType.BankCard]: '#0F4C5C',
-    [AccountType.CreditCard]: '#EF476F',
-    [AccountType.EWallet]: '#FB8B24',
-    [AccountType.Investment]: '#118AB2',
-    [AccountType.Debt]: '#EF476F',
-    [AccountType.Other]: '#6B7280',
+    [String(AccountType.Cash)]: '#06D6A0',
+    [String(AccountType.BankCard)]: '#0F4C5C',
+    [String(AccountType.CreditCard)]: '#EF476F',
+    [String(AccountType.EWallet)]: '#FB8B24',
+    [String(AccountType.Investment)]: '#118AB2',
+    [String(AccountType.Debt)]: '#EF476F',
+    [String(AccountType.Other)]: '#6B7280',
   }
-  return colorMap[type] || '#6B7280'
+  return colorMap[String(type)] || '#6B7280'
 }
 
-const getAccountTypeName = (type: string) => {
+const getAccountTypeName = (type: string | number | undefined) => {
   const nameMap: Record<string, string> = {
-    [AccountType.Cash]: '现金',
-    [AccountType.BankCard]: '银行卡',
-    [AccountType.CreditCard]: '信用卡',
-    [AccountType.EWallet]: '电子钱包',
-    [AccountType.Investment]: '投资账户',
-    [AccountType.Debt]: '债务',
-    [AccountType.Other]: '其他',
+    [String(AccountType.Cash)]: '现金',
+    [String(AccountType.BankCard)]: '银行卡',
+    [String(AccountType.CreditCard)]: '信用卡',
+    [String(AccountType.EWallet)]: '电子钱包',
+    [String(AccountType.Investment)]: '投资账户',
+    [String(AccountType.Debt)]: '债务',
+    [String(AccountType.Other)]: '其他',
   }
-  return nameMap[type] || '其他'
+  return nameMap[String(type)] || '其他'
 }
 
 const goToCreate = () => uni.navigateTo({ url: '/pages/accounts/create' })
 const goToDetail = (account: Account) => uni.navigateTo({ url: `/pages/accounts/detail?id=${account.id}` })
 
-const mockAccounts: Account[] = [
-  { id: 1, name: '建设银行', type: AccountType.BankCard, balance: 12500.00, currency: 'CNY', isActive: true, createTime: '2024-01-01T00:00:00Z' },
-  { id: 2, name: '支付宝', type: AccountType.EWallet, balance: 3200.00, currency: 'CNY', isActive: true, createTime: '2024-01-01T00:00:00Z' },
-  { id: 3, name: '现金', type: AccountType.Cash, balance: 800.00, currency: 'CNY', isActive: true, createTime: '2024-01-01T00:00:00Z' },
-  { id: 4, name: '招商信用卡', type: AccountType.CreditCard, balance: -2500.00, currency: 'CNY', isActive: true, createTime: '2024-01-01T00:00:00Z' },
-]
-
 onMounted(async () => {
   loading.value = true
-  accountingStore.setAccounts(mockAccounts)
-  loading.value = false
+  try {
+    await accountStore.fetchAccounts()
+  } catch (error) {
+    console.error('Failed to load accounts:', error)
+  } finally {
+    loading.value = false
+  }
 })
 </script>
 

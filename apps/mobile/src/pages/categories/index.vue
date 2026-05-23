@@ -43,7 +43,7 @@
             <AppleIcon :name="cat.icon || 'shopping'" :size="24" :color="cat.color" />
           </view>
           <text class="category-name">{{ cat.name }}</text>
-          <text class="category-count">{{ cat.transactionCount || 0 }}笔</text>
+          <text class="category-count">0笔</text>
         </view>
       </view>
 
@@ -105,7 +105,7 @@ const mockCategories = computed(() => {
 
 const goBack = () => uni.navigateBack()
 const goToCreate = () => uni.navigateTo({ url: `/pages/categories/create?type=${currentType.value}` })
-const goToEdit = (cat: any) => uni.showToast({ title: '编辑功能开发中', icon: 'none' })
+const goToEdit = (cat: any) => uni.navigateTo({ url: `/pages/categories/create?id=${cat.id}` })
 
 onMounted(async () => {
   loading.value = true

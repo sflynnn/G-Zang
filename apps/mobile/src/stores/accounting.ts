@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { getAccounts as apiGetAccounts } from '@/api/account'
-import { getCategories as apiGetCategories, type CategoryVO } from '@/api/category'
+import { getCategories as apiGetCategories } from '@/api/category'
 import { createTransaction as apiCreateTransaction } from '@/api/transaction'
 import type { Account, Category, TransactionType } from '@/types'
 
@@ -30,10 +30,12 @@ export interface AccountingState {
 }
 
 // 将后端分类数据转换为前端格式
-function transformCategory(category: CategoryVO): Category {
+function transformCategory(category: any): Category {
   return {
     ...category,
-    name: category.categoryName, // 前端用 name 方便展示
+    name: category.categoryName,
+    isSystem: category.isSystem ? true : false,
+    children: category.children?.map(transformCategory),
   }
 }
 
@@ -188,6 +190,13 @@ export const useAccountingStore = defineStore('accounting', () => {
   // 获取账户信息
   const getAccountInfo = (accountId: number) => {
     return accounts.value.find(a => a.id === accountId)
+  }
+
+  // 获取账户详情（从API）
+  const getAccountById = async (accountId: number) => {
+    const existing = accounts.value.find(a => a.id === accountId)
+    if (existing) return existing
+    return await apiGetAccounts().then(data => data.find(a => a.id === accountId))
   }
 
   // 获取账户名称

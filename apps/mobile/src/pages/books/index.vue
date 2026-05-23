@@ -1,4 +1,5 @@
 <template>
+  <PageTransition>
   <view class="books-page apple-style">
     <!-- Large Title Navigation -->
     <view class="nav-large-title">
@@ -41,7 +42,7 @@
           </view>
           <view class="book-card-footer" @click="goToDetail(defaultBook)">
             <text>查看详情</text>
-            <AppleIcon name="chevron-right" :size="14" color="rgba(255,255,255,0.6)" />
+            <AppleIcon name="chevron-right" :size="14" color="rgba(255,255,255,0.7)" />
           </view>
         </view>
       </view>
@@ -92,6 +93,7 @@
       <view class="bottom-safe-area"></view>
     </scroll-view>
   </view>
+  </PageTransition>
 </template>
 
 <script setup lang="ts">
@@ -99,6 +101,7 @@ import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useBookStore } from '@/stores/book'
 import type { Book } from '@/types/book'
+import PageTransition from '@/components/common/PageTransition/index.vue'
 import AppleIcon from '@/components/common/AppleIcon/index.vue'
 
 const { t } = useI18n()

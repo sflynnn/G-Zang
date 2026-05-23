@@ -80,6 +80,7 @@
 import { ref, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { useCategoryStore } from '@/stores/category'
+import { getCategory } from '@/api/category'
 
 const categoryStore = useCategoryStore()
 
@@ -112,14 +113,20 @@ const availableIcons = computed(() => {
   return formData.value.type === 1 ? incomeIcons : expenseIcons
 })
 
-onLoad((options: any) => {
+onLoad(async (options: any) => {
   if (options?.id) {
     isEdit.value = true
-    categoryId.value = parseInt(options.id)
-    // 加载分类数据
+    categoryId.value = parseInt(String(options.id))
+    try {
+      const cat = await getCategory(categoryId.value)
+      formData.value.name = cat.categoryName
+      formData.value.type = cat.type
+    } catch (e) {
+      // ignore
+    }
   }
   if (options?.type) {
-    formData.value.type = parseInt(options.type)
+    formData.value.type = parseInt(String(options.type))
     selectedIcon.value = formData.value.type === 1 ? '💰' : '🍜'
   }
 })
@@ -136,12 +143,17 @@ async function handleSubmit() {
 
   submitting.value = true
   try {
-    await categoryStore.createCategory({
-      name: formData.value.name,
-      type: formData.value.type,
-      icon: selectedIcon.value
-    })
-    
+    if (isEdit.value && categoryId.value) {
+      await categoryStore.updateCategory(categoryId.value, {
+        categoryName: formData.value.name,
+      })
+    } else {
+      await categoryStore.createCategory({
+        name: formData.value.name,
+        type: formData.value.type,
+      })
+    }
+
     uni.showToast({ title: '保存成功', icon: 'success' })
     setTimeout(() => {
       goBack()

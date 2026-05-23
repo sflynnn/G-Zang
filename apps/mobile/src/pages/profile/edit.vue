@@ -245,11 +245,7 @@ const changeAvatar = () => {
 
 // 绑定手机号
 const bindPhone = () => {
-  // 实现手机号绑定逻辑
-  uni.showToast({
-    title: '手机号绑定功能开发中',
-    icon: 'none',
-  })
+  uni.navigateTo({ url: '/pages/profile/bind-phone' })
 }
 
 // 日期选择器

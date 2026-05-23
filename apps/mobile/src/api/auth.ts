@@ -107,6 +107,30 @@ export function isLoggedIn(): boolean {
   return !!uni.getStorageSync('token');
 }
 
+/**
+ * 发送重置密码验证码
+ * POST /api/mobile/auth/send-reset-code
+ */
+export function sendResetCode(phone: string) {
+  return api.post('/auth/send-reset-code', { phone });
+}
+
+/**
+ * 验证重置密码验证码
+ * POST /api/mobile/auth/verify-reset-code
+ */
+export function verifyResetCode(phone: string, code: string) {
+  return api.post('/auth/verify-reset-code', { phone, code });
+}
+
+/**
+ * 重置密码
+ * POST /api/mobile/auth/reset-password
+ */
+export function resetPassword(phone: string, code: string, newPassword: string) {
+  return api.post('/auth/reset-password', { phone, code, newPassword });
+}
+
 export default {
   login,
   register,
@@ -117,4 +141,7 @@ export default {
   clearToken,
   getToken,
   isLoggedIn,
+  sendResetCode,
+  verifyResetCode,
+  resetPassword,
 };

@@ -29,6 +29,7 @@ export interface TransactionQueryParams {
   endTime?: string;
   type?: TransactionType;
   categoryId?: number;
+  bookId?: number;
 }
 
 /**
@@ -97,16 +98,34 @@ export async function getCategorySummary(params?: {
   startTime?: string;
   endTime?: string;
   type?: TransactionType;
+  bookId?: number;
 }): Promise<
   Array<{
     categoryId: number;
-    categoryName: string;
     totalAmount: number;
     count: number;
-    percentage?: number;
   }>
 > {
   return api.get('/transactions/category-summary', params);
+}
+
+/**
+ * 日历视图：获取指定年月的每日交易汇总
+ * GET /api/mobile/transactions/calendar?year=&month=&bookId=
+ */
+export async function getCalendarTransactions(params: {
+  year: number;
+  month: number;
+  bookId?: number;
+}): Promise<
+  Array<{
+    date: string;
+    income: number;
+    expense: number;
+    count: number;
+  }>
+> {
+  return api.get('/transactions/calendar', params);
 }
 
 export const transactionApi = {
@@ -117,6 +136,7 @@ export const transactionApi = {
   deleteTransaction,
   getTransactionSummary,
   getCategorySummary,
+  getCalendarTransactions,
 };
 
 export default transactionApi;

@@ -1,21 +1,22 @@
 <template>
-  <view class="quick-record-page">
-    <!-- 顶部导航 -->
+  <view class="quick-record-page apple-style">
+    <!-- Top Navigation -->
     <view class="nav-bar">
       <view class="nav-left" @click="goBack">
-        <uni-icons type="left" size="20" color="#333"></uni-icons>
+        <AppleIcon name="chevron-left" :size="20" color="var(--gzang-text-primary)" />
       </view>
-      <view class="nav-title">快速记账</view>
+      <view class="nav-title">{{ t('accounting.quickRecord') }}</view>
       <view class="nav-right">
         <view class="book-selector" @click="showBookPicker">
-          <text class="book-name">{{ currentBook?.name || '选择账本' }}</text>
-          <uni-icons type="bottom" size="12" color="#666"></uni-icons>
+          <text class="book-name">{{ currentBook?.name || t('accounting.selectBook') }}</text>
+          <AppleIcon name="chevron-down" :size="12" color="var(--gzang-text-secondary)" />
         </view>
       </view>
     </view>
 
+    <!-- Main Content -->
     <view class="page-content">
-      <!-- 金额显示区域 -->
+      <!-- Amount Display -->
       <view class="amount-display">
         <text class="currency-symbol">{{ currentCurrencySymbol }}</text>
         <input
@@ -27,115 +28,63 @@
         />
       </view>
 
-      <!-- 交易类型切换 -->
-      <view class="type-selector">
-        <view class="type-tabs">
-          <view
-            class="type-tab expense"
-            :class="{ active: form.type === 2 }"
-            @click="switchType(2)"
-          >
-            <text>支出</text>
-          </view>
-          <view
-            class="type-tab income"
-            :class="{ active: form.type === 1 }"
-            @click="switchType(1)"
-          >
-            <text>收入</text>
-          </view>
-        </view>
-      </view>
+      <!-- Transaction Type Selector -->
+      <TransactionTypeSelector v-model="form.type" @change="onTypeChange" />
 
-      <!-- 分类网格 -->
+      <!-- Category Grid -->
       <view class="category-section">
-        <view class="category-grid">
-          <view
-            v-for="category in currentCategories"
-            :key="category.id"
-            class="category-item"
-            :class="{ selected: form.categoryId === category.id }"
-            @click="selectCategory(category)"
-          >
-            <view
-              class="category-icon"
-              :style="{ background: category.bgColor || '#F8F9FA' }"
-            >
-              <text class="category-emoji">{{ category.icon || '📂' }}</text>
-            </view>
-            <text class="category-name">{{ category.name }}</text>
-            <text
-              v-if="category.amount"
-              class="category-amount"
-              :class="form.type === 1 ? 'income' : 'expense'"
-            >
-              {{ form.type === 1 ? '+' : '-' }}{{ formatAmount(category.amount) }}
-            </text>
-          </view>
-        </view>
+        <CategoryGrid
+          v-model="form.categoryId"
+          :expense-categories="expenseCategories"
+          :income-categories="incomeCategories"
+          :currency-symbol="currentCurrencySymbol"
+          :show-tabs="false"
+          :show-amount="true"
+          :compact="true"
+          @change="onCategoryChange"
+        />
       </view>
 
-      <!-- 子分类展开面板 -->
-      <view v-if="selectedCategory && selectedCategory.children?.length" class="sub-panel">
-        <view class="sub-panel-header">
-          <view class="sub-panel-title">
-            <view
-              class="sub-icon"
-              :style="{ background: selectedCategory.bgColor || '#F8F9FA' }"
-            >
-              <text class="sub-emoji">{{ selectedCategory.icon || '📂' }}</text>
-            </view>
-            <text class="sub-name">{{ selectedCategory.name }}</text>
-          </view>
-        </view>
-        <view class="sub-tags">
-          <view
-            v-for="sub in selectedCategory.children"
-            :key="sub.id"
-            class="sub-tag"
-            :class="{ selected: form.subCategoryId === sub.id }"
-            @click="selectSubCategory(sub)"
-          >
-            <text>{{ sub.name }}</text>
-            <text v-if="sub.amount" class="sub-amount" :class="form.type === 1 ? 'income' : 'expense'">
-              {{ form.type === 1 ? '+' : '-' }}{{ formatAmount(sub.amount) }}
-            </text>
-          </view>
-        </view>
-      </view>
-
-      <!-- 账户选择 -->
-      <view class="form-row" @click="showAccountPicker = true">
-        <view class="row-icon">💳</view>
-        <text class="row-label">账户</text>
-        <text class="row-value" :class="{ placeholder: !selectedAccountName }">
-          {{ selectedAccountName || '请选择账户' }}
-        </text>
-        <text class="row-arrow">›</text>
-      </view>
-
-      <!-- 日期选择 -->
-      <view class="form-row" @click="showDatePicker">
-        <view class="row-icon">📅</view>
-        <text class="row-label">日期</text>
-        <text class="row-value">{{ formatDisplayDate }}</text>
-        <text class="row-arrow">›</text>
-      </view>
-
-      <!-- 快捷金额 -->
+      <!-- Quick Amounts -->
       <view class="quick-amounts">
         <view
           v-for="amount in quickAmounts"
           :key="amount"
           class="qa-btn"
+          :class="{ active: form.amount === String(amount) }"
           @click="setQuickAmount(amount)"
         >
           <text>{{ currentCurrencySymbol }}{{ amount }}</text>
         </view>
       </view>
+
+      <!-- Form Rows -->
+      <view class="form-rows">
+        <!-- Account Selection -->
+        <view class="form-row" @click="showAccountPicker = true">
+          <view class="row-icon" style="background: rgba(6, 214, 160, 0.1)">
+            <AppleIcon name="wallet" :size="18" color="var(--gzang-success)" />
+          </view>
+          <text class="row-label">{{ t('accounting.account') }}</text>
+          <text class="row-value" :class="{ placeholder: !selectedAccountName }">
+            {{ selectedAccountName || t('accounting.selectAccount') }}
+          </text>
+          <AppleIcon name="chevron-right" :size="14" color="var(--gzang-text-tertiary)" />
+        </view>
+
+        <!-- Date Selection -->
+        <view class="form-row" @click="showDatePicker">
+          <view class="row-icon" style="background: rgba(15, 76, 92, 0.1)">
+            <AppleIcon name="calendar" :size="18" color="var(--gzang-primary)" />
+          </view>
+          <text class="row-label">{{ t('accounting.date') }}</text>
+          <text class="row-value">{{ formatDisplayDate }}</text>
+          <AppleIcon name="chevron-right" :size="14" color="var(--gzang-text-tertiary)" />
+        </view>
+      </view>
     </view>
 
-    <!-- 底部提交按钮 -->
+    <!-- Submit Bar -->
     <view class="submit-bar">
       <button
         class="submit-btn"
@@ -143,18 +92,21 @@
         :disabled="!isFormValid || submitting"
         @click="handleSubmit"
       >
-        <text v-if="submitting">保存中...</text>
-        <text v-else>确认记账</text>
+        <AppleIcon v-if="submitting" name="refresh" :size="16" color="white" class="spin" />
+        <text v-else>{{ t('accounting.confirmRecord') }}</text>
+        <text v-if="isFormValid && form.amount" class="btn-amount">
+          {{ currentCurrencySymbol }}{{ parseFloat(form.amount).toFixed(2) }}
+        </text>
       </button>
     </view>
 
-    <!-- 账户选择弹窗 -->
+    <!-- Account Picker Popup -->
     <uni-popup ref="accountPopup" type="bottom" :is-mask-click="true">
       <view class="picker-container">
         <view class="picker-header">
-          <text class="picker-cancel" @click="closeAccountPicker">取消</text>
-          <text class="picker-title">选择账户</text>
-          <text class="picker-confirm" @click="confirmAccount">确定</text>
+          <text class="picker-cancel" @click="closeAccountPicker">{{ t('common.cancel') }}</text>
+          <text class="picker-title">{{ t('accounting.selectAccount') }}</text>
+          <text class="picker-confirm" @click="confirmAccount">{{ t('common.confirm') }}</text>
         </view>
         <picker-view
           :value="accountPickerValue"
@@ -167,52 +119,70 @@
               :key="account.id"
               class="picker-item"
             >
-              {{ getAccountIcon(account) }} {{ account.name }} ({{ currentCurrencySymbol }}{{ account.balance.toFixed(2) }})
+              {{ account.name }} ({{ currentCurrencySymbol }}{{ (Number(account.balance) || 0).toFixed(2) }})
             </view>
           </picker-view-column>
         </picker-view>
       </view>
     </uni-popup>
 
-    <!-- 日期选择弹窗 -->
+    <!-- Date Picker Popup -->
     <uni-popup ref="datePopup" type="bottom" :is-mask-click="true">
-      <view class="picker-container">
+      <view class="date-picker-container">
         <view class="picker-header">
-          <text class="picker-cancel" @click="closeDatePicker">取消</text>
-          <text class="picker-title">选择日期</text>
-          <text class="picker-confirm" @click="confirmDate">确定</text>
+          <text class="picker-cancel" @click="closeDatePicker">{{ t('common.cancel') }}</text>
+          <text class="picker-title">{{ t('accounting.selectDate') }}</text>
+          <text class="picker-confirm" @click="confirmDate">{{ t('common.confirm') }}</text>
         </view>
-        <picker-view
-          :value="datePickerValue"
-          @change="onDateChange"
-          class="date-picker"
-        >
-          <picker-view-column>
-            <view v-for="year in years" :key="year" class="picker-item">
-              {{ year }}年
-            </view>
-          </picker-view-column>
-          <picker-view-column>
-            <view v-for="month in months" :key="month" class="picker-item">
-              {{ month }}月
-            </view>
-          </picker-view-column>
-          <picker-view-column>
-            <view v-for="day in days" :key="day" class="picker-item">
-              {{ day }}日
-            </view>
-          </picker-view-column>
-        </picker-view>
+        <view class="quick-date-btns">
+          <view 
+            v-for="quick in quickDates" 
+            :key="quick.key"
+            class="quick-date-btn"
+            :class="{ active: form.transactionDate === quick.date }"
+            @click="selectQuickDate(quick.date)"
+          >
+            {{ quick.label }}
+          </view>
+        </view>
+        <view class="date-picker-wrapper">
+          <picker-view
+            :value="datePickerValue"
+            @change="onDateChange"
+            class="date-picker"
+          >
+            <picker-view-column>
+              <view v-for="year in years" :key="year" class="picker-item">
+                {{ year }}
+              </view>
+            </picker-view-column>
+            <picker-view-column>
+              <view v-for="month in months" :key="month" class="picker-item">
+                {{ String(month).padStart(2, '0') }}
+              </view>
+            </picker-view-column>
+            <picker-view-column>
+              <view v-for="day in days" :key="day" class="picker-item">
+                {{ String(day).padStart(2, '0') }}
+              </view>
+            </picker-view-column>
+          </picker-view>
+        </view>
+        <view class="picker-labels">
+          <text class="picker-label">年</text>
+          <text class="picker-label">月</text>
+          <text class="picker-label">日</text>
+        </view>
       </view>
     </uni-popup>
 
-    <!-- 账本选择弹窗 -->
+    <!-- Book Picker Popup -->
     <uni-popup ref="bookPopup" type="bottom" :is-mask-click="true">
       <view class="picker-container">
         <view class="picker-header">
-          <text class="picker-cancel" @click="closeBookPicker">取消</text>
-          <text class="picker-title">选择账本</text>
-          <text class="picker-confirm" @click="confirmBook">确定</text>
+          <text class="picker-cancel" @click="closeBookPicker">{{ t('common.cancel') }}</text>
+          <text class="picker-title">{{ t('book.switchBook') }}</text>
+          <text class="picker-confirm" @click="confirmBook">{{ t('common.confirm') }}</text>
         </view>
         <picker-view
           :value="bookPickerValue"
@@ -232,96 +202,66 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useAccountingStore } from '@/stores/accounting'
 import { useBookStore } from '@/stores/book'
-import { useTransactionStore } from '@/stores/transaction'
-import { useCategoryStore } from '@/stores/category'
-import { useAccountStore } from '@/stores/account'
+import AppleIcon from '@/components/common/AppleIcon/index.vue'
+import TransactionTypeSelector from '@/components/business/TransactionTypeSelector/index.vue'
+import CategoryGrid from '@/components/business/CategoryGrid/index.vue'
+import type { Category } from '@/components/business/CategoryGrid/index.vue'
 
-// 分类图标背景色映射
-const CATEGORY_COLORS: Record<string, string> = {
-  '🍜': '#FFF3E0',
-  '🚇': '#E3F2FD',
-  '🛒': '#FCE4EC',
-  '🎮': '#F3E5F5',
-  '💊': '#FFEBEE',
-  '📚': '#E8F5E9',
-  '🏠': '#FFF8E1',
-  '📱': '#E0F7FA',
-  '💰': '#E8F5E9',
-  '🎁': '#FCE4EC',
-  '✈️': '#E3F2FD',
-  '🏥': '#FFEBEE',
-  '👔': '#E3F2FD',
-  '🎨': '#F3E5F5',
-  '☔': '#E0F7FA',
-  '📂': '#F8F9FA',
-}
+const { t } = useI18n()
 
-// Store
+// Stores
 const accountingStore = useAccountingStore()
 const bookStore = useBookStore()
-const transactionStore = useTransactionStore()
-const categoryStore = useCategoryStore()
-const accountStore = useAccountStore()
 
-// 响应式数据
+// Refs
 const submitting = ref(false)
 const showAccountPicker = ref(false)
 const accountPickerValue = ref([0])
 const bookPickerValue = ref([0])
 const datePickerValue = ref([0, 0, 0])
 
-// 弹窗 refs
+// Popup refs
 const accountPopup = ref<any>(null)
 const datePopup = ref<any>(null)
 const bookPopup = ref<any>(null)
 
-// 表单数据
+// Form data
 const form = reactive({
-  type: 2 as 1 | 2, // 1: 收入, 2: 支出
+  type: 2 as 1 | 2, // 2: expense, 1: income
   amount: '',
-  categoryId: 0 as number,
-  subCategoryId: 0 as number,
-  accountId: 0 as number,
+  categoryId: undefined as number | undefined,
+  accountId: 0,
   transactionDate: ''
 })
 
-// 日期选择器数据
+// Date picker data
 const years = computed(() => {
   const current = new Date().getFullYear()
   return Array.from({ length: 10 }, (_, i) => current - 5 + i)
 })
 const months = computed(() => Array.from({ length: 12 }, (_, i) => i + 1))
+
+const getDaysInMonth = (year: number, month: number) => {
+  return new Date(year, month, 0).getDate()
+}
+
 const days = computed(() => {
   const year = years.value[datePickerValue.value[0]] || new Date().getFullYear()
-  const month = months.value[datePickerValue.value[1]] || new Date().getMonth() + 1
+  const month = months.value[datePickerValue.value[1]] || 1
   return Array.from({ length: getDaysInMonth(year, month) }, (_, i) => i + 1)
 })
 
-// 常用金额
+// Quick amounts
 const quickAmounts = [10, 50, 100, 200, 500]
 
-// 计算属性
+// Computed
 const currentBook = computed(() => bookStore.currentBook)
-const books = computed(() => bookStore.bookList)
+const books = computed(() => bookStore.books)
 const currentCurrencySymbol = computed(() => bookStore.currentCurrencySymbol)
-
-const accounts = computed(() => accountStore.accountList)
-
-const currentCategories = computed(() => {
-  const type = form.type
-  const categories = type === 1 ? categoryStore.incomeCategories : categoryStore.expenseCategories
-  return categories.map(cat => ({
-    ...cat,
-    bgColor: CATEGORY_COLORS[cat.icon] || '#F8F9FA'
-  }))
-})
-
-const selectedCategory = computed(() => {
-  if (!form.categoryId) return null
-  return currentCategories.value.find(c => c.id === form.categoryId)
-})
+const accounts = computed(() => accountingStore.accounts)
 
 const selectedAccountName = computed(() => {
   if (!form.accountId) return ''
@@ -330,22 +270,59 @@ const selectedAccountName = computed(() => {
 })
 
 const formatDisplayDate = computed(() => {
-  if (!form.transactionDate) return '今天'
+  if (!form.transactionDate) return t('datetime.today')
   const today = formatDate(new Date())
   const yesterday = formatDate(new Date(Date.now() - 86400000))
-  if (form.transactionDate === today) return '今天'
-  if (form.transactionDate === yesterday) return '昨天'
+  if (form.transactionDate === today) return t('datetime.today')
+  if (form.transactionDate === yesterday) return t('datetime.yesterday')
   return form.transactionDate.replace(/-/g, '/')
 })
 
+// Quick dates
+const quickDates = computed(() => {
+  const today = new Date()
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+  return [
+    { key: 'today', label: t('datetime.today'), date: formatDate(today) },
+    { key: 'yesterday', label: t('datetime.yesterday'), date: formatDate(yesterday) },
+  ]
+})
+
+const selectQuickDate = (date: string) => {
+  form.transactionDate = date
+  closeDatePicker()
+}
+
+// Categories (from API)
+const expenseCategories = computed((): Category[] =>
+  accountingStore.categories.filter(c => c.type === 2).map(c => ({
+    id: c.id,
+    name: c.name || c.categoryName || '',
+    icon: c.icon || 'circle',
+    color: c.color || '#6B7280',
+    type: 2,
+  }))
+)
+
+const incomeCategories = computed((): Category[] =>
+  accountingStore.categories.filter(c => c.type === 1).map(c => ({
+    id: c.id,
+    name: c.name || c.categoryName || '',
+    icon: c.icon || 'circle',
+    color: c.color || '#6B7280',
+    type: 1,
+  }))
+)
+
 const isFormValid = computed(() => {
   const hasAmount = form.amount && parseFloat(form.amount) > 0
-  const hasCategory = form.categoryId > 0
+  const hasCategory = form.categoryId && form.categoryId > 0
   const hasAccount = form.accountId > 0
   return hasAmount && hasCategory && hasAccount
 })
 
-// 方法
+// Methods
 const formatDate = (date: Date) => {
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, '0')
@@ -353,65 +330,34 @@ const formatDate = (date: Date) => {
   return `${y}-${m}-${d}`
 }
 
-const formatAmount = (amount: number) => {
-  if (amount >= 1000) {
-    return (amount / 1000).toFixed(1) + 'k'
-  }
-  return amount.toFixed(0)
+const onTypeChange = (type: 1 | 2 | 3) => {
+  form.type = type as 1 | 2
+  form.categoryId = undefined
 }
 
-const getDaysInMonth = (year: number, month: number) => {
-  return new Date(year, month, 0).getDate()
-}
-
-const getAccountIcon = (account: any) => {
-  const typeIcons: Record<string, string> = {
-    CASH: '💵',
-    BANK_CARD: '🏦',
-    CREDIT_CARD: '💳',
-    E_WALLET: '📱',
-    INVESTMENT: '📈',
-    DEBT: '📋',
-    OTHER: '💰',
-  }
-  return typeIcons[account.type] || '💰'
-}
-
-const switchType = (type: 1 | 2) => {
-  form.type = type
-  form.categoryId = 0
-  form.subCategoryId = 0
-}
-
-const selectCategory = (category: any) => {
+const onCategoryChange = (category: Category) => {
   form.categoryId = category.id
-  form.subCategoryId = 0
-}
-
-const selectSubCategory = (sub: any) => {
-  form.subCategoryId = sub.id
-  form.categoryId = sub.id
-}
-
-const setQuickAmount = (amount: number) => {
-  form.amount = amount.toString()
 }
 
 const onAmountInput = () => {
-  // 过滤非数字输入
+  // Filter non-numeric input
   form.amount = form.amount.replace(/[^\d.]/g, '')
-  // 确保只有一个小数点
+  // Ensure only one decimal point
   const parts = form.amount.split('.')
   if (parts.length > 2) {
     form.amount = parts[0] + '.' + parts.slice(1).join('')
   }
-  // 限制小数位数为2位
+  // Limit decimal places to 2
   if (parts[1] && parts[1].length > 2) {
     form.amount = parts[0] + '.' + parts[1].slice(0, 2)
   }
 }
 
-// 账户选择器
+const setQuickAmount = (amount: number) => {
+  form.amount = String(amount)
+}
+
+// Account picker
 const onAccountChange = (e: any) => {
   accountPickerValue.value = e.detail.value
 }
@@ -426,10 +372,10 @@ const confirmAccount = () => {
 }
 
 const closeAccountPicker = () => {
-  accountPopup.value.close()
+  accountPopup.value?.close()
 }
 
-// 日期选择器
+// Date picker
 const showDatePicker = () => {
   const date = form.transactionDate ? new Date(form.transactionDate) : new Date()
   const yearIndex = years.value.indexOf(date.getFullYear())
@@ -440,11 +386,27 @@ const showDatePicker = () => {
     monthIndex,
     dayIndex >= 0 ? dayIndex : 0
   ]
-  datePopup.value.open()
+  datePopup.value?.open()
 }
 
 const onDateChange = (e: any) => {
-  datePickerValue.value = e.detail.value
+  const newValue = e.detail.value
+  const oldYear = datePickerValue.value[0]
+  const oldMonth = datePickerValue.value[1]
+  const oldDay = datePickerValue.value[2]
+
+  // 检查月份或年份是否改变
+  if (newValue[0] !== oldYear || newValue[1] !== oldMonth) {
+    // 月份或年份改变，重新计算天数
+    const year = years.value[newValue[0]] || new Date().getFullYear()
+    const month = months.value[newValue[1]] || 1
+    const maxDays = getDaysInMonth(year, month)
+    const currentDay = newValue[2]
+    // 确保天数索引不超过最大值
+    newValue[2] = Math.min(currentDay, maxDays - 1)
+  }
+
+  datePickerValue.value = newValue
 }
 
 const confirmDate = () => {
@@ -456,14 +418,14 @@ const confirmDate = () => {
 }
 
 const closeDatePicker = () => {
-  datePopup.value.close()
+  datePopup.value?.close()
 }
 
-// 账本选择器
+// Book picker
 const showBookPicker = () => {
   const currentIndex = books.value.findIndex(b => b.id === currentBook.value?.id)
   bookPickerValue.value = currentIndex >= 0 ? [currentIndex] : [0]
-  bookPopup.value.open()
+  bookPopup.value?.open()
 }
 
 const onBookChange = (e: any) => {
@@ -480,15 +442,15 @@ const confirmBook = () => {
 }
 
 const closeBookPicker = () => {
-  bookPopup.value.close()
+  bookPopup.value?.close()
 }
 
-// 返回
+// Go back
 const goBack = () => {
   uni.navigateBack()
 }
 
-// 提交
+// Submit
 const handleSubmit = async () => {
   if (!isFormValid.value) return
 
@@ -498,23 +460,24 @@ const handleSubmit = async () => {
     const transactionData = {
       type: form.type as 1 | 2,
       amount: parseFloat(form.amount),
-      categoryId: form.categoryId,
+      categoryId: form.categoryId!,
       accountId: form.accountId,
-      transactionTime: form.transactionDate ? `${form.transactionDate} ${new Date().toTimeString().slice(0, 8)}` : new Date().toISOString(),
+      transactionTime: form.transactionDate 
+        ? `${form.transactionDate} ${new Date().toTimeString().slice(0, 8)}` 
+        : new Date().toISOString(),
       remark: ''
     }
 
-    await transactionStore.createTransaction(transactionData)
+    await accountingStore.createTransaction(transactionData as any)
 
     uni.showToast({
-      title: '记账成功',
+      title: t('accounting.recordSuccess'),
       icon: 'success'
     })
 
-    // 重置表单
+    // Reset form
     form.amount = ''
-    form.categoryId = 0
-    form.subCategoryId = 0
+    form.categoryId = undefined
 
     setTimeout(() => {
       uni.navigateBack()
@@ -527,24 +490,24 @@ const handleSubmit = async () => {
   }
 }
 
-// 生命周期
+// Lifecycle
 onMounted(async () => {
-  // 设置默认日期
+  // Set default date
   form.transactionDate = formatDate(new Date())
 
-  // 加载数据
+  // Load data
   await Promise.all([
-    bookStore.fetchBooks(),
-    categoryStore.fetchCategories(),
-    accountStore.fetchAccounts()
+    bookStore.loadBooks(),
+    accountingStore.loadCategories(),
+    accountingStore.loadAccounts()
   ])
 
-  // 获取页面参数
+  // Get page options
   const pages = getCurrentPages()
   const currentPage = pages[pages.length - 1] as any
   const options = currentPage?.options || {}
 
-  // 如果有类型参数
+  // If type parameter exists
   if (options.type) {
     const type = parseInt(options.type as string) as 1 | 2
     if ([1, 2].includes(type)) {
@@ -552,7 +515,7 @@ onMounted(async () => {
     }
   }
 
-  // 如果有账本参数
+  // If book parameter exists
   if (options.bookId) {
     const bookId = parseInt(options.bookId as string)
     bookStore.switchBook(bookId)
@@ -562,22 +525,24 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 .quick-record-page {
-  height: 100vh;
-  background-color: #fff;
+  min-height: 100vh;
+  background: var(--gzang-bg);
   display: flex;
   flex-direction: column;
 }
 
+// ================== Navigation Bar ==================
 .nav-bar {
-  background-color: #fff;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  border-bottom: 1px solid #e5e5e5;
+  padding: var(--apple-space-4);
+  padding-top: calc(constant(safe-area-inset-top) + var(--apple-space-3));
+  background: var(--gzang-bg);
 }
 
-.nav-left, .nav-right {
+.nav-left,
+.nav-right {
   width: 80px;
   display: flex;
   align-items: center;
@@ -592,349 +557,209 @@ onMounted(async () => {
 }
 
 .nav-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
+  font-size: var(--apple-text-lg);
+  font-weight: var(--apple-font-semibold);
+  color: var(--gzang-text-primary);
 }
 
 .book-selector {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  background: #F8F9FA;
-  border-radius: 16px;
-  max-width: 120px;
+  gap: 8rpx;
+  padding: 12rpx 16rpx;
+  background: var(--gzang-surface);
+  border-radius: var(--apple-radius-full);
+  box-shadow: var(--apple-shadow-xs);
 }
 
 .book-name {
-  font-size: 13px;
-  color: #333;
+  font-size: var(--apple-text-sm);
+  color: var(--gzang-text-primary);
   max-width: 80px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+// ================== Page Content ==================
 .page-content {
   flex: 1;
-  overflow-y: auto;
-  padding-bottom: 80px;
+  padding: 0 var(--apple-space-4);
 }
 
-// 金额显示
+// ================== Amount Display ==================
 .amount-display {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 32px 20px;
-  background: linear-gradient(135deg, #0F4C5C 0%, #1a6b7a 100%);
+  padding: var(--apple-space-8) var(--apple-space-4);
+  background: linear-gradient(135deg, var(--gzang-primary) 0%, var(--gzang-primary-light, #1a6b7a) 100%);
+  border-radius: var(--apple-radius-2xl);
+  margin-bottom: var(--apple-space-4);
 }
 
 .currency-symbol {
-  font-size: 32px;
-  font-weight: 600;
+  font-size: var(--apple-text-3xl);
+  font-weight: var(--apple-font-semibold);
   color: rgba(255, 255, 255, 0.9);
-  margin-right: 4px;
+  margin-right: var(--apple-space-2);
 }
 
 .amount-input {
   font-size: 48px;
-  font-weight: 700;
-  color: #fff;
+  font-weight: var(--apple-font-bold);
+  color: white;
   text-align: center;
   background: transparent;
   border: none;
   outline: none;
   min-width: 200px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 
   &::placeholder {
     color: rgba(255, 255, 255, 0.4);
   }
 }
 
-// 类型切换
-.type-selector {
-  margin: 16px;
-}
-
-.type-tabs {
-  display: flex;
-  background: #F8F9FA;
-  border-radius: 12px;
-  padding: 5px;
-  gap: 4px;
-}
-
-.type-tab {
-  flex: 1;
-  padding: 12px;
-  text-align: center;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.2s;
-
-  &.expense {
-    color: #EF476F;
-    &.active {
-      background: #EF476F;
-      color: #fff;
-    }
-  }
-
-  &.income {
-    color: #06D6A0;
-    &.active {
-      background: #06D6A0;
-      color: #fff;
-    }
-  }
-}
-
-// 分类网格
+// ================== Category Section ==================
 .category-section {
-  margin: 0 16px 16px;
+  margin-bottom: var(--apple-space-4);
 }
 
-.category-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-}
-
-.category-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 12px 4px;
-  background: #F8F9FA;
-  border-radius: 14px;
-  transition: all 0.2s;
-
-  &.selected {
-    background: rgba(15, 76, 92, 0.08);
-    border: 1px solid #0F4C5C;
-  }
-
-  &:active {
-    transform: scale(0.96);
-  }
-}
-
-.category-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.category-emoji {
-  font-size: 20px;
-}
-
-.category-name {
-  font-size: 11px;
-  color: #374151;
-  text-align: center;
-}
-
-.category-amount {
-  font-size: 10px;
-  font-weight: 600;
-
-  &.expense {
-    color: #EF476F;
-  }
-
-  &.income {
-    color: #06D6A0;
-  }
-}
-
-// 子分类面板
-.sub-panel {
-  margin: 0 16px 16px;
-  background: #fff;
-  border-radius: 16px;
-  padding: 14px;
-  border: 1px solid #E5E5E5;
-}
-
-.sub-panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.sub-panel-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.sub-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sub-emoji {
-  font-size: 14px;
-}
-
-.sub-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1F2937;
-}
-
-.sub-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.sub-tag {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  background: #F8F9FA;
-  border-radius: 20px;
-  font-size: 12px;
-  color: #333;
-  transition: all 0.2s;
-
-  &.selected {
-    background: rgba(15, 76, 92, 0.12);
-    border: 1px solid #0F4C5C;
-    color: #0F4C5C;
-    font-weight: 600;
-  }
-}
-
-.sub-amount {
-  font-size: 11px;
-
-  &.expense {
-    color: #EF476F;
-  }
-
-  &.income {
-    color: #06D6A0;
-  }
-}
-
-// 表单行
-.form-row {
-  display: flex;
-  align-items: center;
-  margin: 0 16px 12px;
-  height: 46px;
-  background: #F8F9FA;
-  border-radius: 12px;
-  padding: 0 16px;
-  gap: 8px;
-
-  &:active {
-    background: #E9ECEF;
-  }
-}
-
-.row-icon {
-  font-size: 16px;
-}
-
-.row-label {
-  font-size: 14px;
-  color: #666;
-}
-
-.row-value {
-  flex: 1;
-  font-size: 14px;
-  color: #1F2937;
-  text-align: right;
-
-  &.placeholder {
-    color: #ccc;
-  }
-}
-
-.row-arrow {
-  color: #D1D5DB;
-  font-size: 16px;
-}
-
-// 快捷金额
+// ================== Quick Amounts ==================
 .quick-amounts {
   display: flex;
-  gap: 10px;
-  padding: 0 16px;
-  margin-top: 8px;
+  gap: var(--apple-space-2);
+  margin-bottom: var(--apple-space-4);
 }
 
 .qa-btn {
   flex: 1;
-  padding: 12px 0;
-  background: #F8F9FA;
-  border-radius: 10px;
+  padding: var(--apple-space-3);
+  background: var(--gzang-surface);
+  border-radius: var(--apple-radius-lg);
   text-align: center;
-  font-size: 13px;
-  color: #333;
-  font-weight: 500;
-
+  font-size: var(--apple-text-sm);
+  font-weight: var(--apple-font-medium);
+  color: var(--gzang-text-secondary);
+  box-shadow: var(--apple-shadow-xs);
+  transition: all var(--apple-duration-fast) var(--apple-ease-out);
+  
+  &.active {
+    background: var(--gzang-secondary);
+    color: white;
+  }
+  
   &:active {
-    background: #E9ECEF;
+    transform: scale(0.95);
   }
 }
 
-// 底部提交
+// ================== Form Rows ==================
+.form-rows {
+  background: var(--gzang-surface);
+  border-radius: var(--apple-radius-xl);
+  overflow: hidden;
+  box-shadow: var(--apple-shadow-sm);
+}
+
+.form-row {
+  display: flex;
+  align-items: center;
+  padding: var(--apple-space-4);
+  gap: var(--apple-space-3);
+  transition: background-color var(--apple-duration-fast) var(--apple-ease-out);
+  
+  &:not(:last-child) {
+    border-bottom: 0.5px solid var(--gzang-border);
+  }
+  
+  &:active {
+    background: var(--gzang-bg);
+  }
+}
+
+.row-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--apple-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.row-label {
+  font-size: var(--apple-text-base);
+  font-weight: var(--apple-font-medium);
+  color: var(--gzang-text-primary);
+  min-width: 60px;
+}
+
+.row-value {
+  flex: 1;
+  font-size: var(--apple-text-sm);
+  color: var(--gzang-text-secondary);
+  text-align: right;
+  
+  &.placeholder {
+    color: var(--gzang-text-tertiary);
+  }
+}
+
+// ================== Submit Bar ==================
 .submit-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 16px;
-  padding-bottom: calc(16px + env(safe-area-inset-bottom));
-  background: #fff;
-  border-top: 1px solid #E5E5E5;
+  padding: var(--apple-space-4);
+  padding-bottom: calc(var(--apple-space-4) + env(safe-area-inset-bottom));
+  background: var(--gzang-surface);
+  border-top: 0.5px solid var(--gzang-border);
 }
 
 .submit-btn {
   width: 100%;
-  height: 48px;
-  background: #0F4C5C;
-  border-radius: 14px;
+  height: 52px;
+  background: var(--gzang-secondary);
+  border-radius: var(--apple-radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  font-size: 16px;
-  font-weight: 600;
+  gap: var(--apple-space-2);
+  color: white;
+  font-size: var(--apple-text-base);
+  font-weight: var(--apple-font-semibold);
   border: none;
-
+  box-shadow: 0 4px 12px rgba(251, 139, 36, 0.3);
+  transition: all var(--apple-duration-fast) var(--apple-ease-out);
+  
   &.disabled {
-    background: #ccc;
+    background: var(--gzang-border);
+    box-shadow: none;
   }
-
+  
   &:active:not(.disabled) {
-    opacity: 0.9;
+    transform: scale(0.98);
+  }
+  
+  .spin {
+    animation: spin 1s linear infinite;
   }
 }
 
-// 选择器弹窗
+.btn-amount {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  margin-left: var(--apple-space-2);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+// ================== Picker ==================
 .picker-container {
-  background-color: #fff;
-  border-radius: 16px 16px 0 0;
+  background: var(--gzang-surface);
+  border-radius: var(--apple-radius-xl) var(--apple-radius-xl) 0 0;
   overflow: hidden;
 }
 
@@ -942,39 +767,152 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid #E5E5E5;
+  padding: var(--apple-space-4);
+  border-bottom: 0.5px solid var(--gzang-border);
 }
 
-.picker-cancel, .picker-confirm {
-  font-size: 15px;
+.picker-cancel,
+.picker-confirm {
+  font-size: var(--apple-text-base);
+  font-weight: var(--apple-font-medium);
 }
 
 .picker-cancel {
-  color: #999;
+  color: var(--gzang-text-secondary);
 }
 
 .picker-confirm {
-  color: #0F4C5C;
-  font-weight: 500;
+  color: var(--gzang-secondary);
 }
 
 .picker-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
+  font-size: var(--apple-text-lg);
+  font-weight: var(--apple-font-semibold);
+  color: var(--gzang-text-primary);
 }
 
-.account-picker, .book-picker, .date-picker {
+.account-picker,
+.book-picker {
   height: 200px;
+}
+
+// ================== Date Picker ==================
+.date-picker-container {
+  background: var(--gzang-surface);
+  border-radius: var(--apple-radius-xl) var(--apple-radius-xl) 0 0;
+  overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.date-picker-wrapper {
+  position: relative;
+  background: var(--gzang-surface);
+}
+
+.date-picker {
+  height: 216px;
+  width: 100%;
+}
+
+.date-picker picker-view-column {
+  height: 216px;
 }
 
 .picker-item {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 44px;
-  font-size: 15px;
-  color: #333;
+  height: 36px;
+  font-size: var(--apple-text-lg);
+  color: var(--gzang-text-primary);
+}
+
+.picker-labels {
+  display: flex;
+  justify-content: space-around;
+  padding: var(--apple-space-3) var(--apple-space-4);
+  padding-bottom: calc(var(--apple-space-3) + env(safe-area-inset-bottom));
+  background: var(--gzang-surface);
+  border-top: 1px solid var(--gzang-border);
+}
+
+.picker-label {
+  flex: 1;
+  text-align: center;
+  font-size: var(--apple-text-sm);
+  color: var(--gzang-text-tertiary);
+  font-weight: var(--apple-font-medium);
+}
+
+.quick-date-btns {
+  display: flex;
+  gap: var(--apple-space-3);
+  padding: var(--apple-space-3) var(--apple-space-4);
+  border-bottom: 0.5px solid var(--gzang-border);
+}
+
+.quick-date-btn {
+  flex: 1;
+  padding: var(--apple-space-2) var(--apple-space-3);
+  text-align: center;
+  background: var(--gzang-bg);
+  border-radius: var(--apple-radius-sm);
+  font-size: var(--apple-text-sm);
+  font-weight: var(--apple-font-medium);
+  color: var(--gzang-text-secondary);
+  transition: all var(--apple-duration-fast) var(--apple-ease-out);
+
+  &.active {
+    background: var(--gzang-secondary);
+    color: white;
+  }
+  
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+// ================== Dark Mode ==================
+@media (prefers-color-scheme: dark) {
+  .nav-bar,
+  .page-content {
+    background: var(--gzang-bg, #111827);
+  }
+  
+  .amount-display {
+    background: linear-gradient(135deg, var(--gzang-primary-dark, #0a3644) 0%, var(--gzang-primary, #0F4C5C) 100%);
+  }
+  
+  .form-rows,
+  .qa-btn,
+  .book-selector {
+    background: var(--gzang-surface, #1F2937);
+  }
+  
+  .submit-bar {
+    background: var(--gzang-surface, #1F2937);
+    border-top-color: var(--gzang-border, #374151);
+  }
+  
+  .date-picker-container {
+    background: var(--gzang-surface, #1C1C1E);
+  }
+  
+  .date-picker-wrapper {
+    background: var(--gzang-surface, #1C1C1E);
+  }
+  
+  .picker-labels {
+    background: var(--gzang-surface, #1C1C1E);
+    border-top-color: var(--gzang-border, #374151);
+  }
+  
+  .picker-label {
+    color: var(--gzang-text-tertiary, #8E8E93);
+  }
+  
+  .quick-date-btn {
+    background: var(--gzang-bg, #2C2C2E);
+  }
 }
 </style>

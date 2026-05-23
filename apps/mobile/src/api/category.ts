@@ -23,8 +23,10 @@ export interface CategoryVO {
   id: number;
   categoryName: string;
   icon?: string;
+  color?: string;
   type: number;
   parentId?: number;
+  isSystem?: number;
   children?: CategoryVO[];
   amount?: number;
   sortOrder?: number;

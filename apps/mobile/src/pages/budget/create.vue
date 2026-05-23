@@ -95,28 +95,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useBookStore } from '@/stores/book'
+import { useCategoryStore } from '@/stores/category'
+import { createBudget } from '@/api/budget'
 
 const bookStore = useBookStore()
+const categoryStore = useCategoryStore()
 
 const submitting = ref(false)
 
 const periodOptions = [
-  { value: 'week', label: '周', icon: '📅' },
-  { value: 'month', label: '月', icon: '📆' },
-  { value: 'year', label: '年', icon: '📇' }
+  { value: 'week', label: '周', apiValue: 3, icon: '📅' },
+  { value: 'month', label: '月', apiValue: 1, icon: '📆' },
+  { value: 'year', label: '年', apiValue: 2, icon: '📇' }
 ]
 
-const categories = [
-  { id: 1, name: '餐饮', icon: '🍜', iconBg: '#FFF3E0' },
-  { id: 2, name: '交通', icon: '🚇', iconBg: '#E3F2FD' },
-  { id: 3, name: '购物', icon: '🛒', iconBg: '#FCE4EC' },
-  { id: 4, name: '娱乐', icon: '🎮', iconBg: '#F3E5F5' },
-  { id: 5, name: '医疗', icon: '💊', iconBg: '#FFEBEE' },
-  { id: 6, name: '教育', icon: '📚', iconBg: '#E8F5E9' },
-]
-
+const categories = ref<Array<{ id: number; name: string; icon: string; iconBg: string }>>([])
 const quickAmounts = [500, 1000, 2000, 3000, 5000]
 
 const formData = ref({
@@ -126,7 +121,7 @@ const formData = ref({
   warningPercent: 80
 })
 
-const currentCurrency = '¥'
+const currentCurrency = computed(() => bookStore.currentCurrencySymbol)
 
 function goBack() {
   uni.navigateBack()
@@ -142,7 +137,7 @@ function formatAmount() {
 }
 
 function clampWarning() {
-  let val = parseInt(formData.value.warningPercent)
+  let val = parseInt(String(formData.value.warningPercent))
   if (isNaN(val)) val = 80
   if (val < 0) val = 0
   if (val > 100) val = 100
@@ -160,9 +155,20 @@ async function handleSubmit() {
     return
   }
 
+  const periodOpt = periodOptions.find(p => p.value === formData.value.period)
+  if (!periodOpt) return
+
   submitting.value = true
   try {
-    // 调用预算 API
+    await createBudget({
+      name: categories.value.find(c => c.id === formData.value.categoryId)?.name || '预算',
+      bookId: bookStore.currentBook?.id,
+      categoryId: formData.value.categoryId,
+      amount: parseFloat(formData.value.amount),
+      periodType: periodOpt.apiValue,
+      warningThreshold: formData.value.warningPercent,
+      warningEnabled: true,
+    })
     uni.showToast({ title: '创建成功', icon: 'success' })
     setTimeout(() => {
       goBack()
@@ -173,6 +179,29 @@ async function handleSubmit() {
     submitting.value = false
   }
 }
+
+// Load categories on mount
+uni.$on('onLoad', async () => {
+  await categoryStore.fetchCategories()
+  const cats = categoryStore.expenseCategories
+  categories.value = cats.map(c => ({
+    id: c.id,
+    name: c.categoryName || c.name || '未分类',
+    icon: c.icon || '📂',
+    iconBg: '#F8F9FA'
+  }))
+})
+
+// Also try to load immediately (works in component setup)
+categoryStore.fetchCategories().then(() => {
+  const cats = categoryStore.expenseCategories
+  categories.value = cats.map(c => ({
+    id: c.id,
+    name: c.categoryName || c.name || '未分类',
+    icon: c.icon || '📂',
+    iconBg: '#F8F9FA'
+  }))
+})
 </script>
 
 <style scoped lang="scss">

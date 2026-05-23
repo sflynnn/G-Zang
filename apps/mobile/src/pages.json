@@ -153,6 +153,13 @@
       }
     },
     {
+      "path": "pages/budget/detail",
+      "style": {
+        "navigationBarTitleText": "预算详情",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
       "path": "pages/books/index",
       "style": {
         "navigationBarTitleText": "我的账本",
@@ -189,9 +196,18 @@
       }
     },
     {
+      "path": "pages/profile/bind-phone",
+      "style": {
+        "navigationBarTitleText": "绑定手机号",
+        "navigationStyle": "custom",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
       "path": "pages/settings/index",
       "style": {
         "navigationBarTitleText": "设置",
+        "navigationStyle": "custom",
         "backgroundColor": "#F8F9FA"
       }
     },
@@ -199,7 +215,44 @@
       "path": "pages/settings/theme",
       "style": {
         "navigationBarTitleText": "主题设置",
+        "navigationStyle": "custom",
         "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/settings/change-password",
+      "style": {
+        "navigationBarTitleText": "修改密码",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/settings/help",
+      "style": {
+        "navigationBarTitleText": "帮助与反馈",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/privacy/index",
+      "style": {
+        "navigationBarTitleText": "隐私政策",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/terms/index",
+      "style": {
+        "navigationBarTitleText": "用户协议",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/register/index",
+      "style": {
+        "navigationBarTitleText": "注册",
+        "navigationStyle": "custom",
+        "backgroundColor": "#ffffff"
       }
     },
     {
@@ -209,8 +262,23 @@
         "navigationStyle": "custom",
         "backgroundColor": "#ffffff"
       }
-    }
-  ],
+    },
+    {
+      "path": "pages/login/forgot-password",
+      "style": {
+        "navigationBarTitleText": "忘记密码",
+        "navigationStyle": "custom",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
+      "path": "pages/date-picker/index",
+      "style": {
+        "navigationBarTitleText": "选择日期",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
   "globalStyle": {
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "G-Zang",
@@ -218,7 +286,9 @@
     "backgroundColor": "#F8F9FA",
     "backgroundTextStyle": "dark",
     "enablePullDownRefresh": false,
-    "onReachBottomDistance": 50
+    "onReachBottomDistance": 50,
+    "animationType": "fade",
+    "animationDuration": 280
   },
   "tabBar": {
     "custom": true,

@@ -88,6 +88,26 @@
   --apple-duration-fast: 150ms;
   --apple-duration-normal: 250ms;
   --apple-duration-slow: 350ms;
+
+  // ================================================
+  // G-Zang 统一页面转场动画变量
+  // ================================================
+  // 全局默认转场类型（pages.json animationType 对应）
+  --gzang-transition-type: 'fade';
+
+  // 转场时长（毫秒）
+  --gzang-transition-duration: 280ms;
+  --gzang-transition-duration-fast: 180ms;
+  --gzang-transition-duration-slow: 400ms;
+
+  // Loading 遮罩
+  --gzang-loading-zindex: 99999;
+  --gzang-loading-bg: rgba(248, 249, 250, 0.95);
+  --gzang-loading-spinner-color: var(--gzang-primary);
+  --gzang-loading-text-color: var(--gzang-text-secondary);
+
+  // 骨架屏闪烁动画
+  --gzang-shimmer-duration: 1.5s;
   
   // Z-Index Scale
   --apple-z-dropdown: 100;

@@ -57,46 +57,51 @@
 
       <!-- Budget List -->
       <view class="budget-list">
-        <view 
-          v-for="item in budgets" 
+        <view
+          v-for="item in budgets"
           :key="item.id"
           class="budget-card"
-          :class="{ overbudget: item.percent > 100 }"
+          :class="{ overbudget: item.usageRate > 100 }"
           @click="goToDetail(item.id)"
         >
           <view class="card-header">
             <view class="category-info">
-              <view class="category-icon" :style="{ background: item.color + '20' }">
-                <AppleIcon :name="item.icon" :size="20" :color="item.color" />
+              <view class="category-icon" :style="{ background: (item.categoryColor || '#0F4C5C') + '20' }">
+                <AppleIcon :name="item.categoryIcon || 'category'" :size="20" :color="item.categoryColor || '#0F4C5C'" />
               </view>
               <text class="category-name">{{ item.name }}</text>
             </view>
-            <text class="budget-percent" :class="getStatusClass(item.percent)">{{ item.percent }}%</text>
+            <text class="budget-percent" :class="getStatusClass(item.usageRate)">{{ Math.round(item.usageRate) }}%</text>
           </view>
           
           <view class="card-progress">
             <view class="progress-track">
-              <view 
+              <view
                 class="progress-fill"
-                :class="getStatusClass(item.percent)"
-                :style="{ width: Math.min(item.percent, 100) + '%' }"
+                :class="getStatusClass(item.usageRate)"
+                :style="{ width: Math.min(item.usageRate, 100) + '%' }"
               ></view>
             </view>
           </view>
           
           <view class="card-footer">
             <text class="spent">
-              已花费 <text class="amount">{{ currentCurrency }}{{ formatAmount(item.spent) }}</text>
+              已花费 <text class="amount">{{ currentCurrency }}{{ formatAmount(item.usedAmount) }}</text>
             </text>
             <text class="budget">
-              预算 <text class="amount">{{ currentCurrency }}{{ formatAmount(item.budget) }}</text>
+              预算 <text class="amount">{{ currentCurrency }}{{ formatAmount(item.amount) }}</text>
             </text>
           </view>
           
-          <view v-if="item.percent > 100" class="overbudget-badge">
-            超支 {{ currentCurrency }}{{ formatAmount(item.spent - item.budget) }}
+          <view v-if="item.usageRate > 100" class="overbudget-badge">
+            超支 {{ currentCurrency }}{{ formatAmount(item.usedAmount - item.amount) }}
           </view>
         </view>
+      </view>
+
+      <!-- Loading State -->
+      <view v-if="loading" class="loading-state">
+        <text class="loading-text">加载中...</text>
       </view>
 
       <!-- Empty State -->
@@ -114,30 +119,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppleIcon from '@/components/common/AppleIcon/index.vue'
+import { useBookStore } from '@/stores/book'
+import { getBudgets, type Budget } from '@/api/budget'
 
 const { t } = useI18n()
+const bookStore = useBookStore()
 
+const loading = ref(false)
 const currentPeriod = ref('month')
 const periodOptions = [
-  { label: '周', value: 'week' },
-  { label: '月', value: 'month' },
-  { label: '年', value: 'year' }
+  { label: '周', value: 'week', apiValue: 3 },
+  { label: '月', value: 'month', apiValue: 1 },
+  { label: '年', value: 'year', apiValue: 2 }
 ]
 
-const budgets = ref([
-  { id: 1, name: '餐饮', icon: 'food', color: '#FB8B24', budget: 2500, spent: 1700, percent: 68 },
-  { id: 2, name: '购物', icon: 'shopping', color: '#EF476F', budget: 2000, spent: 2160, percent: 108 },
-  { id: 3, name: '交通', icon: 'transport', color: '#0F4C5C', budget: 400, spent: 180, percent: 45 },
-  { id: 4, name: '娱乐', icon: 'entertainment', color: '#9B59B6', budget: 800, spent: 650, percent: 81 },
-])
+const budgets = ref<Budget[]>([])
 
-const periodLabel = computed(() => periodOptions.find(t => t.value === currentPeriod.value)?.label || '月')
+const periodLabel = computed(() => periodOptions.find(p => p.value === currentPeriod.value)?.label || '月')
 
-const totalBudget = computed(() => budgets.value.reduce((sum, b) => sum + b.budget, 0))
-const totalSpent = computed(() => budgets.value.reduce((sum, b) => sum + b.spent, 0))
+const totalBudget = computed(() => budgets.value.reduce((sum, b) => sum + b.amount, 0))
+const totalSpent = computed(() => budgets.value.reduce((sum, b) => sum + b.usedAmount, 0))
 const remaining = computed(() => totalBudget.value - totalSpent.value)
 
 const overallPercent = computed(() => {
@@ -153,10 +157,27 @@ function getStatusClass(percent: number): string {
   return 'success'
 }
 
-const currentCurrency = '¥'
+const currentCurrency = computed(() => bookStore.currentCurrencySymbol)
+
+async function loadBudgets() {
+  loading.value = true
+  try {
+    const periodOpt = periodOptions.find(p => p.value === currentPeriod.value)
+    const params: { periodType?: number; bookId?: number } = {}
+    if (periodOpt) params.periodType = periodOpt.apiValue
+    if (bookStore.currentBookId) params.bookId = bookStore.currentBookId
+
+    budgets.value = await getBudgets(params)
+  } catch (error) {
+    // ignore - keep empty list on error
+  } finally {
+    loading.value = false
+  }
+}
 
 function changePeriod(period: string) {
   currentPeriod.value = period
+  loadBudgets()
 }
 
 function formatAmount(amount: number): string {
@@ -165,7 +186,12 @@ function formatAmount(amount: number): string {
 
 function goBack() { uni.navigateBack() }
 function goToCreate() { uni.navigateTo({ url: '/pages/budget/create' }) }
-function goToDetail(id: number) { uni.showToast({ title: '预算详情开发中', icon: 'none' }) }
+function goToDetail(id: number) { uni.navigateTo({ url: `/pages/budget/detail?id=${id}` }) }
+
+onMounted(async () => {
+  await bookStore.fetchBooks()
+  await loadBudgets()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -429,4 +455,17 @@ function goToDetail(id: number) { uni.showToast({ title: '预算详情开发中'
 .bottom-safe-area {
   height: var(--apple-space-4);
 }
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--apple-space-6) 0;
+}
+
+.loading-text {
+  font-size: var(--apple-text-sm);
+  color: var(--gzang-text-tertiary);
+}
+
 </style>

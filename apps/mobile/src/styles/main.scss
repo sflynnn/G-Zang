@@ -342,3 +342,43 @@ uni-app .uni-tab-bar {
 .amount--transfer {
   color: var(--gzang-primary);
 }
+
+// ================== 全局滚动条样式 ==================
+// G-Zang 品牌滚动条 — 完全隐藏，保留原生滑动体验
+// 移动端优先：滚动时无滚动条干扰，通过触摸自然滑动
+
+/* 隐藏所有滚动条 */
+::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner,
+::-webkit-scrollbar-button {
+  display: none !important;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: none !important;
+  scrollbar-color: transparent transparent !important;
+}
+
+/* 兼容某些特殊容器 */
+html,
+body,
+#app,
+.uni-page-body,
+.page,
+scroll-view {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+/* 确保触摸时无滚动条闪现 */
+* {
+  -ms-overflow-style: none;
+}

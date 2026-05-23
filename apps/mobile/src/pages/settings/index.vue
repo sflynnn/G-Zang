@@ -213,9 +213,9 @@ const toggleSetting = (key: keyof typeof settings) => {
 
 const goBack = () => uni.navigateBack()
 const goToEditProfile = () => uni.navigateTo({ url: '/pages/profile/edit' })
-const goToChangePassword = () => uni.showToast({ title: '功能开发中', icon: 'none' })
+const goToChangePassword = () => uni.navigateTo({ url: '/pages/settings/change-password' })
 const goToTheme = () => uni.navigateTo({ url: '/pages/settings/theme' })
-const goToHelp = () => uni.showToast({ title: '功能开发中', icon: 'none' })
+const goToHelp = () => uni.navigateTo({ url: '/pages/settings/help' })
 const goToPrivacy = () => uni.navigateTo({ url: '/pages/privacy/index' })
 
 const handleExport = () => {

@@ -223,13 +223,13 @@ const handleDelete = () => {
 onMounted(async () => {
   const pages = getCurrentPages()
   const currentPage = pages[pages.length - 1]
-  const options = currentPage.options || {}
+  const options = (currentPage as any).options || {}
 
   if (options.id) {
-    bookId.value = parseInt(options.id as string)
+    bookId.value = parseInt(String(options.id))
   }
 
-  if (!bookStore.books.length) {
+  if (!bookStore.bookList.length) {
     await bookStore.loadBooks()
   }
 })

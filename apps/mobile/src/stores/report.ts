@@ -169,6 +169,83 @@ export const useReportStore = defineStore('report', () => {
     dateRange.value = { startDate, endDate };
   };
 
+  // 导出数据
+  const exportData = async (format: 'csv' | 'pdf' = 'csv') => {
+    try {
+      uni.showLoading({ title: '正在生成导出文件...', mask: true })
+
+      const s = summary.value
+      const categoryRows = categoryReport.value.map(c =>
+        `${c.categoryName},${c.totalAmount},${c.count},${c.percentage?.toFixed(1) || 0}%`
+      ).join('\n')
+      const trendRows = monthlyTrend.value.map(t =>
+        `${t.month}月,${t.income},${t.expense}`
+      ).join('\n')
+
+      const csvContent = [
+        '归藏财务管理系统 - 收支报告',
+        `导出时间：${new Date().toLocaleString('zh-CN')}`,
+        '',
+        '=== 收支概览 ===',
+        `总收入,${s?.totalIncome || 0}`,
+        `总支出,${s?.totalExpense || 0}`,
+        `结余,${s?.balance || 0}`,
+        `交易笔数,${s?.transactionCount || 0}`,
+        '',
+        '=== 分类统计 ===',
+        '分类,金额,笔数,占比',
+        categoryRows,
+        '',
+        '=== 趋势数据 ===',
+        '月份,收入,支出',
+        trendRows,
+      ].join('\n')
+
+      const fs = (uni as any).getFileSystemManager?.()
+      const tempFilePath = `${(uni as any).env?.USER_DATA_PATH || '/tmp'}/gzang_report_${Date.now()}.csv`
+
+      if (fs) {
+        fs.writeFile({
+          filePath: tempFilePath,
+          data: csvContent,
+          encoding: 'utf8',
+          success: () => {
+            uni.hideLoading()
+            uni.share({
+              title: '归藏财务报告',
+              filePath: tempFilePath,
+              success: () => uni.showToast({ title: '导出成功', icon: 'success' }),
+              fail: (e: any) => {
+                if (e.errMsg?.includes('cancel')) return
+                uni.share({
+                  title: '归藏财务报告',
+                  summary: `收入 ${s?.totalIncome || 0} | 支出 ${s?.totalExpense || 0} | 结余 ${s?.balance || 0}`,
+                  fail: () => uni.showToast({ title: '分享失败', icon: 'none' })
+                })
+              }
+            })
+          },
+          fail: () => {
+            uni.hideLoading()
+            uni.showToast({ title: '文件生成失败', icon: 'none' })
+          }
+        })
+      } else {
+        uni.hideLoading()
+        uni.share({
+          title: '归藏财务报告',
+          summary: `收入 ${s?.totalIncome || 0} | 支出 ${s?.totalExpense || 0} | 结余 ${s?.balance || 0}`,
+          success: () => uni.showToast({ title: '导出成功', icon: 'success' }),
+          fail: () => uni.showToast({ title: '分享失败', icon: 'none' })
+        })
+      }
+    } catch (error) {
+      uni.hideLoading()
+      uni.showToast({ title: '导出失败', icon: 'none' })
+      throw error
+    }
+  };
+
   // 清空状态
   const clearState = () => {
     summary.value = null;
@@ -202,6 +279,7 @@ export const useReportStore = defineStore('report', () => {
     fetchCategoryReport,
     fetchAccountBalance,
     setDateRange,
+    exportData,
     getCategoryColor,
     clearState,
   };

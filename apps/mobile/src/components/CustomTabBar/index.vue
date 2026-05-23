@@ -14,7 +14,7 @@
       >
         <!-- 中间魔法按钮 -->
         <view v-if="index === 2" class="magic-wrapper">
-          <view class="magic-button">
+          <view class="magic-button" @click.stop="switchTab(2)">
             <text class="magic-plus">+</text>
           </view>
         </view>
@@ -59,6 +59,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 
 // ========== TabBar 配置 ==========
 interface TabItem {
@@ -78,29 +79,38 @@ const tabs: TabItem[] = [
 const tabBarPaths = tabs.map(t => t.pagePath)
 const activeIndex = ref(0)
 
-// ========== 路由工具 ==========
+// ========== 逻辑 ==========
+// 注意：必须在 onShow 之前定义，确保函数已初始化
 const getCurrentPagePath = (): string => {
+  // H5 模式：优先使用 location.href（同步更新），避免 hashchange 延迟
   try {
-    const hash = window.location.hash
-    if (hash) {
-      const match = hash.match(/#(\/[^?]+)/)
-      if (match) return match[1]
+    if (typeof window !== 'undefined') {
+      const match = window.location.href.match(/#(\/[^?#]+)/)
+      if (match) return match[1].replace(/\/+$/, '')
     }
   } catch (e) { /* H5 only */ }
 
+  // 小程序模式：从 getCurrentPages 获取
   try {
     const pages = getCurrentPages()
     if (pages && pages.length > 0) {
       const currentPage = pages[pages.length - 1] as any
-      if (currentPage.route) return '/' + currentPage.route
+      if (currentPage.route) return ('/' + currentPage.route).replace(/\/+$/, '')
       if (currentPage.$page?.fullPath) {
         const m = currentPage.$page.fullPath.match(/^\/([^?]+)/)
-        if (m) return '/' + m[1]
+        if (m) return ('/' + m[1]).replace(/\/+$/, '')
       }
     }
   } catch (e) { /* Mini-program only */ }
 
   return ''
+}
+
+// ========== 逻辑 ==========
+const updateActiveTab = () => {
+  const path = getCurrentPagePath()
+  const idx = tabBarPaths.indexOf(path)
+  if (idx !== -1) activeIndex.value = idx
 }
 
 // ========== 生命周期 ==========
@@ -111,22 +121,26 @@ onMounted(() => {
   }
 })
 
+// uni-app 每次页面显示时同步 tabbar 高亮状态
+// H5 模式下 window.location.href 可能尚未更新，加短延迟兜底
+onShow(() => {
+  updateActiveTab()
+  // 延迟 50ms 再次同步，应对 H5 下 URL 更新晚于 onShow 的时序问题
+  if (typeof window !== 'undefined') {
+    setTimeout(updateActiveTab, 50)
+  }
+})
+
 onUnmounted(() => {
   if (typeof window !== 'undefined') {
     window.removeEventListener('hashchange', updateActiveTab)
   }
 })
 
-// ========== 逻辑 ==========
-const updateActiveTab = () => {
-  const path = getCurrentPagePath()
-  const idx = tabBarPaths.indexOf(path)
-  if (idx !== -1) activeIndex.value = idx
-}
-
 const switchTab = (index: number) => {
+  // 魔法按钮（中间按钮）跳转到账单页面
   if (index === 2) {
-    uni.switchTab({ url: '/pages/accounting/index' })
+    uni.reLaunch({ url: '/pages/bills/index' })
     return
   }
 
@@ -135,6 +149,7 @@ const switchTab = (index: number) => {
   const tab = tabs[index]
   if (!tab) return
 
+  // 点击时立即更新高亮 — 用户操作即为意图，onShow 兜底同步
   activeIndex.value = index
   uni.switchTab({ url: tab.pagePath })
 }

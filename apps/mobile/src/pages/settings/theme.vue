@@ -96,7 +96,7 @@ const { t } = useI18n()
 const appStore = useAppStore()
 
 // 从 appStore 同步状态
-const currentMode = ref(appStore.theme)
+const currentMode = ref<'light' | 'dark' | 'auto'>(appStore.theme)
 const currentPrimaryColor = ref('#0F4C5C')
 const currentAccentColor = ref('#FB8B24')
 const currentCornerStyle = ref('medium')
@@ -147,7 +147,7 @@ function goBack() {
 }
 
 function setThemeMode(mode: string) {
-  currentMode.value = mode
+  currentMode.value = mode as 'light' | 'dark' | 'auto'
   appStore.setTheme(mode as 'light' | 'dark' | 'auto')
   uni.showToast({ title: t('theme.themeUpdated'), icon: 'success' })
 }

@@ -1,4 +1,5 @@
 <template>
+  <PageTransition>
   <view class="transactions-page">
     <uni-nav-bar 
       left-icon="back" 
@@ -12,8 +13,8 @@
     <view class="filter-bar">
       <view class="filter-tabs">
         <view 
-          v-for="tab in typeTabs" 
-          :key="tab.value"
+          v-for="(tab, idx) in typeTabs" 
+          :key="tab.value ?? idx"
           :class="['filter-tab', { active: currentType === tab.value }]"
           @click="changeType(tab.value)"
         >
@@ -108,12 +109,14 @@
       <text class="fab-icon">+</text>
     </view>
   </view>
+  </PageTransition>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { useTransactionStore } from '@/stores/transaction'
+import PageTransition from '@/components/common/PageTransition/index.vue'
 
 const transactionStore = useTransactionStore()
 
@@ -124,19 +127,35 @@ const hasMore = ref(true)
 const accountId = ref<number | null>(null)
 
 const typeTabs = [
-  { label: '全部', value: null },
+  { label: '全部', value: null as number | null },
   { label: '收入', value: 1 },
   { label: '支出', value: 2 }
 ]
 
 const dateRangeText = ref('本月')
+const startDate = ref<string>('')
+const endDate = ref<string>('')
 
-const transactionList = computed(() => transactionStore.transactionList.records || [])
-const summary = computed(() => transactionStore.summary)
+function toDateString(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+const transactions = computed(() => transactionStore.transactions)
+const transactionList = computed(() => transactions.value)
+
+const summary = computed(() => {
+  const income = transactions.value.filter(t => t.type === 1).reduce((s, t) => s + Number(t.amount), 0)
+  const expense = transactions.value.filter(t => t.type === 2).reduce((s, t) => s + Number(t.amount), 0)
+  return { totalIncome: income, totalExpense: expense }
+})
+
+const currentCurrency = '¥'
 
 const groupedTransactions = computed(() => {
   const groups: Record<string, any> = {}
-  
   transactionList.value.forEach((item: any) => {
     const date = item.transactionTime?.split('T')[0] || 'unknown'
     if (!groups[date]) {
@@ -144,16 +163,13 @@ const groupedTransactions = computed(() => {
     }
     groups[date].items.push(item)
     if (item.type === 1) {
-      groups[date].dayIncome += parseFloat(item.amount) || 0
+      groups[date].dayIncome += parseFloat(String(item.amount)) || 0
     } else {
-      groups[date].dayExpense += parseFloat(item.amount) || 0
+      groups[date].dayExpense += parseFloat(String(item.amount)) || 0
     }
   })
-  
   return groups
 })
-
-const currentCurrency = '¥'
 
 onLoad((options: any) => {
   if (options?.accountId) {
@@ -165,15 +181,20 @@ onMounted(async () => {
   await loadTransactions()
 })
 
+const total = ref(0)
+
 async function loadTransactions() {
   loading.value = true
   try {
-    await transactionStore.fetchTransactions({
+    const data = await transactionStore.fetchPage({
       current: currentPage.value,
       size: 20,
-      type: currentType.value ?? undefined
+      type: currentType.value ?? undefined,
+      startTime: startDate.value || undefined,
+      endTime: endDate.value || undefined,
     })
-    hasMore.value = transactionList.value.length < (transactionStore.transactionList.total || 0)
+    hasMore.value = transactionList.value.length < (data.total || 0)
+    total.value = data.total || 0
   } catch (error) {
     // ignore
   } finally {
@@ -190,16 +211,37 @@ async function loadMore() {
 function changeType(type: number | null) {
   currentType.value = type
   currentPage.value = 1
-  transactionStore.transactionList.records = []
+  transactionStore.clearState()
   loadTransactions()
 }
 
 function showFilter() {
-  uni.showToast({ title: '筛选功能开发中', icon: 'none' })
+  uni.showActionSheet({
+    itemList: ['全部', '收入', '支出'],
+    success: (res: any) => {
+      const types = [null, 1, 2]
+      changeType(types[res.tapIndex])
+    }
+  })
 }
 
 function showDatePicker() {
-  uni.showToast({ title: '日期选择开发中', icon: 'none' })
+  const now = new Date()
+  // 使用 uni-app 的日期选择器组件
+  uni.navigateTo({
+    url: '/pages/date-picker/index?type=single&value=' + toDateString(now),
+    events: {
+      confirm: (data: any) => {
+        if (data && data.date) {
+          startDate.value = data.date
+          endDate.value = data.date
+          dateRangeText.value = data.date
+          currentPage.value = 1
+          loadTransactions()
+        }
+      }
+    }
+  })
 }
 
 function formatAmount(amount: any): string {

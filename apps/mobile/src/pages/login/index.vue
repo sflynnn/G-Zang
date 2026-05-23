@@ -1,4 +1,5 @@
 <template>
+  <PageTransition>
   <view class="login-page">
     <!-- 动态渐变背景 -->
     <view class="gradient-bg">
@@ -139,6 +140,7 @@
       </view>
     </view>
   </view>
+  </PageTransition>
 </template>
 
 <script setup lang="ts">
@@ -147,6 +149,7 @@ import { onShow } from '@dcloudio/uni-app'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 import { Storage } from '@/utils/storage'
+import PageTransition from '@/components/common/PageTransition/index.vue'
 
 // 存储键
 const SAVED_CREDENTIALS_KEY = 'saved_credentials'
@@ -236,10 +239,7 @@ const handleLogin = async () => {
 
 // 忘记密码
 const handleForgot = () => {
-  uni.showToast({
-    title: '忘记密码功能开发中',
-    icon: 'none'
-  })
+  uni.navigateTo({ url: '/pages/login/forgot-password' })
 }
 
 // 注册

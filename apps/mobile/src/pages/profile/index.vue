@@ -1,4 +1,5 @@
 <template>
+  <PageTransition>
   <view class="profile-page apple-style">
     <!-- Large Title Navigation -->
     <view class="nav-large-title">
@@ -207,6 +208,7 @@
     <!-- 自定义 TabBar -->
     <CustomTabBar />
   </view>
+  </PageTransition>
 </template>
 
 <script setup lang="ts">
@@ -214,6 +216,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useBookStore } from '@/stores/book'
+import PageTransition from '@/components/common/PageTransition/index.vue'
 import CustomTabBar from '@/components/CustomTabBar/index.vue'
 import AppleIcon from '@/components/common/AppleIcon/index.vue'
 

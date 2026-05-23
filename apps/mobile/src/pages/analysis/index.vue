@@ -1,4 +1,5 @@
 <template>
+  <PageTransition>
   <view class="analysis-page apple-style">
     <!-- Large Title Navigation -->
     <view class="nav-large-title">
@@ -116,7 +117,7 @@
                 }"
               ></view>
             </view>
-            <text class="bar-label">{{ item.month }}</text>
+            <text class="bar-label">{{ item.date }}</text>
           </view>
         </view>
       </view>
@@ -146,7 +147,7 @@
                   :style="{ width: (item.percentage || 0) + '%', background: pieColors[index % pieColors.length] }"
                 ></view>
               </view>
-              <text class="breakdown-amount expense amount">{{ formatAmount(item.amount || 0) }}</text>
+              <text class="breakdown-amount expense amount">{{ formatAmount(item.value || 0) }}</text>
             </view>
           </view>
         </view>
@@ -187,12 +188,14 @@
     <!-- 自定义 TabBar -->
     <CustomTabBar />
   </view>
+  </PageTransition>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAnalysisStore } from '@/stores/analysis'
+import PageTransition from '@/components/common/PageTransition/index.vue'
 import AppleIcon from '@/components/common/AppleIcon/index.vue'
 import CustomTabBar from '@/components/CustomTabBar/index.vue'
 
@@ -213,9 +216,9 @@ const periods = computed(() => [
 
 // Overview data
 const overview = computed(() => ({
-  totalExpense: 8234.50,
-  totalIncome: 15000,
-  balance: 6765.50
+  totalExpense: analysisStore.overview.totalExpense || 0,
+  totalIncome: analysisStore.overview.totalIncome || 0,
+  balance: analysisStore.overview.balance || 0
 }))
 
 // Trend percentage
@@ -229,21 +232,10 @@ const expenseProgress = computed(() => {
 })
 
 // Category chart data
-const categoryChart = ref([
-  { name: '餐饮', amount: 1234.5, percentage: 25, icon: 'food' },
-  { name: '交通', amount: 890, percentage: 18, icon: 'transport' },
-  { name: '购物', amount: 756, percentage: 15, icon: 'shopping' },
-  { name: '居住', amount: 2500, percentage: 20, icon: 'housing' },
-  { name: '娱乐', amount: 423, percentage: 8, icon: 'entertainment' },
-])
+const categoryChart = computed(() => analysisStore.categoryChart)
 
 // Trend chart data
-const trendChart = ref([
-  { month: '1月', expense: 12000, income: 15000 },
-  { month: '2月', expense: 9000, income: 15000 },
-  { month: '3月', expense: 15000, income: 15000 },
-  { month: '4月', expense: 8234, income: 15000 },
-])
+const trendChart = computed(() => analysisStore.trendChart)
 
 // Max expense for bar chart
 const maxTrendExpense = computed(() => {
@@ -291,15 +283,29 @@ const getCurrentPeriodLabel = () => {
 
 const handleExport = () => {
   uni.showActionSheet({
-    itemList: ['导出为 Excel', '导出为 PDF', '分享报告'],
-    success: (res) => {
-      // handle export
+    itemList: ['导出为 CSV', '分享报告'],
+    success: (res: any) => {
+      if (res.tapIndex === 0) {
+        analysisStore.exportData('excel')
+      } else if (res.tapIndex === 1) {
+        uni.share({
+          title: '归藏财务报告',
+          summary: `收入 ${overview.value.totalIncome.toFixed(2)} | 支出 ${overview.value.totalExpense.toFixed(2)} | 结余 ${overview.value.balance.toFixed(2)}`,
+          success: () => uni.showToast({ title: '分享成功', icon: 'success' }),
+          fail: () => uni.showToast({ title: '分享失败', icon: 'none' })
+        })
+      }
     }
   })
 }
 
 onMounted(async () => {
-  // Load data
+  // Load data from API
+  try {
+    await analysisStore.loadAllStats()
+  } catch (error) {
+    console.error('Failed to load analysis data:', error)
+  }
 })
 </script>
 

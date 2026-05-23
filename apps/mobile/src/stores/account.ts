@@ -184,6 +184,14 @@ export const useAccountStore = defineStore('account', () => {
     return accountList.value.find((a) => a.id === accountId);
   };
 
+  // 获取账户详情
+  const getAccountById = async (accountId: number) => {
+    const existing = accountList.value.find((a) => a.id === accountId);
+    if (existing) return existing;
+    await fetchAccounts();
+    return accountList.value.find((a) => a.id === accountId);
+  };
+
   // 更新账户余额（本地，用于即时反馈）
   const updateLocalBalance = (accountId: number, amount: number) => {
     const account = accountList.value.find((a) => a.id === accountId);
@@ -222,6 +230,7 @@ export const useAccountStore = defineStore('account', () => {
     deleteAccount,
     fetchTotalBalance,
     getAccountInfo,
+    getAccountById,
     getAccountColor,
     getAccountIcon,
     updateLocalBalance,

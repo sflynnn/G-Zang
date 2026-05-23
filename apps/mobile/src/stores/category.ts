@@ -20,9 +20,19 @@ export interface CategoryState {
   loading: boolean;
 }
 
+// 将后端 CategoryVO 数据转换为前端 Category 格式
+function transformCategoryVO(vo: any): any {
+  return {
+    ...vo,
+    name: vo.categoryName,
+    isSystem: vo.isSystem ? true : false,
+    children: vo.children?.map(transformCategoryVO),
+  }
+}
+
 export const useCategoryStore = defineStore('category', () => {
   // 状态
-  const categoryList = ref<Category[]>([]);
+  const categoryList = ref<any[]>([]);
   const loading = ref(false);
 
   // 计算属性
@@ -88,8 +98,8 @@ export const useCategoryStore = defineStore('category', () => {
     try {
       loading.value = true;
       const data = await categoryApi.getCategories(type);
-      categoryList.value = data;
-      return data;
+      categoryList.value = data.map(transformCategoryVO);
+      return categoryList.value;
     } catch (error) {
       throw error;
     } finally {
@@ -110,8 +120,8 @@ export const useCategoryStore = defineStore('category', () => {
         type: data.type,
         parentId: data.parentId,
       });
-      categoryList.value.push(newCategory);
-      return newCategory;
+      categoryList.value.push(transformCategoryVO(newCategory));
+      return categoryList.value[categoryList.value.length - 1];
     } catch (error) {
       throw error;
     } finally {
@@ -131,11 +141,11 @@ export const useCategoryStore = defineStore('category', () => {
       loading.value = true;
       const updatedCategory = await categoryApi.updateCategory({ id, ...data });
 
-      const index = categoryList.value.findIndex((c) => c.id === id);
+      const index = categoryList.value.findIndex((c: any) => c.id === id);
       if (index !== -1) {
         categoryList.value[index] = {
           ...categoryList.value[index],
-          ...updatedCategory,
+          ...transformCategoryVO(updatedCategory),
         };
       }
 

@@ -39,11 +39,15 @@
           <text>将小票/发票放入框内</text>
         </view>
 
-        <!-- 切换摄像头按钮 -->
+        <!-- 拍照按钮 -->
         <view class="camera-controls">
           <view class="control-btn" @click="toggleCamera">
             <text>🔄</text>
           </view>
+          <view class="capture-btn" @click="takePhoto">
+            <view class="capture-btn-inner"></view>
+          </view>
+          <view class="control-btn placeholder"></view>
         </view>
       </view>
 
@@ -147,7 +151,7 @@
 
         <!-- 编辑选项 -->
         <view class="edit-section">
-          <view class="edit-row" @click="showAmountEdit = true">
+          <view class="edit-row" @click="openAmountPopup">
             <view class="edit-label">
               <text class="edit-icon">💰</text>
               <text>金额</text>
@@ -158,7 +162,7 @@
             </view>
           </view>
 
-          <view class="edit-row" @click="showCategoryEdit = true">
+          <view class="edit-row" @click="openCategoryPopup">
             <view class="edit-label">
               <text class="edit-icon">📂</text>
               <text>分类</text>
@@ -169,7 +173,7 @@
             </view>
           </view>
 
-          <view class="edit-row" @click="showAccountEdit = true">
+          <view class="edit-row" @click="openAccountPopup">
             <view class="edit-label">
               <text class="edit-icon">💳</text>
               <text>账户</text>
@@ -180,7 +184,7 @@
             </view>
           </view>
 
-          <view class="edit-row" @click="showDateEdit = true">
+          <view class="edit-row" @click="openDatePopup">
             <view class="edit-label">
               <text class="edit-icon">📅</text>
               <text>日期</text>
@@ -353,6 +357,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { onShow, onHide } from '@dcloudio/uni-app'
 import { useOCR, type OCRResult } from '@/composables/useOCR'
 import { useBookStore } from '@/stores/book'
 import { useTransactionStore } from '@/stores/transaction'
@@ -375,6 +380,8 @@ const cameraFacing = ref<'front' | 'back'>('back')
 const capturedImage = ref('')
 const ocrResult = ref<OCRResult | null>(null)
 const submitting = ref(false)
+
+let cameraContext: UniApp.CameraContext | null = null
 
 const formData = reactive({
   amount: 0,
@@ -453,7 +460,22 @@ const toggleCamera = () => {
 }
 
 const onCameraError = (e: any) => {
+  console.warn('Camera error:', e)
   cameraAvailable.value = false
+}
+
+const takePhoto = () => {
+  if (!cameraContext) return
+  cameraContext.takePhoto({
+    quality: 'high',
+    success: (res: any) => {
+      capturedImage.value = res.tempImagePath
+    },
+    fail: (err: any) => {
+      console.error('Take photo failed:', err)
+      uni.showToast({ title: '拍照失败，请重试', icon: 'none' })
+    }
+  })
 }
 
 const retakePhoto = () => {
@@ -507,6 +529,40 @@ const showCategoryEdit = computed(() => false)
 const showAccountEdit = computed(() => false)
 const showDateEdit = computed(() => false)
 
+const openAmountPopup = () => {
+  tempAmount.value = formData.amount > 0 ? formData.amount.toString() : ''
+  amountPopup.value.open()
+}
+
+const openCategoryPopup = () => {
+  if (allCategories.value.length > 0) {
+    const idx = allCategories.value.findIndex(c => c.id === formData.categoryId)
+    categoryPickerValue.value = idx >= 0 ? [idx] : [0]
+  }
+  categoryPopup.value.open()
+}
+
+const openAccountPopup = () => {
+  if (accounts.value.length > 0) {
+    const idx = accounts.value.findIndex(a => a.id === formData.accountId)
+    accountPickerValue.value = idx >= 0 ? [idx] : [0]
+  }
+  accountPopup.value.open()
+}
+
+const openDatePopup = () => {
+  const date = formData.date ? new Date(formData.date) : new Date()
+  const yearIndex = years.value.indexOf(date.getFullYear())
+  const monthIndex = date.getMonth()
+  const dayIndex = date.getDate() - 1
+  datePickerValue.value = [
+    yearIndex >= 0 ? yearIndex : 0,
+    monthIndex,
+    dayIndex >= 0 ? dayIndex : 0
+  ]
+  datePopup.value.open()
+}
+
 const closeAmountPopup = () => {
   amountPopup.value.close()
 }
@@ -558,19 +614,6 @@ const confirmAccount = () => {
 }
 
 // 日期选择
-const showDatePicker = () => {
-  const date = formData.date ? new Date(formData.date) : new Date()
-  const yearIndex = years.value.indexOf(date.getFullYear())
-  const monthIndex = date.getMonth()
-  const dayIndex = date.getDate() - 1
-  datePickerValue.value = [
-    yearIndex >= 0 ? yearIndex : 0,
-    monthIndex,
-    dayIndex >= 0 ? dayIndex : 0
-  ]
-  datePopup.value.open()
-}
-
 const onDateChange = (e: any) => {
   datePickerValue.value = e.detail.value
 }
@@ -580,7 +623,7 @@ const confirmDate = () => {
   const month = months.value[datePickerValue.value[1]] || 1
   const day = days.value[datePickerValue.value[2]] || 1
   formData.date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-  closeDatePopup()
+  datePopup.value.close()
 }
 
 const closeDatePopup = () => {
@@ -600,7 +643,7 @@ const handleSubmit = async () => {
   try {
     submitting.value = true
 
-    await transactionStore.createTransaction({
+    await transactionStore.create({
       type: 2, // 支出
       amount: formData.amount,
       categoryId: formData.categoryId,
@@ -643,15 +686,35 @@ const goBack = () => {
   uni.navigateBack()
 }
 
-// 生命周期
-onMounted(async () => {
-  // 检查相机是否可用
-  try {
-    const cameraInfo = uni.createCameraContext()
-    cameraAvailable.value = !!cameraInfo
-  } catch (e) {
+// 相机生命周期管理
+const initCamera = () => {
+  if (typeof uni.createCameraContext === 'function') {
+    try {
+      cameraContext = uni.createCameraContext()
+      cameraAvailable.value = true
+    } catch (e) {
+      cameraAvailable.value = false
+    }
+  } else {
     cameraAvailable.value = false
   }
+}
+
+const releaseCamera = () => {
+  cameraContext = null
+}
+
+onShow(() => {
+  initCamera()
+})
+
+onHide(() => {
+  releaseCamera()
+})
+
+// 生命周期
+onMounted(async () => {
+  initCamera()
 
   // 加载数据
   await Promise.all([
@@ -665,6 +728,10 @@ onMounted(async () => {
     formData.accountId = accounts.value[0].id
     formData.accountName = accounts.value[0].name || ''
   }
+})
+
+onUnmounted(() => {
+  releaseCamera()
 })
 </script>
 
@@ -833,7 +900,8 @@ onMounted(async () => {
   right: 0;
   display: flex;
   justify-content: center;
-  gap: 20px;
+  align-items: center;
+  gap: 32px;
 }
 
 .control-btn {
@@ -849,6 +917,34 @@ onMounted(async () => {
   &:active {
     background: rgba(255, 255, 255, 0.3);
   }
+
+  &.placeholder {
+    background: transparent;
+    pointer-events: none;
+  }
+}
+
+.capture-btn {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease;
+
+  &:active {
+    transform: scale(0.92);
+  }
+}
+
+.capture-btn-inner {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #fff;
+  border: 4px solid rgba(251, 139, 36, 0.8);
 }
 
 // 预览区域

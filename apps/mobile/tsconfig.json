@@ -24,7 +24,7 @@
       "@types/*": ["src/types/*"],
       "@shared/*": ["../../packages/shared/src/*"]
     },
-    "types": ["@dcloudio/types"],
+    "types": ["vite/client", "@dcloudio/types"],
     "skipLibCheck": true
   },
   "include": [

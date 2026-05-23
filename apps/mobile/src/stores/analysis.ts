@@ -165,14 +165,83 @@ export const useAnalysisStore = defineStore('analysis', () => {
     await loadAllStats()
   }
 
-  // 导出数据（移动端暂不支持服务器端导出，提示用户使用本地功能）
+  // 导出数据
   const exportData = async (format: 'excel' | 'pdf' = 'excel') => {
     try {
-      uni.showToast({
-        title: '导出功能开发中，请稍候',
-        icon: 'none'
-      })
+      uni.showLoading({ title: '正在生成导出文件...', mask: true })
+
+      // 生成 CSV 数据
+      const categoryRows = categoryChart.value.map(c =>
+        `${c.name},${c.value},${c.percentage?.toFixed(1) || 0}%`
+      ).join('\n')
+      const trendRows = trendChart.value.map(t =>
+        `${t.date},${t.income},${t.expense},${t.balance}`
+      ).join('\n')
+
+      const csvContent = [
+        '归藏财务管理系统 - 收支报告',
+        `导出时间：${new Date().toLocaleString('zh-CN')}`,
+        '',
+        '=== 收支概览 ===',
+        `总收入,${overview.value.totalIncome}`,
+        `总支出,${overview.value.totalExpense}`,
+        `结余,${overview.value.balance}`,
+        `交易笔数,${overview.value.transactionCount}`,
+        '',
+        '=== 分类统计 ===',
+        '分类,金额,占比',
+        categoryRows,
+        '',
+        '=== 趋势数据 ===',
+        '月份,收入,支出,结余',
+        trendRows,
+      ].join('\n')
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const tempFilePath = `${(uni as any).env?.USER_DATA_PATH || '/tmp'}/gzang_report_${Date.now()}.csv`
+
+      // 写入临时文件
+      const fs = (uni as any).getFileSystemManager?.()
+      if (fs) {
+        fs.writeFile({
+          filePath: tempFilePath,
+          data: csvContent,
+          encoding: 'utf8',
+          success: () => {
+            uni.hideLoading()
+            uni.share({
+              title: '归藏财务报告',
+              filePath: tempFilePath,
+              success: () => uni.showToast({ title: '导出成功', icon: 'success' }),
+              fail: (e: any) => {
+                if (e.errMsg?.includes('cancel')) return
+                // 降级：分享文本
+                uni.share({
+                  title: '归藏财务报告',
+                  summary: `收支概览：收入 ${overview.value.totalIncome}，支出 ${overview.value.totalExpense}，结余 ${overview.value.balance}`,
+                  fail: () => uni.showToast({ title: '分享失败', icon: 'none' })
+                })
+              }
+            })
+          },
+          fail: () => {
+            uni.hideLoading()
+            uni.showToast({ title: '文件生成失败', icon: 'none' })
+          }
+        })
+      } else {
+        // 降级：直接分享文本
+        uni.hideLoading()
+        uni.share({
+          title: '归藏财务报告',
+          summary: `收入 ${overview.value.totalIncome} | 支出 ${overview.value.totalExpense} | 结余 ${overview.value.balance}`,
+          success: () => uni.showToast({ title: '导出成功', icon: 'success' }),
+          fail: () => uni.showToast({ title: '分享失败', icon: 'none' })
+        })
+      }
     } catch (error) {
+      uni.hideLoading()
+      uni.showToast({ title: '导出失败', icon: 'none' })
       throw error
     }
   }

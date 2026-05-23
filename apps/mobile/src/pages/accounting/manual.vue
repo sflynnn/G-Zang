@@ -754,10 +754,8 @@ const handleSubmit = async () => {
       amount: parseFloat(form.amount),
       categoryId: form.categoryId,
       accountId: form.accountId,
-      targetAccountId: form.type === 3 ? form.targetAccountId : undefined,
       transactionTime,
       remark: form.remark,
-      tags: form.tags.length > 0 ? form.tags : undefined
     })
 
     uni.showToast({

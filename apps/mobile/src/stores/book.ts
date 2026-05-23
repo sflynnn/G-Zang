@@ -152,18 +152,18 @@ export const useBookStore = defineStore('book', () => {
     params?: { startDate?: string; endDate?: string }
   ) => {
     try {
-      const stats = await bookApi.getBookStatistics(bookId, params, { skipLoading: true });
+      const stats = await bookApi.getBookStatistics(bookId, params);
       statistics.value[bookId] = {
         bookId,
-        totalIncome: stats.totalIncome,
-        totalExpense: stats.totalExpense,
-        balance: stats.balance,
-        transactionCount: stats.transactionCount,
-        periodStats: {
+        totalIncome: stats.totalIncome || 0,
+        totalExpense: stats.totalExpense || 0,
+        balance: stats.balance || 0,
+        transactionCount: stats.transactionCount || 0,
+        periodStats: stats.periodStats || {
           today: { income: 0, expense: 0 },
           thisWeek: { income: 0, expense: 0 },
-          thisMonth: { income: stats.totalIncome, expense: stats.totalExpense },
-          thisYear: { income: stats.totalIncome, expense: stats.totalExpense },
+          thisMonth: { income: 0, expense: 0 },
+          thisYear: { income: 0, expense: 0 },
         },
       };
       return stats;
@@ -176,7 +176,7 @@ export const useBookStore = defineStore('book', () => {
   const updateBook = async (id: number, form: Partial<BookForm>) => {
     try {
       loading.value = true;
-      const updatedBook = await bookApi.updateBook({ id, ...form });
+      const updatedBook = await bookApi.updateBook(id, form);
 
       const index = bookList.value.findIndex((b) => b.id === id);
       if (index !== -1) {

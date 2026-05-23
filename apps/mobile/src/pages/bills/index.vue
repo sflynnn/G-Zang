@@ -1,4 +1,5 @@
 <template>
+  <PageTransition>
   <view class="bills-page apple-style">
     <!-- Large Title Navigation -->
     <view class="nav-large-title">
@@ -39,40 +40,134 @@
     <scroll-view class="main-content" scroll-y="true" @scrolltolower="loadMore">
       <!-- Calendar Card - Apple Style -->
       <view class="calendar-card">
-        <!-- Month Navigation -->
-        <view class="calendar-header">
-          <view class="month-nav" @click="prevMonth">
-            <AppleIcon name="chevron-left" :size="18" color="var(--gzang-text-secondary)" />
+        <!-- Month View -->
+        <template v-if="activePeriod === 'month' || activePeriod === 'day'">
+          <!-- Month Navigation -->
+          <view class="calendar-header">
+            <view class="month-nav" @click="prevMonth">
+              <AppleIcon name="chevron-left" :size="18" color="var(--gzang-text-secondary)" />
+            </view>
+            <text class="month-title">{{ currentMonthTitle }}</text>
+            <view class="month-nav" @click="nextMonth">
+              <AppleIcon name="chevron-right" :size="18" color="var(--gzang-text-secondary)" />
+            </view>
           </view>
-          <text class="month-title">{{ currentMonthTitle }}</text>
-          <view class="month-nav" @click="nextMonth">
-            <AppleIcon name="chevron-right" :size="18" color="var(--gzang-text-secondary)" />
-          </view>
-        </view>
 
-        <!-- Weekday Header -->
-        <view class="weekday-row">
-          <text v-for="day in weekdays" :key="day" class="weekday">{{ day }}</text>
-        </view>
-
-        <!-- Calendar Grid -->
-        <view class="days-grid">
-          <view
-            v-for="(day, index) in calendarDays"
-            :key="index"
-            class="day-cell"
-            :class="{
-              'is-empty': !day.date,
-              'is-today': day.isToday,
-              'has-data': day.hasData,
-              'is-selected': selectedDate === day.dateStr
-            }"
-            @click="selectDate(day)"
-          >
-            <text v-if="day.date" class="day-text">{{ day.date }}</text>
-            <view v-if="day.hasData && day.date" class="day-indicator"></view>
+          <!-- Weekday Header -->
+          <view class="weekday-row">
+            <text v-for="day in weekdays" :key="day" class="weekday">{{ day }}</text>
           </view>
-        </view>
+
+          <!-- Calendar Grid -->
+          <view class="days-grid">
+            <view
+              v-for="(day, index) in calendarDays"
+              :key="index"
+              class="day-cell"
+              :class="{
+                'is-empty': !day.date,
+                'is-today': day.isToday,
+                'has-data': day.hasData,
+                'is-selected': selectedDate === day.dateStr
+              }"
+              @click="selectDate(day)"
+            >
+              <text v-if="day.date" class="day-text">{{ day.date }}</text>
+              <view v-if="day.hasData && day.date" class="day-amounts">
+                <text v-if="day.income > 0" class="day-income">+{{ formatAmountShort(day.income) }}</text>
+                <text v-if="day.expense > 0" class="day-expense">-{{ formatAmountShort(day.expense) }}</text>
+              </view>
+            </view>
+          </view>
+        </template>
+
+        <!-- Week View -->
+        <template v-else-if="activePeriod === 'week'">
+          <view class="calendar-header">
+            <view class="month-nav" @click="prevWeek">
+              <AppleIcon name="chevron-left" :size="18" color="var(--gzang-text-secondary)" />
+            </view>
+            <text class="month-title">{{ weekTitle }}</text>
+            <view class="month-nav" @click="nextWeek">
+              <AppleIcon name="chevron-right" :size="18" color="var(--gzang-text-secondary)" />
+            </view>
+          </view>
+
+          <view class="week-grid">
+            <view
+              v-for="day in weekDays"
+              :key="day.dateStr"
+              class="week-day-cell"
+              :class="{
+                'is-today': day.isToday,
+                'has-data': day.hasData,
+                'is-selected': selectedDate === day.dateStr
+              }"
+              @click="selectDate(day)"
+            >
+              <text class="week-day-name">{{ day.dayName }}</text>
+              <text class="week-day-num">{{ day.date }}</text>
+              <view v-if="day.hasData" class="week-amounts">
+                <text v-if="day.income > 0" class="day-income">+{{ formatAmountShort(day.income) }}</text>
+                <text v-if="day.expense > 0" class="day-expense">-{{ formatAmountShort(day.expense) }}</text>
+              </view>
+            </view>
+          </view>
+        </template>
+
+        <!-- Year View -->
+        <template v-else-if="activePeriod === 'year'">
+          <view class="calendar-header">
+            <view class="month-nav" @click="prevYear">
+              <AppleIcon name="chevron-left" :size="18" color="var(--gzang-text-secondary)" />
+            </view>
+            <text class="month-title">{{ currentYearTitle }}</text>
+            <view class="month-nav" @click="nextYear">
+              <AppleIcon name="chevron-right" :size="18" color="var(--gzang-text-secondary)" />
+            </view>
+          </view>
+
+          <view class="year-grid">
+            <view
+              v-for="month in yearMonths"
+              :key="month.month"
+              class="year-month-cell"
+              :class="{
+                'is-current': month.isCurrent,
+                'has-data': month.hasData,
+                'is-selected': selectedMonth === month.month
+              }"
+              @click="selectMonth(month)"
+            >
+              <text class="year-month-name">{{ month.monthName }}</text>
+              <view v-if="month.hasData" class="year-month-amounts">
+                <text v-if="month.income > 0" class="day-income">+{{ formatAmountShort(month.income) }}</text>
+                <text v-if="month.expense > 0" class="day-expense">-{{ formatAmountShort(month.expense) }}</text>
+              </view>
+            </view>
+          </view>
+        </template>
+
+        <!-- Custom Date Range -->
+        <template v-else-if="activePeriod === 'custom'">
+          <view class="calendar-header">
+            <text class="month-title">{{ t('bills.customRange') }}</text>
+          </view>
+
+          <view class="custom-range-display">
+            <view class="range-item" @click="pickStartDate">
+              <text class="range-label">{{ t('bills.startDate') }}</text>
+              <text class="range-value">{{ customStartDate || t('bills.selectDate') }}</text>
+            </view>
+            <view class="range-separator">
+              <AppleIcon name="arrow-right" :size="16" color="var(--gzang-text-tertiary)" />
+            </view>
+            <view class="range-item" @click="pickEndDate">
+              <text class="range-label">{{ t('bills.endDate') }}</text>
+              <text class="range-value">{{ customEndDate || t('bills.selectDate') }}</text>
+            </view>
+          </view>
+        </template>
 
         <!-- Period Tabs -->
         <view class="period-tabs">
@@ -144,8 +239,8 @@
                 class="transaction-item"
                 @click="goToDetail(item)"
               >
-                <view class="item-icon" :style="{ background: getCategoryBg(item.categoryIcon) + '20' }">
-                  <AppleIcon :name="item.categoryIcon || 'shopping'" :size="18" :color="getCategoryColor(item.categoryIcon)" />
+                <view class="item-icon" :style="{ background: getCategoryBg(item.categoryIcon, item.categoryColor) + '20' }">
+                  <AppleIcon :name="item.categoryIcon || 'shopping'" :size="18" :color="getCategoryColor(item.categoryIcon, item.categoryColor)" />
                 </view>
                 <view class="item-info">
                   <text class="item-category">{{ item.categoryName }}</text>
@@ -186,13 +281,16 @@
     <!-- 自定义 TabBar -->
     <CustomTabBar />
   </view>
+  </PageTransition>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useBookStore } from '@/stores/book'
+import { useTransactionStore } from '@/stores/transaction'
 import type { Transaction } from '@/types/transaction'
+import PageTransition from '@/components/common/PageTransition/index.vue'
 import CustomTabBar from '@/components/CustomTabBar/index.vue'
 import AppleIcon from '@/components/common/AppleIcon/index.vue'
 
@@ -200,17 +298,37 @@ const { t } = useI18n()
 
 // Store
 const bookStore = useBookStore()
+const transactionStore = useTransactionStore()
 
 // State
 const loading = ref(false)
 const finished = ref(false)
 const currentBookId = ref<number | null>(null)
 const currentMonth = ref(new Date())
-const activePeriod = ref<'day' | 'week' | 'month' | 'year' | 'all'>('month')
+const activePeriod = ref<'day' | 'week' | 'month' | 'year' | 'custom'>('month')
 const selectedDate = ref<string | null>(null)
+const currentWeekStart = ref(getWeekStart(new Date()))
+const currentYear = ref(new Date().getFullYear())
+const selectedMonth = ref<number | null>(null)
+const customStartDate = ref<string | null>(null)
+const customEndDate = ref<string | null>(null)
+
+// 交易数据来源：从 store 获取
+const storeTransactions = computed(() => transactionStore.transactions)
+const storeCalendarData = computed(() => transactionStore.calendarData)
 
 // Weekdays
 const weekdays = ['日', '一', '二', '三', '四', '五', '六']
+
+// Helper function to get week start (Monday)
+function getWeekStart(date: Date): Date {
+  const d = new Date(date)
+  const day = d.getDay()
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
+  d.setDate(diff)
+  d.setHours(0, 0, 0, 0)
+  return d
+}
 
 // Periods
 const periods = computed(() => [
@@ -218,6 +336,7 @@ const periods = computed(() => [
   { key: 'week' as const, label: t('datetime.thisWeek') },
   { key: 'month' as const, label: t('datetime.thisMonth') },
   { key: 'year' as const, label: t('datetime.thisYear') },
+  { key: 'custom' as const, label: t('bills.custom') },
 ])
 
 // Computed
@@ -228,6 +347,95 @@ const currentMonthTitle = computed(() => {
   const year = currentMonth.value.getFullYear()
   const month = currentMonth.value.getMonth() + 1
   return `${year}年${month}月`
+})
+
+// Week title
+const weekTitle = computed(() => {
+  const start = currentWeekStart.value
+  const end = new Date(start)
+  end.setDate(end.getDate() + 6)
+  const startMonth = start.getMonth() + 1
+  const endMonth = end.getMonth() + 1
+  if (startMonth === endMonth) {
+    return `${start.getFullYear()}年${startMonth}月`
+  }
+  return `${start.getFullYear()}年${startMonth}月 - ${endMonth}月`
+})
+
+// Current year title
+const currentYearTitle = computed(() => `${currentYear.value}年`)
+
+// Week days
+const weekDays = computed(() => {
+  const start = currentWeekStart.value
+  const today = new Date()
+  const todayStr = formatDateStr(today)
+
+  const days: Array<{
+    date: number
+    dateStr: string
+    dayName: string
+    isToday: boolean
+    hasData: boolean
+    income: number
+    expense: number
+  }> = []
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start)
+    d.setDate(d.getDate() + i)
+    const dateStr = formatDateStr(d)
+    const stats = storeCalendarData.value[dateStr] || { income: 0, expense: 0 }
+    const isToday = dateStr === todayStr
+    const hasData = (stats.income || 0) > 0 || (stats.expense || 0) > 0
+
+    days.push({
+      date: d.getDate(),
+      dateStr,
+      dayName: weekdays[d.getDay()],
+      isToday,
+      hasData,
+      income: stats.income || 0,
+      expense: stats.expense || 0,
+    })
+  }
+
+  return days
+})
+
+// Year months
+const yearMonths = computed(() => {
+  const today = new Date()
+  const currentMonthNum = today.getMonth() + 1
+  const currentYearNum = today.getFullYear()
+
+  const months = []
+  const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
+
+  for (let i = 1; i <= 12; i++) {
+    let income = 0
+    let expense = 0
+    for (const [dateStr, data] of Object.entries(storeCalendarData.value)) {
+      const date = new Date(dateStr)
+      if (date.getFullYear() === currentYear.value && date.getMonth() + 1 === i) {
+        income += (data.income || 0)
+        expense += (data.expense || 0)
+      }
+    }
+    const hasData = income > 0 || expense > 0
+    const isCurrent = currentYear.value === currentYearNum && i === currentMonthNum
+
+    months.push({
+      month: i,
+      monthName: monthNames[i - 1],
+      isCurrent,
+      hasData,
+      income,
+      expense,
+    })
+  }
+
+  return months
 })
 
 // Calendar days
@@ -250,83 +458,59 @@ const calendarDays = computed(() => {
     dateStr: string | null
     isToday: boolean
     hasData: boolean
+    income: number
+    expense: number
   }> = []
 
   // Empty cells
   for (let i = 0; i < startWeek; i++) {
-    days.push({ date: null, dateStr: null, isToday: false, hasData: false })
+    days.push({ date: null, dateStr: null, isToday: false, hasData: false, income: 0, expense: 0 })
   }
 
   // Date cells
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
     const isToday = year === todayYear && month === todayMonth && d === todayDate
-    const hasData = Math.random() > 0.6
+    const stats = storeCalendarData.value[dateStr] || { income: 0, expense: 0 }
+    const hasData = (stats.income || 0) > 0 || (stats.expense || 0) > 0
 
-    days.push({ date: d, dateStr, isToday, hasData })
+    days.push({ date: d, dateStr, isToday, hasData, income: stats.income || 0, expense: stats.expense || 0 })
   }
 
   return days
 })
 
-// Mock transactions
-const mockTransactions = computed((): Transaction[] => {
-  const year = currentMonth.value.getFullYear()
-  const month = currentMonth.value.getMonth() + 1
-  const transactions: Transaction[] = []
-
-  const categories = [
-    { name: '餐饮', icon: 'food', color: '#FB8B24' },
-    { name: '交通', icon: 'transport', color: '#0F4C5C' },
-    { name: '购物', icon: 'shopping', color: '#EF476F' },
-    { name: '娱乐', icon: 'entertainment', color: '#9B59B6' },
-    { name: '工资', icon: 'income', color: '#06D6A0' },
-  ]
-  const accounts = ['支付宝', '微信钱包', '建设银行', '招商银行']
-
-  for (let d = 1; d <= 28; d++) {
-    if (Math.random() > 0.5) {
-      const day = String(d).padStart(2, '0')
-      const monthStr = String(month).padStart(2, '0')
-      const dateStr = `${year}-${monthStr}-${day}`
-
-      for (let i = 0; i < Math.floor(Math.random() * 3) + 1; i++) {
-        const cat = categories[Math.floor(Math.random() * categories.length)]
-        const acc = accounts[Math.floor(Math.random() * accounts.length)]
-        const type = cat.name === '工资' ? 1 : 2
-
-        transactions.push({
-          id: Date.now() + d * 100 + i,
-          type,
-          amount: Math.floor(Math.random() * 500) + 10,
-          categoryId: Math.floor(Math.random() * 100) + 1,
-          categoryName: cat.name,
-          categoryIcon: cat.icon,
-          accountId: Math.floor(Math.random() * 4) + 1,
-          accountName: acc,
-          transactionTime: `${dateStr} ${String(Math.floor(Math.random() * 12) + 8).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:00`,
-          createTime: `${dateStr} ${String(Math.floor(Math.random() * 12) + 8).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:00`,
-        } as Transaction)
-      }
-    }
-  }
-
-  return transactions.sort((a, b) =>
-    new Date(b.transactionTime).getTime() - new Date(a.transactionTime).getTime()
-  )
-})
-
-// Filtered transactions
+// Filtered transactions (from store)
 const filteredTransactions = computed(() => {
-  let result = [...mockTransactions.value]
+  let result = [...storeTransactions.value]
 
   if (activePeriod.value === 'day' && selectedDate.value) {
-    result = result.filter(t => t.transactionTime.startsWith(selectedDate.value!))
+    result = result.filter(t => (t.transactionTime || '').startsWith(selectedDate.value!))
+  } else if (activePeriod.value === 'week') {
+    const start = currentWeekStart.value
+    const end = new Date(start)
+    end.setDate(end.getDate() + 7)
+    result = result.filter(t => {
+      const date = new Date(t.transactionTime || '')
+      return date >= start && date < end
+    })
   } else if (activePeriod.value === 'month') {
     const year = currentMonth.value.getFullYear()
     const month = currentMonth.value.getMonth() + 1
     const monthStr = `${year}-${String(month).padStart(2, '0')}`
-    result = result.filter(t => t.transactionTime.startsWith(monthStr))
+    result = result.filter(t => (t.transactionTime || '').startsWith(monthStr))
+  } else if (activePeriod.value === 'year') {
+    const yearStr = String(currentYear.value)
+    result = result.filter(t => (t.transactionTime || '').startsWith(yearStr))
+  } else if (activePeriod.value === 'custom') {
+    if (customStartDate.value && customEndDate.value) {
+      const start = customStartDate.value
+      const end = customEndDate.value
+      result = result.filter(t => {
+        const dateStr = (t.transactionTime || '').split(' ')[0]
+        return dateStr >= start && dateStr <= end
+      })
+    }
   }
 
   return result
@@ -337,15 +521,15 @@ const groupedTransactions = computed(() => {
   const groups: Record<string, { date: string; income: number; expense: number; transactions: Transaction[] }> = {}
 
   filteredTransactions.value.forEach(t => {
-    const dateStr = t.transactionTime.split(' ')[0]
+    const dateStr = (t.transactionTime || '').split(' ')[0]
     if (!groups[dateStr]) {
       groups[dateStr] = { date: dateStr, income: 0, expense: 0, transactions: [] }
     }
     groups[dateStr].transactions.push(t)
     if (t.type === 1) {
-      groups[dateStr].income += t.amount
+      groups[dateStr].income += (t.amount || 0)
     } else {
-      groups[dateStr].expense += t.amount
+      groups[dateStr].expense += (t.amount || 0)
     }
   })
 
@@ -381,6 +565,13 @@ const formatAmount = (amount: number) => {
   })
 }
 
+const formatAmountShort = (amount: number) => {
+  if (amount >= 10000) {
+    return (amount / 10000).toFixed(1) + 'w'
+  }
+  return amount.toFixed(0)
+}
+
 const formatGroupDate = (dateStr: string) => {
   const today = formatDateStr(new Date())
   const yesterday = formatDateStr(new Date(Date.now() - 86400000))
@@ -401,7 +592,8 @@ const formatTime = (timeStr: string) => {
   return time.substring(0, 5)
 }
 
-const getCategoryBg = (icon?: string) => {
+const getCategoryBg = (icon?: string, color?: string) => {
+  if (color) return color
   const bgMap: Record<string, string> = {
     food: '#FB8B24',
     transport: '#0F4C5C',
@@ -412,7 +604,8 @@ const getCategoryBg = (icon?: string) => {
   return bgMap[icon || ''] || '#6B7280'
 }
 
-const getCategoryColor = (icon?: string) => {
+const getCategoryColor = (icon?: string, color?: string) => {
+  if (color) return color
   const colorMap: Record<string, string> = {
     food: '#FB8B24',
     transport: '#0F4C5C',
@@ -429,28 +622,72 @@ const getPeriodLabel = () => {
     week: t('datetime.thisWeek'),
     month: t('datetime.thisMonth'),
     year: t('datetime.thisYear'),
-    all: t('common.all'),
+    custom: t('bills.custom'),
   }
   return labels[activePeriod.value]
 }
 
 // Actions
-const switchBook = (bookId: number) => {
+const switchBook = async (bookId: number) => {
   currentBookId.value = bookId
-  bookStore.switchBook(bookId)
+  await bookStore.switchBook(bookId)
   selectedDate.value = null
+  transactionStore.resetPagination()
+  await loadCalendarData()
+  await loadTransactions()
+}
+
+const loadCalendarData = async () => {
+  const year = currentMonth.value.getFullYear()
+  const month = currentMonth.value.getMonth() + 1
+  await transactionStore.fetchCalendarData(year, month, currentBookId.value || undefined)
+}
+
+const loadTransactions = async () => {
+  const year = currentMonth.value.getFullYear()
+  const month = currentMonth.value.getMonth() + 1
+  const monthStr = `${year}-${String(month).padStart(2, '0')}`
+  await transactionStore.fetchPage({
+    bookId: currentBookId.value || undefined,
+    startTime: `${monthStr}-01 00:00:00`,
+    endTime: `${monthStr}-31 23:59:59`,
+  })
 }
 
 const prevMonth = () => {
   const date = new Date(currentMonth.value)
   date.setMonth(date.getMonth() - 1)
   currentMonth.value = date
+  loadCalendarData()
+  loadTransactions()
 }
 
 const nextMonth = () => {
   const date = new Date(currentMonth.value)
   date.setMonth(date.getMonth() + 1)
   currentMonth.value = date
+  loadCalendarData()
+  loadTransactions()
+}
+
+const prevWeek = () => {
+  const date = new Date(currentWeekStart.value)
+  date.setDate(date.getDate() - 7)
+  currentWeekStart.value = date
+}
+
+const nextWeek = () => {
+  const date = new Date(currentWeekStart.value)
+  date.setDate(date.getDate() + 7)
+  currentWeekStart.value = date
+}
+
+const prevYear = () => {
+  currentYear.value--
+}
+
+const nextYear = () => {
+  currentYear.value++
 }
 
 const selectDate = (day: { date: number | null; dateStr: string | null }) => {
@@ -459,16 +696,67 @@ const selectDate = (day: { date: number | null; dateStr: string | null }) => {
   activePeriod.value = 'day'
 }
 
+const selectMonth = (month: { month: number }) => {
+  selectedMonth.value = month.month
+  // Switch to month view and navigate to that month
+  currentMonth.value = new Date(currentYear.value, month.month - 1, 1)
+  activePeriod.value = 'month'
+}
+
+const pickStartDate = () => {
+  const current = customStartDate.value || new Date().toISOString().split('T')[0]
+  ;(uni as any).showDatePicker({
+    currentDate: current,
+    success: (res: any) => {
+      if (res.dateValue) {
+        customStartDate.value = res.dateValue
+        loadTransactions()
+      }
+    }
+  })
+}
+
+const pickEndDate = () => {
+  const current = customEndDate.value || new Date().toISOString().split('T')[0]
+  ;(uni as any).showDatePicker({
+    currentDate: current,
+    success: (res: any) => {
+      if (res.dateValue) {
+        customEndDate.value = res.dateValue
+        loadTransactions()
+      }
+    }
+  })
+}
+
 const switchPeriod = (period: typeof activePeriod.value) => {
   activePeriod.value = period
   if (period !== 'day') {
     selectedDate.value = null
   }
+  if (period === 'week') {
+    currentWeekStart.value = getWeekStart(new Date())
+  }
+  if (period === 'year') {
+    currentYear.value = new Date().getFullYear()
+  }
+  if (period === 'month') {
+    loadCalendarData()
+    loadTransactions()
+  }
 }
 
-const loadMore = () => {
+const loadMore = async () => {
   if (loading.value || finished.value) return
-  finished.value = true
+  loading.value = true
+  try {
+    const hasMore = await transactionStore.loadMore({
+      bookId: currentBookId.value || undefined,
+    })
+    finished.value = !hasMore
+  } finally {
+    loading.value = false
+  }
 }
 
 // Navigation
@@ -495,6 +783,11 @@ onMounted(async () => {
     currentBookId.value = bookStore.currentBookId
   } else if (bookStore.books.length > 0) {
     currentBookId.value = bookStore.books[0].id
+  }
+
+  if (currentBookId.value) {
+    await loadCalendarData()
+    await loadTransactions()
   }
 })
 </script>
@@ -659,12 +952,12 @@ onMounted(async () => {
 
 .day-cell {
   width: calc(100% / 7);
-  aspect-ratio: 1;
+  min-height: 56px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  position: relative;
+  justify-content: flex-start;
+  padding-top: 4px;
   
   &.is-empty {
     pointer-events: none;
@@ -675,8 +968,8 @@ onMounted(async () => {
       background: var(--gzang-primary);
       color: white;
       border-radius: 50%;
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -688,8 +981,8 @@ onMounted(async () => {
       background: rgba(251, 139, 36, 0.15);
       color: var(--gzang-secondary);
       border-radius: 50%;
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -703,13 +996,163 @@ onMounted(async () => {
   color: var(--gzang-text-primary);
 }
 
-.day-indicator {
-  position: absolute;
-  bottom: 4px;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--gzang-secondary);
+.day-amounts {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  margin-top: 2px;
+}
+
+.day-income {
+  font-size: 9px;
+  color: #EF476F;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.day-expense {
+  font-size: 9px;
+  color: var(--gzang-success);
+  font-weight: 500;
+  line-height: 1;
+}
+
+// Week View
+.week-grid {
+  display: flex;
+  justify-content: space-between;
+}
+
+.week-day-cell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 4px;
+  border-radius: var(--apple-radius-md);
+  transition: all var(--apple-duration-fast) var(--apple-ease-out);
+
+  &.is-today {
+    background: rgba(251, 139, 36, 0.1);
+    
+    .week-day-num {
+      background: var(--gzang-primary);
+      color: white;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  &.is-selected {
+    background: rgba(251, 139, 36, 0.15);
+    
+    .week-day-num {
+      color: var(--gzang-secondary);
+      font-weight: var(--apple-font-semibold);
+    }
+  }
+}
+
+.week-day-name {
+  font-size: 10px;
+  color: var(--gzang-text-tertiary);
+  margin-bottom: 4px;
+}
+
+.week-day-num {
+  font-size: var(--apple-text-sm);
+  color: var(--gzang-text-primary);
+  font-weight: var(--apple-font-medium);
+}
+
+.week-amounts {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  margin-top: 4px;
+}
+
+// Year View
+.year-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.year-month-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px;
+  border-radius: var(--apple-radius-md);
+  background: var(--gzang-bg);
+  transition: all var(--apple-duration-fast) var(--apple-ease-out);
+
+  &.is-current {
+    background: rgba(251, 139, 36, 0.1);
+    
+    .year-month-name {
+      color: var(--gzang-secondary);
+      font-weight: var(--apple-font-semibold);
+    }
+  }
+
+  &.is-selected {
+    background: rgba(251, 139, 36, 0.15);
+    border: 1px solid var(--gzang-secondary);
+  }
+}
+
+.year-month-name {
+  font-size: var(--apple-text-sm);
+  color: var(--gzang-text-primary);
+  margin-bottom: 4px;
+}
+
+.year-month-amounts {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+// Custom Range
+.custom-range-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px;
+  background: var(--gzang-bg);
+  border-radius: var(--apple-radius-md);
+}
+
+.range-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.range-label {
+  font-size: var(--apple-text-xs);
+  color: var(--gzang-text-tertiary);
+}
+
+.range-value {
+  font-size: var(--apple-text-sm);
+  color: var(--gzang-text-primary);
+  font-weight: var(--apple-font-medium);
+}
+
+.range-separator {
+  padding-top: 16px;
 }
 
 // Period Tabs
@@ -719,16 +1162,19 @@ onMounted(async () => {
   border-radius: var(--apple-radius-sm);
   padding: 2px;
   margin-top: var(--apple-space-3);
+  overflow-x: auto;
 }
 
 .period-tab {
   flex: 1;
-  padding: var(--apple-space-2) 0;
+  min-width: 0;
+  padding: var(--apple-space-2) 4px;
   text-align: center;
-  font-size: var(--apple-text-xs);
+  font-size: 11px;
   color: var(--gzang-text-secondary);
   border-radius: calc(var(--apple-radius-sm) - 2px);
   transition: all var(--apple-duration-fast) var(--apple-ease-out);
+  white-space: nowrap;
   
   &.active {
     background: var(--gzang-surface);

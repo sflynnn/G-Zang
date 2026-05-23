@@ -1,39 +1,27 @@
 <template>
+  <PageTransition>
   <view class="accounting-page apple-style">
-    <!-- Header with Segmented Control -->
+    <!-- Header -->
     <view class="page-header">
+      <!-- Header Nav -->
       <view class="header-nav">
         <view class="nav-left">
           <view class="book-selector" @click="showBookPicker">
-            <text class="book-name">{{ currentBook?.name || t('accounting.selectCategory') }}</text>
+            <text class="book-name">{{ currentBook?.name || t('accounting.selectBook') }}</text>
             <AppleIcon name="chevron-down" :size="12" color="var(--gzang-text-secondary)" />
           </view>
         </view>
       </view>
-      
-      <!-- Segmented Control - Type Selector -->
-      <view class="segmented-control">
-        <view 
-          v-for="type in transactionTypes" 
-          :key="type.key"
-          class="segment-item"
-          :class="{ active: form.type === type.key }"
-          @click="switchType(type.key)"
-        >
-          <AppleIcon 
-            :name="type.icon" 
-            :size="16" 
-            :color="form.type === type.key ? 'white' : 'text-secondary'" 
-          />
-          <text class="segment-label">{{ t('accounting.' + type.i18nKey) }}</text>
-        </view>
-      </view>
+
+      <!-- Transaction Type Selector -->
+      <TransactionTypeSelector v-model="form.type" @change="onTypeChange" />
     </view>
 
     <!-- Main Content -->
-    <scroll-view class="main-content" scroll-y="true">
-      <!-- Amount Display - Large & Center -->
-      <view class="amount-section">
+    <scroll-view class="main-content" scroll-y="true" :scroll-into-view="scrollIntoView" scroll-with-animation>
+
+      <!-- Amount Section -->
+      <view id="amount-section" class="amount-section">
         <view class="amount-display">
           <text class="currency">{{ currentCurrencySymbol }}</text>
           <input
@@ -41,6 +29,7 @@
             type="digit"
             placeholder="0.00"
             class="amount-input"
+            @focus="onAmountFocus"
             @blur="validateField('amount')"
           />
         </view>
@@ -53,13 +42,18 @@
           v-for="amount in quickAmounts" 
           :key="amount"
           class="quick-amount-btn"
+          :class="{ active: form.amount === String(amount) }"
           @click="setAmount(amount)"
         >
           {{ currentCurrencySymbol }}{{ amount }}
         </view>
+        <view class="quick-amount-btn custom" @click="showKeyboard = true">
+          <AppleIcon name="edit" :size="14" color="var(--gzang-text-secondary)" />
+          <text>{{ t('accounting.custom') }}</text>
+        </view>
       </view>
 
-      <!-- Info Row -->
+      <!-- Info Row: Date + Account -->
       <view class="info-row apple-list">
         <!-- Date -->
         <view class="info-item" @click="showDatePicker">
@@ -97,7 +91,7 @@
             <view class="info-icon" style="background: rgba(251, 139, 36, 0.1)">
               <AppleIcon name="transfer" :size="18" color="var(--gzang-secondary)" />
             </view>
-            <text class="info-label">{{ t('accounting.selectTargetAccount') }}</text>
+            <text class="info-label">{{ t('accounting.targetAccount') }}</text>
           </view>
           <view class="info-right">
             <text class="info-value" :class="{ placeholder: !selectedTargetAccount }">
@@ -111,41 +105,16 @@
       <!-- Category Selection -->
       <view class="category-section">
         <text class="section-title">{{ t('accounting.category') }}</text>
-        <view class="category-tabs">
-          <view 
-            class="category-tab"
-            :class="{ active: activeTab === 1 }"
-            @click="activeTab = 1"
-          >
-            <AppleIcon name="income" :size="14" :color="activeTab === 1 ? 'var(--gzang-secondary)' : 'var(--gzang-text-secondary)'" />
-            <text>{{ t('accounting.income') }}</text>
-          </view>
-          <view 
-            class="category-tab"
-            :class="{ active: activeTab === 2 }"
-            @click="activeTab = 2"
-          >
-            <AppleIcon name="expense" :size="14" :color="activeTab === 2 ? 'var(--gzang-secondary)' : 'var(--gzang-text-secondary)'" />
-            <text>{{ t('accounting.expense') }}</text>
-          </view>
-        </view>
-        
-        <view class="category-grid">
-          <view 
-            v-for="category in currentCategories"
-            :key="category.id"
-            class="category-item"
-            :class="{ selected: form.categoryId === category.id }"
-            @click="selectCategory(category)"
-          >
-            <view class="category-icon" :style="{ background: category.color + '20' }">
-              <AppleIcon :name="category.icon" :size="20" :color="category.color" />
-            </view>
-            <text class="category-name">{{ category.name }}</text>
-            <text class="category-amount" v-if="category.amount">{{ formatAmount(category.amount) }}</text>
-          </view>
-        </view>
-        <text v-if="errors.categoryId" class="error-text">{{ errors.categoryId }}</text>
+        <CategoryGrid
+          v-model="form.categoryId"
+          :expense-categories="expenseCategories"
+          :income-categories="incomeCategories"
+          :currency-symbol="currentCurrencySymbol"
+          :show-tabs="form.type !== 3"
+          :show-amount="true"
+          :error="errors.categoryId"
+          @change="onCategoryChange"
+        />
       </view>
 
       <!-- Remark -->
@@ -166,28 +135,33 @@
           <text>{{ form.remark.length }}/200</text>
         </view>
       </view>
-      <!-- Bottom Action Bar -->
-      <view class="action-bar">
-        <button 
-          class="action-btn secondary" 
-          @click="resetForm"
-        >
-          <AppleIcon name="refresh" :size="16" color="var(--gzang-text-secondary)" />
-          <text>{{ t('common.reset') }}</text>
-        </button>
-        <button 
-          class="action-btn primary"
-          :class="{ loading: submitting }"
-          :disabled="!isFormValid || submitting"
-          @click="handleSubmit"
-        >
-          <AppleIcon v-if="submitting" name="refresh" :size="16" color="white" class="spin" />
-          <text v-else>{{ t('common.confirm') }}</text>
-        </button>
-      </view>
-      <!-- Bottom Safe Area -->
-      <view class="bottom-safe-area"></view>
+
+      <!-- Bottom Safe Area Spacer -->
+      <view class="bottom-spacer"></view>
     </scroll-view>
+
+    <!-- Fixed Action Bar -->
+    <view class="action-bar">
+      <button 
+        class="action-btn secondary" 
+        @click="resetForm"
+      >
+        <AppleIcon name="refresh" :size="16" color="var(--gzang-text-secondary)" />
+        <text>{{ t('common.reset') }}</text>
+      </button>
+      <button 
+        class="action-btn primary"
+        :class="{ loading: submitting, disabled: !isFormValid }"
+        :disabled="!isFormValid || submitting"
+        @click="handleSubmit"
+      >
+        <AppleIcon v-if="submitting" name="refresh" :size="16" color="white" class="spin" />
+        <text v-else>{{ t('accounting.confirmRecord') }}</text>
+        <text v-if="isFormValid && form.amount" class="btn-amount">
+          {{ currentCurrencySymbol }}{{ parseFloat(form.amount).toFixed(2) }}
+        </text>
+      </button>
+    </view>
 
     <!-- Account Picker Popup -->
     <uni-popup ref="accountPopup" type="bottom" :is-mask-click="true">
@@ -207,9 +181,32 @@
       </view>
     </uni-popup>
 
+    <!-- Target Account Picker Popup -->
+    <uni-popup ref="targetAccountPopup" type="bottom" :is-mask-click="true">
+      <view class="picker-container">
+        <view class="picker-header">
+          <text class="picker-cancel" @click="hideTargetAccountPicker">{{ t('common.cancel') }}</text>
+          <text class="picker-title">{{ t('accounting.selectTargetAccount') }}</text>
+          <text class="picker-confirm" @click="confirmTargetAccount">{{ t('common.confirm') }}</text>
+        </view>
+        <picker-view :value="targetAccountPickerValue" @change="onTargetAccountChange" class="account-picker">
+          <picker-view-column>
+            <view 
+              v-for="account in targetAccounts" 
+              :key="account.id" 
+              class="picker-item"
+              :class="{ disabled: account.id === form.accountId }"
+            >
+              {{ account.name }} ({{ currentCurrencySymbol }}{{ (account.balance || 0).toFixed(2) }})
+            </view>
+          </picker-view-column>
+        </picker-view>
+      </view>
+    </uni-popup>
+
     <!-- Date Picker Popup -->
     <uni-popup ref="datePopup" type="bottom" :is-mask-click="true">
-      <view class="picker-container">
+      <view class="date-picker-container">
         <view class="picker-header">
           <text class="picker-cancel" @click="hideDatePicker">{{ t('common.cancel') }}</text>
           <text class="picker-title">{{ t('accounting.selectDate') }}</text>
@@ -226,17 +223,24 @@
             {{ quick.label }}
           </view>
         </view>
-        <picker-view :value="datePickerValue" @change="onDateChange" class="date-picker">
-          <picker-view-column>
-            <view v-for="year in years" :key="year" class="picker-item">{{ year }}年</view>
-          </picker-view-column>
-          <picker-view-column>
-            <view v-for="month in months" :key="month" class="picker-item">{{ month }}月</view>
-          </picker-view-column>
-          <picker-view-column>
-            <view v-for="day in days" :key="day" class="picker-item">{{ day }}日</view>
-          </picker-view-column>
-        </picker-view>
+        <view class="date-picker-wrapper">
+          <picker-view :value="datePickerValue" @change="onDateChange" class="date-picker">
+            <picker-view-column>
+              <view v-for="year in years" :key="year" class="picker-item">{{ year }}</view>
+            </picker-view-column>
+            <picker-view-column>
+              <view v-for="month in months" :key="month" class="picker-item">{{ String(month).padStart(2, '0') }}</view>
+            </picker-view-column>
+            <picker-view-column>
+              <view v-for="day in days" :key="day" class="picker-item">{{ String(day).padStart(2, '0') }}</view>
+            </picker-view-column>
+          </picker-view>
+        </view>
+        <view class="picker-labels">
+          <text class="picker-label">年</text>
+          <text class="picker-label">月</text>
+          <text class="picker-label">日</text>
+        </view>
       </view>
     </uni-popup>
 
@@ -251,16 +255,30 @@
         <picker-view :value="bookPickerValue" @change="onBookChange" class="book-picker">
           <picker-view-column>
             <view v-for="book in books" :key="book.id" class="picker-item">
-              {{ book.icon }} {{ book.name }}
+              {{ book.icon || '📒' }} {{ book.name }}
             </view>
           </picker-view-column>
         </picker-view>
       </view>
     </uni-popup>
 
-    <!-- 自定义 TabBar -->
+    <!-- Amount Keyboard Popup -->
+    <uni-popup ref="keyboardPopup" type="bottom" :is-mask-click="true">
+      <view class="keyboard-popup-content">
+        <AmountKeyboard
+          v-model="form.amount"
+          :currency-symbol="currentCurrencySymbol"
+          :quick-amounts="quickAmounts"
+          @confirm="hideKeyboard"
+          @cancel="hideKeyboard"
+        />
+      </view>
+    </uni-popup>
+
+    <!-- Custom TabBar -->
     <CustomTabBar />
   </view>
+  </PageTransition>
 </template>
 
 <script setup lang="ts">
@@ -269,9 +287,13 @@ import { useI18n } from 'vue-i18n'
 import { useAccountingStore } from '@/stores/accounting'
 import { useBookStore } from '@/stores/book'
 import { useAppStore } from '@/stores/app'
-import { DeviceUtils } from '@/utils/device'
+import PageTransition from '@/components/common/PageTransition/index.vue'
 import AppleIcon from '@/components/common/AppleIcon/index.vue'
+import TransactionTypeSelector from '@/components/business/TransactionTypeSelector/index.vue'
+import CategoryGrid from '@/components/business/CategoryGrid/index.vue'
+import AmountKeyboard from '@/components/common/AmountKeyboard/index.vue'
 import CustomTabBar from '@/components/CustomTabBar/index.vue'
+import type { Category } from '@/components/business/CategoryGrid/index.vue'
 
 const { t } = useI18n()
 
@@ -282,21 +304,25 @@ const appStore = useAppStore()
 
 // Refs
 const submitting = ref(false)
-const activeTab = ref<1 | 2>(2)
 const showAccountPicker = ref(false)
 const showTargetAccountPicker = ref(false)
+const showKeyboard = ref(false)
 const bookPickerValue = ref([0])
 const accountPickerValue = ref([0])
+const targetAccountPickerValue = ref([0])
 const datePickerValue = ref([0, 0, 0])
+const scrollIntoView = ref('')
 
 // Popup refs
 const accountPopup = ref<any>(null)
+const targetAccountPopup = ref<any>(null)
 const bookPopup = ref<any>(null)
 const datePopup = ref<any>(null)
+const keyboardPopup = ref<any>(null)
 
 // Form data
 const form = reactive({
-  type: 2 as 1 | 2 | 3,
+  type: 2 as 1 | 2 | 3, // 2: expense, 1: income, 3: transfer
   amount: '',
   categoryId: undefined as number | undefined,
   accountId: 0,
@@ -314,21 +340,19 @@ const errors = reactive({
   targetAccountId: ''
 })
 
-// Transaction types
-const transactionTypes = [
-  { key: 1 as const, i18nKey: 'income', icon: 'income' },
-  { key: 2 as const, i18nKey: 'expense', icon: 'expense' },
-  { key: 3 as const, i18nKey: 'transfer', icon: 'transfer' }
-]
-
 // Quick amounts
-const quickAmounts = [10, 50, 100, 200, 500, 1000]
+const quickAmounts = [10, 50, 100, 200, 500]
 
 // Computed
 const currentBook = computed(() => bookStore.currentBook)
 const books = computed(() => bookStore.books)
 const currentCurrencySymbol = computed(() => bookStore.currentCurrencySymbol)
 const accounts = computed(() => accountingStore.accounts)
+
+// Filter out the source account for target account selection
+const targetAccounts = computed(() => {
+  return accounts.value.filter(a => a.id !== form.accountId)
+})
 
 const selectedAccount = computed(() => {
   const account = accounts.value.find(a => a.id === form.accountId)
@@ -340,9 +364,26 @@ const selectedTargetAccount = computed(() => {
   return account?.name || ''
 })
 
-const currentCategories = computed(() => {
-  return getCategories(activeTab.value)
-})
+// Categories (from API)
+const expenseCategories = computed((): Category[] =>
+  accountingStore.categories.filter(c => c.type === 2).map(c => ({
+    id: c.id,
+    name: c.name || c.categoryName || '',
+    icon: c.icon || 'circle',
+    color: c.color || '#6B7280',
+    type: 2,
+  }))
+)
+
+const incomeCategories = computed((): Category[] =>
+  accountingStore.categories.filter(c => c.type === 1).map(c => ({
+    id: c.id,
+    name: c.name || c.categoryName || '',
+    icon: c.icon || 'circle',
+    color: c.color || '#6B7280',
+    type: 1,
+  }))
+)
 
 const isFormValid = computed(() => {
   const hasAmount = form.amount && parseFloat(form.amount) > 0
@@ -371,9 +412,14 @@ const years = computed(() => {
 
 const months = computed(() => Array.from({ length: 12 }, (_, i) => i + 1))
 
+// 修复：当月份切换时，确保天数不超过该月最大天数
+const getDaysInMonth = (year: number, month: number) => {
+  return new Date(year, month, 0).getDate()
+}
+
 const days = computed(() => {
   const year = years.value[datePickerValue.value[0]] || new Date().getFullYear()
-  const month = months.value[datePickerValue.value[1]] || new Date().getMonth() + 1
+  const month = months.value[datePickerValue.value[1]] || 1
   return Array.from({ length: getDaysInMonth(year, month) }, (_, i) => i + 1)
 })
 
@@ -394,31 +440,27 @@ const formatDisplayDate = (dateStr: string) => {
   return dateStr.replace(/-/g, '/')
 }
 
-const getDaysInMonth = (year: number, month: number) => {
-  return new Date(year, month, 0).getDate()
-}
-
-const switchType = (type: 1 | 2 | 3) => {
+// Event handlers
+const onTypeChange = (type: 1 | 2 | 3) => {
   form.type = type
   form.categoryId = undefined
   form.targetAccountId = 0
-  if (type === 1) activeTab.value = 1
-  else activeTab.value = 2
-  validateForm()
+  errors.categoryId = ''
+  errors.targetAccountId = ''
+}
+
+const onCategoryChange = (category: Category) => {
+  form.categoryId = category.id
+  errors.categoryId = ''
+}
+
+const onAmountFocus = () => {
+  scrollIntoView.value = 'amount-section'
 }
 
 const setAmount = (amount: number) => {
-  form.amount = amount.toString()
+  form.amount = String(amount)
   validateField('amount')
-}
-
-const selectCategory = (category: any) => {
-  form.categoryId = category.id
-  validateField('categoryId')
-}
-
-const formatAmount = (amount: number) => {
-  return currentCurrencySymbol.value + amount.toFixed(0)
 }
 
 // Account picker
@@ -438,6 +480,25 @@ const confirmAccount = () => {
 
 const hideAccountPicker = () => {
   accountPopup.value?.close()
+}
+
+// Target Account picker
+const onTargetAccountChange = (e: any) => {
+  targetAccountPickerValue.value = e.detail.value
+}
+
+const confirmTargetAccount = () => {
+  const index = targetAccountPickerValue.value[0]
+  const account = targetAccounts.value[index]
+  if (account) {
+    form.targetAccountId = account.id
+    validateField('targetAccountId')
+  }
+  hideTargetAccountPicker()
+}
+
+const hideTargetAccountPicker = () => {
+  targetAccountPopup.value?.close()
 }
 
 // Book picker
@@ -479,7 +540,23 @@ const showDatePicker = () => {
 }
 
 const onDateChange = (e: any) => {
-  datePickerValue.value = e.detail.value
+  const newValue = e.detail.value
+  const oldYear = datePickerValue.value[0]
+  const oldMonth = datePickerValue.value[1]
+  const oldDay = datePickerValue.value[2]
+
+  // 检查月份或年份是否改变
+  if (newValue[0] !== oldYear || newValue[1] !== oldMonth) {
+    // 月份或年份改变，重新计算天数
+    const year = years.value[newValue[0]] || new Date().getFullYear()
+    const month = months.value[newValue[1]] || 1
+    const maxDays = getDaysInMonth(year, month)
+    const currentDay = newValue[2]
+    // 确保天数索引不超过最大值
+    newValue[2] = Math.min(currentDay, maxDays - 1)
+  }
+
+  datePickerValue.value = newValue
 }
 
 const selectQuickDate = (date: string) => {
@@ -499,6 +576,17 @@ const hideDatePicker = () => {
   datePopup.value?.close()
 }
 
+// Keyboard
+const showAmountKeyboard = () => {
+  showKeyboard.value = true
+  keyboardPopup.value?.open()
+}
+
+const hideKeyboard = () => {
+  showKeyboard.value = false
+  keyboardPopup.value?.close()
+}
+
 // Validation
 const validateField = (field: keyof typeof errors) => {
   switch (field) {
@@ -515,6 +603,13 @@ const validateField = (field: keyof typeof errors) => {
       if (!form.accountId) errors.accountId = t('accounting.pleaseSelectAccount')
       else errors.accountId = ''
       break
+    case 'targetAccountId':
+      if (form.type === 3 && !form.targetAccountId) {
+        errors.targetAccountId = t('accounting.pleaseSelectTargetAccount')
+      } else {
+        errors.targetAccountId = ''
+      }
+      break
   }
 }
 
@@ -522,6 +617,8 @@ const validateForm = () => {
   validateField('amount')
   validateField('categoryId')
   validateField('accountId')
+  validateField('targetAccountId')
+  return !errors.amount && !errors.categoryId && !errors.accountId && !errors.targetAccountId
 }
 
 // Reset
@@ -538,7 +635,13 @@ const resetForm = () => {
 
 // Submit
 const handleSubmit = async () => {
-  if (!isFormValid.value) return
+  if (!validateForm()) {
+    // Scroll to first error
+    if (errors.amount) {
+      scrollIntoView.value = 'amount-section'
+    }
+    return
+  }
 
   try {
     submitting.value = true
@@ -563,32 +666,6 @@ const handleSubmit = async () => {
   } finally {
     submitting.value = false
   }
-}
-
-// Mock categories
-const getCategories = (type: 1 | 2) => {
-  if (type === 1) {
-    return [
-      { id: 101, name: '工资', icon: 'income', color: '#06D6A0', amount: 15000 },
-      { id: 102, name: '奖金', icon: 'star', color: '#FFD166', amount: 3000 },
-      { id: 103, name: '兼职', icon: 'clock', color: '#118AB2', amount: 2000 },
-      { id: 104, name: '理财', icon: 'chart', color: '#3A86FF', amount: 500 },
-      { id: 105, name: '礼金', icon: 'heart', color: '#EF476F', amount: 1000 },
-      { id: 106, name: '退款', icon: 'refresh', color: '#9B59B6', amount: 0 },
-    ]
-  }
-  return [
-    { id: 201, name: '餐饮', icon: 'food', color: '#FB8B24', amount: 1234.5 },
-    { id: 202, name: '交通', icon: 'transport', color: '#0F4C5C', amount: 456 },
-    { id: 203, name: '购物', icon: 'shopping', color: '#EF476F', amount: 789 },
-    { id: 204, name: '娱乐', icon: 'entertainment', color: '#9B59B6', amount: 300 },
-    { id: 205, name: '居住', icon: 'housing', color: '#06D6A0', amount: 2500 },
-    { id: 206, name: '医疗', icon: 'medical', color: '#EF476F', amount: 0 },
-    { id: 207, name: '教育', icon: 'education', color: '#118AB2', amount: 500 },
-    { id: 208, name: '通讯', icon: 'communication', color: '#FFD166', amount: 100 },
-    { id: 209, name: '服饰', icon: 'shopping', color: '#3A86FF', amount: 0 },
-    { id: 210, name: '日用', icon: 'list', color: '#6B7280', amount: 0 },
-  ]
 }
 
 // Lifecycle
@@ -647,41 +724,6 @@ onMounted(async () => {
   }
 }
 
-// ================== Segmented Control ==================
-.segmented-control {
-  display: flex;
-  background: var(--gzang-surface);
-  border-radius: var(--apple-radius-lg);
-  padding: 4px;
-  box-shadow: var(--apple-shadow-xs);
-}
-
-.segment-item {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--apple-space-2);
-  padding: var(--apple-space-3);
-  border-radius: calc(var(--apple-radius-lg) - 4px);
-  transition: all var(--apple-duration-fast) var(--apple-ease-out);
-  
-  .segment-label {
-    font-size: var(--apple-text-sm);
-    font-weight: var(--apple-font-medium);
-    color: var(--gzang-text-secondary);
-  }
-  
-  &.active {
-    background: var(--gzang-secondary);
-    box-shadow: 0 2px 8px rgba(251, 139, 36, 0.3);
-    
-    .segment-label {
-      color: white;
-    }
-  }
-}
-
 // ================== Main Content ==================
 .main-content {
   flex: 1;
@@ -716,6 +758,7 @@ onMounted(async () => {
   border: none;
   outline: none;
   font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   letter-spacing: -1px;
   min-width: 200px;
   
@@ -727,13 +770,18 @@ onMounted(async () => {
 // ================== Quick Amounts ==================
 .quick-amounts {
   display: flex;
-  flex-wrap: wrap;
   gap: var(--apple-space-2);
-  justify-content: center;
   margin-bottom: var(--apple-space-5);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .quick-amount-btn {
+  flex-shrink: 0;
   padding: var(--apple-space-2) var(--apple-space-4);
   background: var(--gzang-surface);
   border-radius: var(--apple-radius-full);
@@ -743,10 +791,21 @@ onMounted(async () => {
   box-shadow: var(--apple-shadow-xs);
   transition: all var(--apple-duration-fast) var(--apple-ease-out);
   
-  &:active {
-    transform: scale(0.95);
+  &.active {
     background: var(--gzang-secondary);
     color: white;
+  }
+  
+  &.custom {
+    display: flex;
+    align-items: center;
+    gap: var(--apple-space-2);
+    background: var(--gzang-surface);
+    border: 1.5rpx dashed var(--gzang-border);
+  }
+  
+  &:active {
+    transform: scale(0.95);
   }
 }
 
@@ -823,89 +882,6 @@ onMounted(async () => {
   margin-bottom: var(--apple-space-3);
 }
 
-.category-tabs {
-  display: flex;
-  gap: var(--apple-space-2);
-  margin-bottom: var(--apple-space-4);
-}
-
-.category-tab {
-  display: flex;
-  align-items: center;
-  gap: var(--apple-space-2);
-  padding: var(--apple-space-2) var(--apple-space-4);
-  background: var(--gzang-surface);
-  border-radius: var(--apple-radius-full);
-  font-size: var(--apple-text-sm);
-  color: var(--gzang-text-secondary);
-  box-shadow: var(--apple-shadow-xs);
-  transition: all var(--apple-duration-fast) var(--apple-ease-out);
-  
-  &.active {
-    background: var(--gzang-secondary);
-    color: white;
-  }
-}
-
-.category-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--apple-space-3);
-}
-
-.category-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: var(--apple-space-3);
-  background: var(--gzang-surface);
-  border-radius: var(--apple-radius-lg);
-  box-shadow: var(--apple-shadow-xs);
-  transition: all var(--apple-duration-fast) var(--apple-ease-out);
-  
-  &.selected {
-    background: var(--gzang-secondary);
-    box-shadow: 0 4px 12px rgba(251, 139, 36, 0.3);
-    
-    .category-name,
-    .category-amount {
-      color: white;
-    }
-    
-    .category-icon {
-      background: rgba(255, 255, 255, 0.2) !important;
-    }
-  }
-  
-  &:active {
-    transform: scale(0.95);
-  }
-}
-
-.category-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--apple-radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: var(--apple-space-2);
-}
-
-.category-name {
-  font-size: var(--apple-text-xs);
-  color: var(--gzang-text-primary);
-  font-weight: var(--apple-font-medium);
-  text-align: center;
-}
-
-.category-amount {
-  font-size: 10px;
-  color: var(--gzang-text-secondary);
-  font-family: var(--font-mono);
-  margin-top: 2px;
-}
-
 // ================== Remark Section ==================
 .remark-section {
   border-radius: var(--apple-radius-xl);
@@ -949,12 +925,21 @@ onMounted(async () => {
   }
 }
 
+// ================== Bottom Spacer ==================
+.bottom-spacer {
+  height: 140px;
+}
+
 // ================== Action Bar ==================
 .action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
   gap: var(--apple-space-3);
   padding: var(--apple-space-4);
-  padding-bottom: calc(var(--apple-space-4) + env(safe-area-inset-bottom));
+  padding-bottom: calc(var(--apple-space-4) + env(safe-area-inset-bottom) + 84px);
   background: var(--gzang-surface);
   border-top: 0.5px solid var(--gzang-border);
 }
@@ -986,12 +971,12 @@ onMounted(async () => {
     color: white;
     box-shadow: 0 4px 12px rgba(251, 139, 36, 0.3);
     
-    &:disabled {
+    &.disabled {
       background: var(--gzang-border);
       box-shadow: none;
     }
     
-    &:active:not(:disabled) {
+    &:active:not(.disabled) {
       transform: scale(0.98);
     }
   }
@@ -999,6 +984,12 @@ onMounted(async () => {
   .spin {
     animation: apple-spin 1s linear infinite;
   }
+}
+
+.btn-amount {
+  margin-left: var(--apple-space-2);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 @keyframes apple-spin {
@@ -1011,6 +1002,8 @@ onMounted(async () => {
   font-size: var(--apple-text-xs);
   color: var(--gzang-danger);
   margin-top: var(--apple-space-2);
+  display: block;
+  text-align: center;
 }
 
 // ================== Picker ==================
@@ -1048,19 +1041,57 @@ onMounted(async () => {
   color: var(--gzang-text-primary);
 }
 
+.account-picker,
+.book-picker {
+  height: 200px;
+}
+
+// ================== Date Picker ==================
+.date-picker-container {
+  background: var(--gzang-surface);
+  border-radius: var(--apple-radius-xl) var(--apple-radius-xl) 0 0;
+  overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.date-picker-wrapper {
+  position: relative;
+  background: var(--gzang-surface);
+}
+
+.date-picker {
+  height: 216px;
+  width: 100%;
+}
+
+.date-picker picker-view-column {
+  height: 216px;
+}
+
 .picker-item {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 44px;
-  font-size: var(--apple-text-base);
+  height: 36px;
+  font-size: var(--apple-text-lg);
   color: var(--gzang-text-primary);
 }
 
-.account-picker,
-.book-picker,
-.date-picker {
-  height: 200px;
+.picker-labels {
+  display: flex;
+  justify-content: space-around;
+  padding: var(--apple-space-3) var(--apple-space-4);
+  padding-bottom: calc(var(--apple-space-3) + env(safe-area-inset-bottom));
+  background: var(--gzang-surface);
+  border-top: 1px solid var(--gzang-border);
+}
+
+.picker-label {
+  flex: 1;
+  text-align: center;
+  font-size: var(--apple-text-sm);
+  color: var(--gzang-text-tertiary);
+  font-weight: var(--apple-font-medium);
 }
 
 .quick-date-btns {
@@ -1072,23 +1103,29 @@ onMounted(async () => {
 
 .quick-date-btn {
   flex: 1;
-  padding: var(--apple-space-2);
+  padding: var(--apple-space-2) var(--apple-space-3);
   text-align: center;
   background: var(--gzang-bg);
   border-radius: var(--apple-radius-sm);
   font-size: var(--apple-text-sm);
+  font-weight: var(--apple-font-medium);
   color: var(--gzang-text-secondary);
   transition: all var(--apple-duration-fast) var(--apple-ease-out);
-  
+
   &.active {
     background: var(--gzang-secondary);
     color: white;
   }
+  
+  &:active {
+    opacity: 0.7;
+  }
 }
 
-// ================== Bottom Safe Area ==================
-.bottom-safe-area {
-  height: calc(var(--apple-space-4) + 84px);
+// ================== Keyboard Popup ==================
+.keyboard-popup-content {
+  background: var(--gzang-surface);
+  border-radius: var(--apple-radius-xl) var(--apple-radius-xl) 0 0;
 }
 
 // ================== Dark Mode ==================
@@ -1103,24 +1140,31 @@ onMounted(async () => {
   }
   
   .info-item,
-  .category-item,
   .remark-item,
   .remark-count,
-  .segment-item:not(.active),
-  .book-selector,
   .quick-amount-btn {
     background: var(--gzang-surface, #1C1C1E);
   }
-}
-
-[data-theme="dark"] {
-  .page-header,
-  .main-content {
-    background: var(--gzang-bg, #000000);
+  
+  .date-picker-container {
+    background: var(--gzang-surface, #1C1C1E);
   }
   
-  .amount-input {
-    color: var(--gzang-text-primary, #FFFFFF);
+  .date-picker-wrapper {
+    background: var(--gzang-surface, #1C1C1E);
+  }
+  
+  .picker-labels {
+    background: var(--gzang-surface, #1C1C1E);
+    border-top-color: var(--gzang-border, #374151);
+  }
+  
+  .picker-label {
+    color: var(--gzang-text-tertiary, #8E8E93);
+  }
+  
+  .quick-date-btn {
+    background: var(--gzang-bg, #2C2C2E);
   }
 }
 </style>

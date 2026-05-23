@@ -1,4 +1,5 @@
 <template>
+  <PageTransition>
   <view class="home-page apple-style">
     <!-- Large Title Navigation -->
     <view class="nav-large-title">
@@ -18,9 +19,9 @@
     <!-- Main Content -->
     <view class="main-content">
       <scroll-view
+        id="home-content-scroll"
         class="content-scroll"
         scroll-y="true"
-        :scroll-top="scrollTop"
         @scrolltolower="onScrollToLower"
       >
       <!-- Asset Card - Gradient Style -->
@@ -31,7 +32,7 @@
               <AppleIcon name="book" :size="14" color="white" />
               <text class="book-name">{{ currentBook?.name || t('book.defaultBook') }}</text>
             </view>
-            <AppleIcon name="chevron-right" :size="16" color="rgba(255,255,255,0.6)" />
+            <AppleIcon name="chevron-right" :size="16" color="rgba(255,255,255,0.7)" />
           </view>
           
           <view class="asset-main">
@@ -42,7 +43,7 @@
           <view class="asset-stats">
             <view class="stat-item">
               <view class="stat-icon">
-                <AppleIcon name="income" :size="14" color="rgba(255,255,255,0.6)" />
+                <AppleIcon name="income" :size="14" color="rgba(255,255,255,0.7)" />
               </view>
               <view class="stat-content">
                 <text class="stat-label">{{ t('home.monthlyIncome') }}</text>
@@ -52,7 +53,7 @@
             <view class="stat-divider"></view>
             <view class="stat-item">
               <view class="stat-icon">
-                <AppleIcon name="expense" :size="14" color="rgba(255,255,255,0.6)" />
+                <AppleIcon name="expense" :size="14" color="rgba(255,255,255,0.7)" />
               </view>
               <view class="stat-content">
                 <text class="stat-label">{{ t('home.monthlyExpense') }}</text>
@@ -155,6 +156,7 @@
     <!-- 自定义 TabBar -->
     <CustomTabBar />
   </view>
+  </PageTransition>
 </template>
 
 <script setup lang="ts">
@@ -164,6 +166,8 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useBookStore } from '@/stores/book'
 import { useAccountStore } from '@/stores/account'
+import { useTransactionStore } from '@/stores/transaction'
+import PageTransition from '@/components/common/PageTransition/index.vue'
 import AppleIcon from '@/components/common/AppleIcon/index.vue'
 import CustomTabBar from '@/components/CustomTabBar/index.vue'
 
@@ -173,10 +177,10 @@ const { t } = useI18n()
 const authStore = useAuthStore()
 const bookStore = useBookStore()
 const accountStore = useAccountStore()
+const transactionStore = useTransactionStore()
 
 // Refs
 const isLoading = ref(false)
-const scrollTop = ref(0)
 
 // User Info
 const userInitials = computed(() => {
@@ -221,7 +225,16 @@ const monthlyExpense = computed(() => {
 })
 
 // Quick Actions
-const quickActions = computed(() => [
+interface QuickAction {
+  key: string
+  icon: string
+  label: string
+  bgColor: string
+  color: string
+  path: string
+}
+
+const quickActions = computed((): QuickAction[] => [
   { 
     key: 'accounting', 
     icon: 'accounting', 
@@ -272,45 +285,8 @@ const quickActions = computed(() => [
   },
 ])
 
-// Recent Transactions (mock data)
-const recentTransactions = ref([
-  {
-    id: 1,
-    categoryName: '餐饮',
-    categoryIcon: 'food',
-    categoryColor: '#FB8B24',
-    accountName: '交通银行',
-    amount: 12.50,
-    type: 2
-  },
-  {
-    id: 2,
-    categoryName: '地铁',
-    categoryIcon: 'transport',
-    categoryColor: '#0F4C5C',
-    accountName: '交通银行',
-    amount: 4.00,
-    type: 2
-  },
-  {
-    id: 3,
-    categoryName: '工资',
-    categoryIcon: 'income',
-    categoryColor: '#06D6A0',
-    accountName: '建设银行',
-    amount: 15000.00,
-    type: 1
-  },
-  {
-    id: 4,
-    categoryName: '网购',
-    categoryIcon: 'shopping',
-    categoryColor: '#EF476F',
-    accountName: '支付宝',
-    amount: 199.00,
-    type: 2
-  }
-])
+// Recent Transactions (from transaction store)
+const recentTransactions = computed(() => transactionStore.recentTransactions)
 
 // Format Amount
 const formatAmount = (amount: number) => {
@@ -331,7 +307,7 @@ const switchBook = async (book: any) => {
   }
 }
 
-const handleAction = (action: typeof quickActions[0]) => {
+const handleAction = (action: QuickAction) => {
   const tabBarPages = ['/pages/home/index', '/pages/accounting/index', '/pages/bills/index', '/pages/analysis/index', '/pages/profile/index']
   if (tabBarPages.includes(action.path)) {
     uni.switchTab({ url: action.path })
@@ -372,6 +348,7 @@ const loadData = async () => {
     await accountStore.fetchAccounts().catch(() => {})
     if (currentBook.value) {
       await bookStore.fetchStatistics(currentBook.value.id).catch(() => {})
+      await transactionStore.fetchRecent(5).catch(() => {})
     }
   } finally {
     isLoading.value = false
@@ -869,19 +846,25 @@ onShow(() => {
   .nav-large-title {
     background: var(--gzang-bg, #000000);
   }
-  
+
   .nav-title,
   .section-title,
   .transaction-name,
   .empty-title {
     color: var(--gzang-text-primary, #FFFFFF);
   }
-  
+
   .asset-card-wrapper,
   .section-book-switcher,
   .section-quick-actions,
   .section-recent {
-    .book-chip,
+    .book-chip {
+      background: var(--gzang-surface, #1C1C1E);
+
+      &.active {
+        background: var(--gzang-primary);
+      }
+    }
     .quick-action-item,
     .transaction-list {
       background: var(--gzang-surface, #1C1C1E);

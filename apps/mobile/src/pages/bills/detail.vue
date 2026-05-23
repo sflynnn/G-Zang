@@ -1,4 +1,5 @@
 <template>
+  <PageTransition>
   <view class="bills-detail-page">
     <uni-nav-bar left-icon="back" title="账单详情" @clickLeft="goBack" />
     
@@ -93,12 +94,14 @@
       <text>交易记录不存在</text>
     </view>
   </view>
+  </PageTransition>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { useTransactionStore } from '@/stores/transaction'
+import PageTransition from '@/components/common/PageTransition/index.vue'
 
 const transactionStore = useTransactionStore()
 
@@ -123,9 +126,9 @@ async function loadTransaction() {
   try {
     const res = await uni.request({
       url: `/api/mobile/transactions/${transactionId.value}`
-    })
-    if (res.data?.data) {
-      transaction.value = res.data.data
+    }) as any
+    if ((res.data as any)?.data) {
+      transaction.value = (res.data as any).data
     }
   } catch (error) {
     // ignore

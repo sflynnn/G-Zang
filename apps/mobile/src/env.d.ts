@@ -3,6 +3,7 @@
  * Augments third-party library types for compatibility
  */
 
+/// <reference types="vite/client" />
 /// <reference types="@dcloudio/types" />
 
 // Declare wx global for WeChat miniprogram
