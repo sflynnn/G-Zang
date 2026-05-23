@@ -77,6 +77,13 @@ public class Result<T> {
     }
 
     /**
+     * 成功响应（自定义消息，无数据）
+     */
+    public static Result<Void> successWithMessage(String message) {
+        return new Result<>(0, message, null);
+    }
+
+    /**
      * 失败响应
      */
     public static Result<Void> error(Integer code, String message) {

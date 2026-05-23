@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gzang.app.mapper.SystemConfigMapper">
+
+    <select id="selectByGroup" resultType="com.gzang.app.entity.SystemConfig">
+        SELECT * FROM t_system_config
+        WHERE config_group = #{configGroup}
+        ORDER BY sort_order ASC, id ASC
+    </select>
+
+    <select id="selectByKey" resultType="com.gzang.app.entity.SystemConfig">
+        SELECT * FROM t_system_config
+        WHERE config_key = #{configKey}
+        LIMIT 1
+    </select>
+
+    <select id="selectAllGroups" resultType="java.lang.String">
+        SELECT DISTINCT config_group FROM t_system_config ORDER BY config_group
+    </select>
+
+    <select id="selectByKeys" resultType="com.gzang.app.entity.SystemConfig">
+        SELECT * FROM t_system_config
+        WHERE config_key IN
+        <foreach collection="keys" item="key" open="(" separator="," close=")">
+            #{key}
+        </foreach>
+    </select>
+
+</mapper>
