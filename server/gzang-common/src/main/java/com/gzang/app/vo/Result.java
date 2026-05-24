@@ -91,7 +91,14 @@ public class Result<T> {
     }
 
     /**
-     * 失败响应（有数据）
+     * 失败响应（只传消息，默认使用500错误码）
+     */
+    public static Result<Void> fail(String message) {
+        return new Result<>(500, message, null);
+    }
+
+    /**
+     * 失败响应（带数据）
      */
     public static <T> Result<T> error(Integer code, String message, T data) {
         return new Result<>(code, message, data);
