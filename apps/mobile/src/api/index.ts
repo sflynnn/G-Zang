@@ -8,10 +8,33 @@
 export * from './book';
 export * from './account';
 export * from './transaction';
-export * from './category';
+export {
+  getCategories,
+  getCategoriesWithChildren,
+  getCategory,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  getSystemCategories,
+  initUserCategories,
+  type CategoryVO,
+  type CategoryWithChildrenVO,
+  type CategoryListWithChildrenResponse,
+} from './category';
+export { getCategories as getSystemCategoriesFromCategory } from './category';
 export * from './report';
 export * from './voice';
 export * from './budget';
+export * from './tag';
+export * from './paymentMethod';
+export {
+  getCategoryBudget,
+  getBudgetList,
+  saveBudget,
+  deleteBudget,
+  type CategoryBudgetVO as CategoryBudgetVO2,
+  type CategoryBudgetItemVO,
+} from './categoryBudget';
 
 /**
  * API Base Configuration

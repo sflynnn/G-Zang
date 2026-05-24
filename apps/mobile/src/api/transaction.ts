@@ -12,8 +12,12 @@ export interface CreateTransactionDTO {
   type: number;
   categoryId: number;
   accountId: number;
+  bookId?: number;
   transactionTime?: string;
   remark?: string;
+  targetAccountId?: number;  // 转账目标账户
+  paymentMethod?: string;    // 支付方式
+  tags?: string[];           // 标签
 }
 
 /** 后端 UpdateTransactionDTO 字段 */

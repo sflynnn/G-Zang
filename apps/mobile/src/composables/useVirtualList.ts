@@ -45,7 +45,7 @@ export function useVirtualList<T>(
 
   // 获取可见项
   const visibleItems = computed(() => {
-    return items.value.slice(startIndex.value, endIndex.value.value)
+    return items.value.slice(startIndex.value, endIndex.value)
   })
 
   // 计算偏移量（用于绝对定位）
@@ -89,11 +89,11 @@ export function useVirtualList<T>(
   })
 
   return {
-    visibleItems,
-    totalHeight,
-    offsetY,
-    startIndex,
-    endIndex,
+    visibleItems: visibleItems.value,
+    totalHeight: totalHeight.value,
+    offsetY: offsetY.value,
+    startIndex: startIndex.value,
+    endIndex: endIndex.value,
     containerRef,
     handleScroll,
     scrollTo

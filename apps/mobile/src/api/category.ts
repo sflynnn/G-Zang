@@ -32,6 +32,27 @@ export interface CategoryVO {
   sortOrder?: number;
 }
 
+/** 分类预算信息 */
+export interface CategoryBudgetVO {
+  budget: number;
+  spent: number;
+  remaining: number;
+  percentUsed?: number;
+  warningThreshold?: number;
+}
+
+/** 带子分类和额度的分类 */
+export interface CategoryWithChildrenVO extends CategoryVO {
+  children: CategoryVO[];
+  budget?: CategoryBudgetVO;
+}
+
+/** 分类列表响应（带子分类和额度） */
+export interface CategoryListWithChildrenResponse {
+  expenseCategories: CategoryWithChildrenVO[];
+  incomeCategories: CategoryWithChildrenVO[];
+}
+
 /**
  * 获取分类列表
  * GET /api/mobile/categories?type=1|2
@@ -41,11 +62,40 @@ export async function getCategories(type?: TransactionType): Promise<CategoryVO[
 }
 
 /**
+ * 获取分类列表（带子分类和额度）
+ * GET /api/mobile/categories/with-children?bookId={bookId}&month={YYYY-MM}
+ */
+export async function getCategoriesWithChildren(
+  bookId?: number,
+  month?: string
+): Promise<CategoryWithChildrenVO[]> {
+  const params: Record<string, any> = {};
+  if (bookId) params.bookId = bookId;
+  if (month) params.month = month;
+  return api.get('/categories/with-children', Object.keys(params).length > 0 ? params : undefined);
+}
+
+/**
  * 获取分类详情
  * GET /api/mobile/categories/{id}
  */
 export async function getCategory(id: number): Promise<CategoryVO> {
   return api.get(`/categories/${id}`);
+}
+
+/**
+ * 获取分类月度额度
+ * GET /api/mobile/categories/{id}/budget?bookId={bookId}&month={YYYY-MM}
+ */
+export async function getCategoryBudget(
+  id: number,
+  bookId?: number,
+  month?: string
+): Promise<CategoryBudgetVO> {
+  const params: Record<string, any> = {};
+  if (bookId) params.bookId = bookId;
+  if (month) params.month = month;
+  return api.get(`/categories/${id}/budget`, Object.keys(params).length > 0 ? params : undefined);
 }
 
 /**
@@ -106,7 +156,9 @@ export async function initUserCategories(): Promise<void> {
 
 export const categoryApi = {
   getCategories,
+  getCategoriesWithChildren,
   getCategory,
+  getCategoryBudget,
   createCategory,
   updateCategory,
   deleteCategory,

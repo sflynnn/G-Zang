@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { getAccounts as apiGetAccounts } from '@/api/account'
-import { getCategories as apiGetCategories } from '@/api/category'
+import { getCategories as apiGetCategories, getCategoriesWithChildren as apiGetCategoriesWithChildren } from '@/api/category'
 import { createTransaction as apiCreateTransaction } from '@/api/transaction'
 import type { Account, Category, TransactionType } from '@/types'
 
@@ -19,13 +19,38 @@ export interface AccountingTransactionForm {
   remark?: string
   transactionTime: string
   tags?: string[]
+  paymentMethod?: string
+}
+
+// 分类额度信息
+export interface CategoryBudget {
+  budget: number
+  spent: number
+  remaining: number
+  percentUsed?: number
+  warningThreshold?: number
+}
+
+// 分类（带子分类和额度）
+export interface CategoryWithChildren extends Category {
+  children?: Category[]
+  budget?: CategoryBudget
+}
+
+// 月度统计
+export interface MonthStats {
+  expense: number
+  income: number
+  balance: number
 }
 
 export interface AccountingState {
   categories: Category[]
+  categoriesWithChildren: CategoryWithChildren[]
   accounts: Account[]
   recentCategories: Category[]
   recentAccounts: Account[]
+  currentMonthStats: MonthStats | null
   loading: boolean
 }
 
@@ -36,6 +61,33 @@ function transformCategory(category: any): Category {
     name: category.categoryName,
     isSystem: category.isSystem ? true : false,
     children: category.children?.map(transformCategory),
+  }
+}
+
+// 将后端分类数据（带子分类和额度）转换为前端格式
+function transformCategoryWithChildren(category: any): CategoryWithChildren {
+  return {
+    ...category,
+    id: category.id,
+    name: category.categoryName,
+    icon: category.icon || '📂',
+    color: category.color || '#6B7280',
+    isSystem: category.isSystem ? true : false,
+    children: category.children?.map((child: any) => ({
+      ...child,
+      id: child.id,
+      name: child.categoryName,
+      icon: child.icon || '📂',
+      color: child.color || category.color || '#6B7280',
+      parentId: child.parentId
+    })),
+    budget: category.budget ? {
+      budget: category.budget.budget || 0,
+      spent: category.budget.spent || 0,
+      remaining: category.budget.remaining || 0,
+      percentUsed: category.budget.percentUsed || 0,
+      warningThreshold: category.budget.warningThreshold || 80
+    } : undefined
   }
 }
 
@@ -53,9 +105,11 @@ function transformAccount(account: Account): Account {
 export const useAccountingStore = defineStore('accounting', () => {
   // 状态
   const categories = ref<Category[]>([])
+  const categoriesWithChildren = ref<CategoryWithChildren[]>([])
   const accounts = ref<Account[]>([])
   const recentCategories = ref<Category[]>([])
   const recentAccounts = ref<Account[]>([])
+  const currentMonthStats = ref<MonthStats | null>(null)
   const loading = ref(false)
 
   // 计算属性
@@ -87,6 +141,71 @@ export const useAccountingStore = defineStore('accounting', () => {
     }
   }
 
+  // 加载带子分类和额度的分类
+  const loadCategoriesWithChildren = async (bookId?: number, month?: string) => {
+    try {
+      loading.value = true
+      const data = await apiGetCategoriesWithChildren(bookId, month)
+      categoriesWithChildren.value = data.map(transformCategoryWithChildren)
+      
+      // 同时更新基础分类列表
+      categories.value = data.map(transformCategory)
+
+      // 缓存最近使用的分类
+      loadRecentCategories()
+    } catch (error: any) {
+      // 如果API不支持（400错误），使用本地分类数据构建树
+      console.warn('API /categories/with-children 不可用，使用本地数据:', error?.message)
+      const allCategories = await apiGetCategories()
+      categoriesWithChildren.value = buildCategoryTree(allCategories)
+      categories.value = allCategories.map(transformCategory)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 将平铺分类构建为树形结构
+  const buildCategoryTree = (flatCategories: any[]): CategoryWithChildren[] => {
+    const tree: CategoryWithChildren[] = []
+    
+    flatCategories.forEach(cat => {
+      if (!cat.parentId || cat.parentId === 0) {
+        const item: CategoryWithChildren = {
+          ...cat,
+          name: cat.categoryName,
+          children: []
+        }
+        
+        // 查找子分类
+        flatCategories.forEach(sub => {
+          if (sub.parentId === cat.id) {
+            item.children!.push({
+              ...sub,
+              id: sub.id,
+              name: sub.categoryName,
+              parentId: sub.parentId
+            })
+          }
+        })
+        
+        tree.push(item)
+      }
+    })
+    
+    return tree
+  }
+
+  // 加载月度统计
+  const loadMonthStats = async (bookId?: number, month?: string) => {
+    // TODO: 调用API获取月度统计
+    // 目前返回模拟数据
+    currentMonthStats.value = {
+      expense: 0,
+      income: 0,
+      balance: 0
+    }
+  }
+
   // 加载账户
   const loadAccounts = async () => {
     try {
@@ -112,9 +231,12 @@ export const useAccountingStore = defineStore('accounting', () => {
         type: form.type as number,
         categoryId: form.categoryId,
         accountId: form.accountId,
+        targetAccountId: form.targetAccountId,
         transactionTime: form.transactionTime,
         remark: form.remark,
-      })
+        tags: form.tags,
+        paymentMethod: form.paymentMethod
+      } as any)
 
       // 更新账户余额
       await loadAccounts()
@@ -221,9 +343,11 @@ export const useAccountingStore = defineStore('accounting', () => {
   return {
     // 状态
     categories: computed(() => categories.value),
+    categoriesWithChildren: computed(() => categoriesWithChildren.value),
     accounts: computed(() => accounts.value),
     recentCategories: computed(() => recentCategories.value),
     recentAccounts: computed(() => recentAccounts.value),
+    currentMonthStats: computed(() => currentMonthStats.value),
     loading: computed(() => loading.value),
 
     // 计算属性
@@ -233,6 +357,8 @@ export const useAccountingStore = defineStore('accounting', () => {
 
     // 方法
     loadCategories,
+    loadCategoriesWithChildren,
+    loadMonthStats,
     loadAccounts,
     createTransaction,
     loadRecentCategories,
