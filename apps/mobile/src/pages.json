@@ -46,6 +46,14 @@
       }
     },
     {
+      "path": "pages/accounting/category-record",
+      "style": {
+        "navigationBarTitleText": "记账",
+        "navigationStyle": "custom",
+        "backgroundColor": "#F8F9FA"
+      }
+    },
+    {
       "path": "pages/bills/index",
       "style": {
         "navigationBarTitleText": "账单",
@@ -277,8 +285,8 @@
         "navigationBarTitleText": "选择日期",
         "backgroundColor": "#F8F9FA"
       }
-    },
-    {
+    }
+  ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "G-Zang",

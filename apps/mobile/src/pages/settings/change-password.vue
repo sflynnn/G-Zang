@@ -64,11 +64,11 @@
             <text>6-20位字符</text>
           </view>
           <view class="tips-row">
-            <text :class="['tips-dot', { ok: hasLetterAndNumber }">-</text>
+            <text :class="['tips-dot', { ok: hasLetterAndNumber }]">-</text>
             <text>字母和数字组合</text>
           </view>
           <view class="tips-row">
-            <text :class="['tips-dot', { ok: passwordsMatch }">-</text>
+            <text :class="['tips-dot', { ok: passwordsMatch }]">-</text>
             <text>两次密码一致</text>
           </view>
         </view>

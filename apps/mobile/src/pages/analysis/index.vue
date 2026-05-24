@@ -136,7 +136,7 @@
             <view class="breakdown-left">
               <view class="breakdown-rank">{{ index + 1 }}</view>
               <view class="breakdown-icon" :style="{ background: pieColors[index % pieColors.length] + '20' }">
-                <AppleIcon :name="item.icon || 'shopping'" :size="16" :color="pieColors[index % pieColors.length]" />
+                <AppleIcon :name="(item as any).icon || 'shopping'" :size="16" :color="pieColors[index % pieColors.length]" />
               </view>
               <text class="breakdown-name">{{ item.name }}</text>
             </view>
