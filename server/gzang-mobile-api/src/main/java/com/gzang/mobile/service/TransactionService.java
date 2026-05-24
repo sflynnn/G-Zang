@@ -99,4 +99,21 @@ public interface TransactionService extends IService<Transaction> {
             LocalDateTime endTime,
             Integer type,
             Long bookId);
+
+    /**
+     * 日历视图：获取指定年月的每日交易汇总
+     *
+     * @param userId 用户ID
+     * @param companyId 公司ID（可选）
+     * @param year 年份
+     * @param month 月份
+     * @param bookId 账本ID
+     * @return 每日汇总列表
+     */
+    List<TransactionMapper.CalendarSummary> getCalendarSummary(
+            Long userId,
+            Long companyId,
+            Integer year,
+            Integer month,
+            Long bookId);
 }

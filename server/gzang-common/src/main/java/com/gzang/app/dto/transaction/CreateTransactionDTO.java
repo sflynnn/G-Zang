@@ -43,6 +43,15 @@ public class CreateTransactionDTO {
     @Size(max = 500, message = "备注长度不能超过500")
     private String remark;
 
+    @Schema(description = "目标账户ID（转账场景）")
+    private Long targetAccountId;
+
+    @Schema(description = "标签列表")
+    private String tags;
+
+    @Schema(description = "支付方式：cash/card/wx/alipay/other")
+    private String paymentMethod;
+
     public BigDecimal getAmount() {
         return amount;
     }
@@ -97,5 +106,29 @@ public class CreateTransactionDTO {
 
     public void setRemark(String remark) {
         this.remark = remark;
+    }
+
+    public Long getTargetAccountId() {
+        return targetAccountId;
+    }
+
+    public void setTargetAccountId(Long targetAccountId) {
+        this.targetAccountId = targetAccountId;
+    }
+
+    public String getTags() {
+        return tags;
+    }
+
+    public void setTags(String tags) {
+        this.tags = tags;
+    }
+
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
     }
 }

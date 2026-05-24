@@ -102,4 +102,25 @@
         AND YEAR(transaction_time) = #{year}
     </select>
 
+    <!-- 日历视图：获取指定年月的每日交易汇总 -->
+    <select id="selectCalendarSummary" resultType="com.gzang.app.mapper.TransactionMapper$CalendarSummary">
+        SELECT
+            DATE_FORMAT(transaction_time, '%Y-%m-%d') as date,
+            SUM(CASE WHEN type = 1 THEN amount ELSE 0 END) as income,
+            SUM(CASE WHEN type = 2 THEN amount ELSE 0 END) as expense,
+            COUNT(*) as count
+        FROM t_transaction
+        WHERE user_id = #{userId}
+        <if test="companyId != null">
+            AND company_id = #{companyId}
+        </if>
+        AND YEAR(transaction_time) = #{year}
+        AND MONTH(transaction_time) = #{month}
+        <if test="bookId != null">
+            AND book_id = #{bookId}
+        </if>
+        GROUP BY DATE_FORMAT(transaction_time, '%Y-%m-%d')
+        ORDER BY date
+    </select>
+
 </mapper>

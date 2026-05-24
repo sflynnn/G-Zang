@@ -77,4 +77,22 @@ public class Transaction extends BaseEntity {
      */
     @TableField("related_business_id")
     private String relatedBusinessId;
+
+    /**
+     * 目标账户ID（转账场景）
+     */
+    @TableField("target_account_id")
+    private Long targetAccountId;
+
+    /**
+     * 标签列表（JSON数组格式）
+     */
+    @TableField("tags")
+    private String tags;
+
+    /**
+     * 支付方式：cash/card/wx/alipay/other
+     */
+    @TableField("payment_method")
+    private String paymentMethod;
 }

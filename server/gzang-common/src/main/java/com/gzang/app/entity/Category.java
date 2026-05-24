@@ -56,4 +56,22 @@ public class Category {
      */
     @TableField("is_system")
     private Integer isSystem;
+
+    /**
+     * 分类图标（从 t_category_icon 表关联获取，非持久化字段）
+     */
+    @TableField(exist = false)
+    private String icon;
+
+    /**
+     * 分类颜色（从 t_category_icon 表关联获取，非持久化字段）
+     */
+    @TableField(exist = false)
+    private String color;
+
+    /**
+     * 子分类列表（非持久化字段，用于树形结构）
+     */
+    @TableField(exist = false)
+    private java.util.List<Category> children;
 }

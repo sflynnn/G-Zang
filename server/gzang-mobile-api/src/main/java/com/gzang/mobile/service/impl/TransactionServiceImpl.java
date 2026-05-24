@@ -166,6 +166,12 @@ public class TransactionServiceImpl extends ServiceImpl<TransactionMapper, Trans
         return getBaseMapper().selectCategorySummary(userId, companyId, startTime, endTime, type, bookId);
     }
 
+    @Override
+    public List<TransactionMapper.CalendarSummary> getCalendarSummary(Long userId, Long companyId,
+                                                                     Integer year, Integer month, Long bookId) {
+        return getBaseMapper().selectCalendarSummary(userId, companyId, year, month, bookId);
+    }
+
     /**
      * 更新账户余额
      *

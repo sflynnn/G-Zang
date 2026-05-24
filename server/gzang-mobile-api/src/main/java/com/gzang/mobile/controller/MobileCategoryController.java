@@ -170,4 +170,37 @@ public class MobileCategoryController {
         log.info("用户分类初始化成功: userId={}", userId);
         return Result.success();
     }
+
+    /**
+     * 获取带子分类和额度的分类列表
+     */
+    @GetMapping("/with-children")
+    @Operation(summary = "获取带子分类和额度的分类", description = "获取一级分类及其子分类，同时包含预算额度信息")
+    public Result<List<Category>> getCategoriesWithChildren(
+            @Parameter(description = "账本ID") @RequestParam(name = "bookId", required = false) Long bookId,
+            @Parameter(description = "月份 (YYYY-MM)") @RequestParam(name = "month", required = false) String month) {
+
+        Long userId = TenantContextHolder.getUserId();
+        log.info("获取带子分类的分类列表: userId={}, bookId={}, month={}", userId, bookId, month);
+
+        List<Category> categories = categoryService.getCategoriesWithChildren(userId, bookId, month);
+        return Result.success(categories);
+    }
+
+    /**
+     * 获取分类月度额度
+     */
+    @GetMapping("/{id}/budget")
+    @Operation(summary = "获取分类月度额度", description = "获取指定分类的月度预算额度信息")
+    public Result<CategoryService.CategoryBudgetInfo> getCategoryBudget(
+            @Parameter(description = "分类ID") @PathVariable Long id,
+            @Parameter(description = "账本ID") @RequestParam(name = "bookId", required = false) Long bookId,
+            @Parameter(description = "月份 (YYYY-MM)") @RequestParam(name = "month", required = false) String month) {
+
+        Long userId = TenantContextHolder.getUserId();
+        log.info("获取分类预算: categoryId={}, userId={}, bookId={}, month={}", id, userId, bookId, month);
+
+        CategoryService.CategoryBudgetInfo budgetInfo = categoryService.getCategoryBudget(id, userId, bookId, month);
+        return Result.success(budgetInfo);
+    }
 }

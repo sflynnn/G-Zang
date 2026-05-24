@@ -207,4 +207,63 @@ public interface TransactionMapper extends BaseMapper<Transaction> {
             this.count = count;
         }
     }
+
+    /**
+     * 日历视图每日汇总DTO
+     */
+    class CalendarSummary {
+        private String date;
+        private BigDecimal income;
+        private BigDecimal expense;
+        private Integer count;
+
+        public String getDate() {
+            return date;
+        }
+
+        public void setDate(String date) {
+            this.date = date;
+        }
+
+        public BigDecimal getIncome() {
+            return income != null ? income : BigDecimal.ZERO;
+        }
+
+        public void setIncome(BigDecimal income) {
+            this.income = income;
+        }
+
+        public BigDecimal getExpense() {
+            return expense != null ? expense : BigDecimal.ZERO;
+        }
+
+        public void setExpense(BigDecimal expense) {
+            this.expense = expense;
+        }
+
+        public Integer getCount() {
+            return count != null ? count : 0;
+        }
+
+        public void setCount(Integer count) {
+            this.count = count;
+        }
+    }
+
+    /**
+     * 日历视图：获取指定年月的每日交易汇总
+     *
+     * @param userId 用户ID
+     * @param companyId 公司ID（可选）
+     * @param year 年份
+     * @param month 月份
+     * @param bookId 账本ID
+     * @return 每日汇总列表
+     */
+    List<CalendarSummary> selectCalendarSummary(
+            @Param("userId") Long userId,
+            @Param("companyId") Long companyId,
+            @Param("year") Integer year,
+            @Param("month") Integer month,
+            @Param("bookId") Long bookId);
 }

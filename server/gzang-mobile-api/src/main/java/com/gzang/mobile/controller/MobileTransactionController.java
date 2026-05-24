@@ -62,6 +62,16 @@ public class MobileTransactionController {
         transaction.setRemark(dto.getRemark());
         transaction.setUserId(userId);
         transaction.setCompanyId(companyId);
+        // 新增字段
+        if (dto.getTargetAccountId() != null) {
+            transaction.setTargetAccountId(dto.getTargetAccountId());
+        }
+        if (dto.getTags() != null) {
+            transaction.setTags(dto.getTags());
+        }
+        if (dto.getPaymentMethod() != null) {
+            transaction.setPaymentMethod(dto.getPaymentMethod());
+        }
 
         boolean success = transactionService.createTransaction(transaction);
         if (!success) {
@@ -204,6 +214,27 @@ public class MobileTransactionController {
 
         List<TransactionMapper.CategorySummary> summary = transactionService.getCategorySummary(
                 userId, companyId, startTime, endTime, type, bookId);
+
+        return Result.success(summary);
+    }
+
+    /**
+     * 日历视图：获取指定年月的每日交易汇总
+     */
+    @GetMapping("/calendar")
+    @Operation(summary = "日历视图", description = "获取指定年月的每日交易汇总")
+    public Result<List<TransactionMapper.CalendarSummary>> getCalendarSummary(
+            @Parameter(description = "年份") @RequestParam Integer year,
+            @Parameter(description = "月份") @RequestParam Integer month,
+            @Parameter(description = "账本ID") @RequestParam(required = false) Long bookId) {
+
+        Long userId = TenantContextHolder.getUserId();
+        Long companyId = TenantContextHolder.getCompanyId();
+
+        log.info("获取日历视图数据: userId={}, year={}, month={}, bookId={}", userId, year, month, bookId);
+
+        List<TransactionMapper.CalendarSummary> summary = transactionService.getCalendarSummary(
+                userId, companyId, year, month, bookId);
 
         return Result.success(summary);
     }

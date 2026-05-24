@@ -95,4 +95,47 @@ public interface CategoryService extends IService<Category> {
      * @return 是否可用
      */
     boolean isCategoryNameAvailable(String categoryName, Long userId, Long companyId, Long excludeId);
+
+    /**
+     * 获取带子分类和额度的分类列表
+     *
+     * @param userId 用户ID
+     * @param bookId 账本ID（可选）
+     * @param yearMonth 年月（格式：YYYY-MM）
+     * @return 分类列表
+     */
+    List<Category> getCategoriesWithChildren(Long userId, Long bookId, String yearMonth);
+
+    /**
+     * 获取分类月度额度信息
+     *
+     * @param categoryId 分类ID
+     * @param userId 用户ID
+     * @param bookId 账本ID（可选）
+     * @param yearMonth 年月（格式：YYYY-MM）
+     * @return 预算信息
+     */
+    CategoryBudgetInfo getCategoryBudget(Long categoryId, Long userId, Long bookId, String yearMonth);
+
+    /**
+     * 分类预算信息内部类
+     */
+    class CategoryBudgetInfo {
+        private double budget;
+        private double spent;
+        private double remaining;
+        private double percentUsed;
+        private double warningThreshold;
+
+        public double getBudget() { return budget; }
+        public void setBudget(double budget) { this.budget = budget; }
+        public double getSpent() { return spent; }
+        public void setSpent(double spent) { this.spent = spent; }
+        public double getRemaining() { return remaining; }
+        public void setRemaining(double remaining) { this.remaining = remaining; }
+        public double getPercentUsed() { return percentUsed; }
+        public void setPercentUsed(double percentUsed) { this.percentUsed = percentUsed; }
+        public double getWarningThreshold() { return warningThreshold; }
+        public void setWarningThreshold(double warningThreshold) { this.warningThreshold = warningThreshold; }
+    }
 }
