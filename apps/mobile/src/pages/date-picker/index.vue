@@ -2,43 +2,47 @@
   <view class="date-picker-page">
     <uni-nav-bar 
       left-icon="close" 
-      title="选择日期" 
+      :title="$t('common.selectDate')" 
       @clickLeft="onCancel"
     />
     
     <view class="picker-content">
-      <van-datetime-picker
+      <uni-datetime-picker
         v-model="currentDate"
-        type="date"
-        :min-date="minDate"
-        :max-date="maxDate"
-        @confirm="onConfirm"
-        @cancel="onCancel"
+        :start="startDate"
+        :end="endDate"
+        return-type="string"
+        :border="false"
+        @change="onChange"
+        @maskClick="onMaskClick"
       />
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
-const currentDate = ref(Date.now())
-const minDate = ref(new Date(2020, 0, 1).getTime())
-const maxDate = ref(Date.now())
+const currentDate = ref(new Date())
 
-function onConfirm(value: number) {
-  const date = new Date(value)
-  const dateStr = date.toISOString().split('T')[0]
+const startDate = computed(() => new Date(2020, 0, 1).getTime())
+const endDate = computed(() => Date.now())
+
+function onChange(e: string | string[]) {
+  if (Array.isArray(e)) return
+  const dateStr = e.split(' ')[0]
   
-  // 获取页面栈
   const pages = getCurrentPages()
   const prevPage = pages[pages.length - 2]
   
   if (prevPage) {
-    // 触发上一页的 confirm 事件
     prevPage.$vm && prevPage.$vm.$trigger && prevPage.$vm.$trigger('confirm', { date: dateStr })
   }
   
+  uni.navigateBack()
+}
+
+function onMaskClick() {
   uni.navigateBack()
 }
 
