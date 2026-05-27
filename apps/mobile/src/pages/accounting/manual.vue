@@ -1,4 +1,9 @@
 <template>
+  <!-- 自定义组件 -->
+  <CustomToast />
+  <CustomModal />
+  <CustomLoading />
+
   <view class="manual-page">
     <!-- 顶部导航 -->
     <view class="nav-bar">
@@ -392,7 +397,11 @@ import { useBookStore } from '@/stores/book'
 import { useTransactionStore } from '@/stores/transaction'
 import { useCategoryStore } from '@/stores/category'
 import { useAccountStore } from '@/stores/account'
+import { useToast } from '@/composables/useToast'
 import { formatDate as formatDateStr } from '@/utils/date'
+import CustomToast from '@/components/common/CustomToast/index.vue'
+import CustomModal from '@/components/common/CustomModal/index.vue'
+import CustomLoading from '@/components/common/CustomLoading/index.vue'
 
 // 分类图标背景色映射
 const CATEGORY_COLORS: Record<string, string> = {
@@ -699,7 +708,7 @@ const toggleTag = (tag: string) => {
     if (form.tags.length < 5) {
       form.tags.push(tag)
     } else {
-      uni.showToast({ title: '最多添加5个标签', icon: 'none' })
+      toast.warning('最多添加5个标签')
     }
   }
 }
@@ -716,7 +725,7 @@ const confirmTag = () => {
         form.tags.push(newTag.value.trim())
       }
     } else {
-      uni.showToast({ title: '最多添加5个标签', icon: 'none' })
+      toast.warning('最多添加5个标签')
     }
   }
   closeTagPopup()
@@ -758,10 +767,7 @@ const handleSubmit = async () => {
       remark: form.remark,
     })
 
-    uni.showToast({
-      title: '记账成功',
-      icon: 'success'
-    })
+    toast.success('记账成功')
 
     setTimeout(() => {
       uni.navigateBack()

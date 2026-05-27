@@ -1,6 +1,8 @@
 // G-Zang 移动端权限工具函数
 
 import { useAuthStore } from '@/stores/auth'
+import { toast } from '@/composables/useToast'
+import { modal } from '@/composables/useModal'
 
 // 权限类型
 export enum Permission {
@@ -73,17 +75,19 @@ export class SystemPermission {
         scope: 'scope.camera',
         success: () => resolve(true),
         fail: () => {
-          uni.showModal({
+          modal.show({
             title: '权限提示',
-            content: '需要相机权限才能拍照识别，请前往设置开启',
+            message: '需要相机权限才能拍照识别，请前往设置开启',
             showCancel: true,
             confirmText: '去设置',
-            success: (res) => {
-              if (res.confirm) {
-                uni.openSetting()
-              }
+            cancelText: '取消',
+            onConfirm: () => {
+              uni.openSetting()
               resolve(false)
-            }
+            },
+            onCancel: () => {
+              resolve(false)
+            },
           })
         }
       })
@@ -97,17 +101,19 @@ export class SystemPermission {
         scope: 'scope.record',
         success: () => resolve(true),
         fail: () => {
-          uni.showModal({
+          modal.show({
             title: '权限提示',
-            content: '需要麦克风权限才能语音记账，请前往设置开启',
+            message: '需要麦克风权限才能语音记账，请前往设置开启',
             showCancel: true,
             confirmText: '去设置',
-            success: (res) => {
-              if (res.confirm) {
-                uni.openSetting()
-              }
+            cancelText: '取消',
+            onConfirm: () => {
+              uni.openSetting()
               resolve(false)
-            }
+            },
+            onCancel: () => {
+              resolve(false)
+            },
           })
         }
       })
@@ -121,17 +127,19 @@ export class SystemPermission {
         scope: 'scope.userLocation',
         success: () => resolve(true),
         fail: () => {
-          uni.showModal({
+          modal.show({
             title: '权限提示',
-            content: '需要位置权限才能获取地理位置信息，请前往设置开启',
+            message: '需要位置权限才能获取地理位置信息，请前往设置开启',
             showCancel: true,
             confirmText: '去设置',
-            success: (res) => {
-              if (res.confirm) {
-                uni.openSetting()
-              }
+            cancelText: '取消',
+            onConfirm: () => {
+              uni.openSetting()
               resolve(false)
-            }
+            },
+            onCancel: () => {
+              resolve(false)
+            },
           })
         }
       })
@@ -145,17 +153,19 @@ export class SystemPermission {
         scope: 'scope.writePhotosAlbum',
         success: () => resolve(true),
         fail: () => {
-          uni.showModal({
+          modal.show({
             title: '权限提示',
-            content: '需要存储权限才能保存文件，请前往设置开启',
+            message: '需要存储权限才能保存文件，请前往设置开启',
             showCancel: true,
             confirmText: '去设置',
-            success: (res) => {
-              if (res.confirm) {
-                uni.openSetting()
-              }
+            cancelText: '取消',
+            onConfirm: () => {
+              uni.openSetting()
               resolve(false)
-            }
+            },
+            onCancel: () => {
+              resolve(false)
+            },
           })
         }
       })
@@ -180,10 +190,7 @@ export class PermissionGuard {
   // 需要登录的页面守卫
   static requireAuth(): boolean {
     if (!PermissionChecker.isAuthenticated()) {
-      uni.showToast({
-        title: '请先登录',
-        icon: 'none'
-      })
+      toast.warning('请先登录')
       uni.reLaunch({
         url: '/pages/login/index'
       })
@@ -195,10 +202,7 @@ export class PermissionGuard {
   // 需要特定权限的页面守卫
   static requirePermission(permission: Permission | string, message = '权限不足'): boolean {
     if (!PermissionChecker.hasPermission(permission)) {
-      uni.showToast({
-        title: message,
-        icon: 'none'
-      })
+      toast.warning(message)
       uni.navigateBack()
       return false
     }
@@ -208,10 +212,7 @@ export class PermissionGuard {
   // 需要管理员权限的页面守卫
   static requireAdmin(): boolean {
     if (!PermissionChecker.isAdmin()) {
-      uni.showToast({
-        title: '需要管理员权限',
-        icon: 'none'
-      })
+      toast.warning('需要管理员权限')
       uni.navigateBack()
       return false
     }

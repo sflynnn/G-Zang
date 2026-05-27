@@ -186,6 +186,42 @@ export default {
     thisWeek: '本周',
     thisMonth: '本月',
     customDate: '自定义日期',
+
+    categoryRecord: {
+      selectCategory: '选择分类',
+      selectCurrency: '选择币种',
+      tags: '标签',
+      addTags: '添加标签',
+      tagInputPlaceholder: '输入标签后按回车添加',
+      quickAdd: '快速添加：',
+      remark: '备注',
+      addRemark: '添加备注',
+      remarkPlaceholder: '添加备注信息...',
+      paymentMethod: '支付方式',
+      selectPaymentMethod: '选择支付方式',
+      allTags: '全部标签',
+      searchTags: '搜索标签',
+      noTagsFound: '未找到相关标签',
+      createTag: '创建标签',
+      date: '日期',
+      selectDate: '选择日期',
+      recordChar: '记',
+      record: '记账',
+      today: '今天',
+      yesterday: '昨天',
+      pleaseEnterAmount: '请输入金额',
+      pleaseAddAccount: '请先添加账户',
+      recordSuccess: '记账成功',
+      recordFailed: '记账失败',
+      payment: {
+        cash: '现金',
+        wechat: '微信支付',
+        alipay: '支付宝',
+        bankCard: '银行卡',
+        creditCard: '信用卡',
+        other: '其他'
+      }
+    }
   },
 
   // ================== 账单 ==================
@@ -275,12 +311,22 @@ export default {
     selectType: '请选择账户类型',
     balance: '余额',
     initialBalance: '初始余额',
-    cardNumber: '卡号',
-    cardNumberPlaceholder: '请输入卡号（选填）',
+    cardNumber: '卡号后4位',
+    cardNumberPlaceholder: '请输入卡号后4位（选填）',
     bank: '开户银行',
     bankPlaceholder: '请输入开户银行（选填）',
+    bankCode: '银行',
+    selectBank: '选择银行',
+    cardBrand: '卡品牌',
+    selectCardBrand: '选择卡品牌',
+    currency: '货币',
+    selectCurrency: '选择货币',
     remark: '备注',
     remarkPlaceholder: '添加备注（选填）',
+    icon: '图标',
+    selectIcon: '选择图标',
+    color: '颜色',
+    selectColor: '选择颜色',
     types: {
       cash: '现金',
       bankCard: '银行卡',
@@ -288,6 +334,13 @@ export default {
       alipay: '支付宝',
       wechatPay: '微信支付',
       other: '其他',
+    },
+    typeGroups: {
+      fund: '资金账户',
+      credit: '信用账户',
+      receivable: '应收/应付',
+      investment: '投资账户',
+      recharge: '充值账户',
     },
     createSuccess: '账户创建成功',
     createFailed: '账户创建失败',
@@ -469,6 +522,7 @@ export default {
   // ================== 错误消息 ==================
   messages: {
     unauthorized: '未授权，请重新登录',
+    sessionExpired: '登录已过期，请重新登录',
     forbidden: '没有权限访问此资源',
     notFound: '资源不存在',
     serverError: '服务器错误，请稍后重试',
@@ -478,6 +532,7 @@ export default {
     loginRequired: '请先登录',
     formInvalid: '表单填写不完整',
     confirmRequired: '请确认操作',
+    goToLogin: '去登录',
   },
 
   // ================== 日期时间 ==================

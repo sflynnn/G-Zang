@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import * as reportApi from '@/api/report'
+import { toast } from '@/composables/useToast'
 
 // 类型定义
 export interface ChartData {
@@ -73,90 +74,54 @@ export const useAnalysisStore = defineStore('analysis', () => {
 
   // 加载统计概览
   const loadOverview = async () => {
-    try {
-      loading.value = true
-      const data = await reportApi.getSummary()
-      overview.value = data
-    } catch (error) {
-      throw error
-    } finally {
-      loading.value = false
-    }
+    const data = await reportApi.getSummary()
+    overview.value = data
   }
 
   // 加载分类统计图表
   const loadCategoryChart = async () => {
-    try {
-      loading.value = true
-      const data = await reportApi.getCategoryReport()
+    const data = await reportApi.getCategoryReport()
 
-      categoryChart.value = data.map((item) => ({
-        name: item.categoryName,
-        value: item.totalAmount,
-        percentage: item.percentage || 0
-      }))
-    } catch (error) {
-      throw error
-    } finally {
-      loading.value = false
-    }
+    categoryChart.value = data.map((item) => ({
+      name: item.categoryName,
+      value: item.totalAmount,
+      percentage: item.percentage || 0
+    }))
   }
 
   // 加载趋势图表
   const loadTrendChart = async () => {
-    try {
-      loading.value = true
-      const year = new Date().getFullYear()
-      const data = await reportApi.getMonthlyTrend({ year })
+    const year = new Date().getFullYear()
+    const data = await reportApi.getMonthlyTrend({ year })
 
-      trendChart.value = data.map(item => ({
-        date: `${item.month}`,
-        income: item.income,
-        expense: item.expense,
-        balance: item.balance || 0
-      }))
-    } catch (error) {
-      throw error
-    } finally {
-      loading.value = false
-    }
+    trendChart.value = data.map(item => ({
+      date: `${item.month}`,
+      income: item.income,
+      expense: item.expense,
+      balance: item.balance || 0
+    }))
   }
 
   // 加载账户统计图表
   const loadAccountChart = async () => {
-    try {
-      loading.value = true
-      const data = await reportApi.getAccountBalance()
+    const data = await reportApi.getAccountBalance()
 
-      accountChart.value = data.map(item => ({
-        name: item.accountName,
-        value: item.balance,
-        percentage: item.percentage || 0
-      }))
-    } catch (error) {
-      throw error
-    } finally {
-      loading.value = false
-    }
+    accountChart.value = data.map(item => ({
+      name: item.accountName,
+      value: item.balance,
+      percentage: item.percentage || 0
+    }))
   }
 
   // 加载所有统计数据
   const loadAllStats = async () => {
-    try {
-      loading.value = true
-
-      // 并行加载所有统计数据
-      await Promise.all([
-        loadOverview(),
-        loadCategoryChart(),
-        loadTrendChart(),
-        loadAccountChart()
-      ])
-    } catch (error) {
-      throw error
-    } finally {
-      loading.value = false
-    }
+    // 并行加载所有统计数据
+    await Promise.all([
+      loadOverview(),
+      loadCategoryChart(),
+      loadTrendChart(),
+      loadAccountChart()
+    ])
   }
 
   // 设置时间范围
@@ -212,21 +177,20 @@ export const useAnalysisStore = defineStore('analysis', () => {
             uni.share({
               title: '归藏财务报告',
               filePath: tempFilePath,
-              success: () => uni.showToast({ title: '导出成功', icon: 'success' }),
+              success: () => toast.success('导出成功'),
               fail: (e: any) => {
                 if (e.errMsg?.includes('cancel')) return
-                // 降级：分享文本
                 uni.share({
                   title: '归藏财务报告',
                   summary: `收支概览：收入 ${overview.value.totalIncome}，支出 ${overview.value.totalExpense}，结余 ${overview.value.balance}`,
-                  fail: () => uni.showToast({ title: '分享失败', icon: 'none' })
+                  fail: () => toast.error('分享失败')
                 })
               }
             })
           },
           fail: () => {
             uni.hideLoading()
-            uni.showToast({ title: '文件生成失败', icon: 'none' })
+            toast.error('文件生成失败')
           }
         })
       } else {
@@ -235,13 +199,13 @@ export const useAnalysisStore = defineStore('analysis', () => {
         uni.share({
           title: '归藏财务报告',
           summary: `收入 ${overview.value.totalIncome} | 支出 ${overview.value.totalExpense} | 结余 ${overview.value.balance}`,
-          success: () => uni.showToast({ title: '导出成功', icon: 'success' }),
-          fail: () => uni.showToast({ title: '分享失败', icon: 'none' })
+          success: () => toast.success('导出成功'),
+          fail: () => toast.error('分享失败')
         })
       }
     } catch (error) {
       uni.hideLoading()
-      uni.showToast({ title: '导出失败', icon: 'none' })
+      toast.error('导出失败')
       throw error
     }
   }
@@ -255,11 +219,8 @@ export const useAnalysisStore = defineStore('analysis', () => {
           if (res.statusCode === 200) {
             uni.saveFile({
               tempFilePath: res.tempFilePath,
-              success: (saveRes) => {
-                uni.showToast({
-                  title: '文件已保存',
-                  icon: 'success'
-                })
+              success: () => {
+                toast.success('文件已保存')
               }
             })
           }

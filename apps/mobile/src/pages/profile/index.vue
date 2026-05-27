@@ -214,6 +214,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { modal } from '@/composables/useModal'
 import { useAuthStore } from '@/stores/auth'
 import { useBookStore } from '@/stores/book'
 import PageTransition from '@/components/common/PageTransition/index.vue'
@@ -307,23 +308,25 @@ const goToPrivacy = () => {
 }
 
 const showVersion = () => {
-  uni.showModal({
+  modal.show({
     title: t('settings.currentVersion'),
-    content: 'G-Zang v1.0.0',
-    showCancel: false
+    message: 'G-Zang v1.0.0',
+    showCancel: false,
+    confirmText: t('common.confirm'),
   })
 }
 
 const handleLogout = () => {
-  uni.showModal({
+  modal.show({
     title: t('settings.logout'),
-    content: t('auth.logoutConfirm'),
-    success: async (res) => {
-      if (res.confirm) {
-        await authStore.logout()
-        uni.reLaunch({ url: '/pages/login/index' })
-      }
-    }
+    message: t('auth.logoutConfirm'),
+    showCancel: true,
+    confirmText: t('common.confirm'),
+    cancelText: t('common.cancel'),
+    onConfirm: async () => {
+      await authStore.logout()
+      uni.reLaunch({ url: '/pages/login/index' })
+    },
   })
 }
 

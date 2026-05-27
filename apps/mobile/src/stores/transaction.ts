@@ -48,53 +48,38 @@ export const useTransactionStore = defineStore('transaction', () => {
 
   // 加载近期交易（首页用）
   const fetchRecent = async (limit = 5) => {
-    try {
-      loading.value = true
-      const data = await getTransactions({ size: limit })
-      recentTransactions.value = data.records
-      return data.records
-    } finally {
-      loading.value = false
-    }
+    const data = await getTransactions({ size: limit })
+    recentTransactions.value = data.records
+    return data.records
   }
 
   // 加载日历视图数据
   const fetchCalendarData = async (year: number, month: number, bookId?: number) => {
-    try {
-      loading.value = true
-      const data = await getCalendarTransactions({ year, month, bookId })
-      const map: Record<string, { income: number; expense: number; count: number }> = {}
-      for (const item of data) {
-        map[item.date] = { income: item.income, expense: item.expense, count: item.count }
-      }
-      calendarData.value = map
-      return map
-    } finally {
-      loading.value = false
+    const data = await getCalendarTransactions({ year, month, bookId })
+    const map: Record<string, { income: number; expense: number; count: number }> = {}
+    for (const item of data) {
+      map[item.date] = { income: item.income, expense: item.expense, count: item.count }
     }
+    calendarData.value = map
+    return map
   }
 
   // 加载交易列表（账单页用）
   const fetchPage = async (params: TransactionQueryParams = {}) => {
-    try {
-      loading.value = true
-      const pageParams = {
-        ...params,
-        current: params.current || current.value,
-        size: params.size || pageSize.value,
-      }
-      const data = await getTransactions(pageParams)
-      if ((pageParams.current || 1) > 1) {
-        transactions.value.push(...data.records)
-      } else {
-        transactions.value = data.records
-      }
-      total.value = data.total
-      current.value = pageParams.current || 1
-      return data
-    } finally {
-      loading.value = false
+    const pageParams = {
+      ...params,
+      current: params.current || current.value,
+      size: params.size || pageSize.value,
     }
+    const data = await getTransactions(pageParams)
+    if ((pageParams.current || 1) > 1) {
+      transactions.value.push(...data.records)
+    } else {
+      transactions.value = data.records
+    }
+    total.value = data.total
+    current.value = pageParams.current || 1
+    return data
   }
 
   // 加载更多
@@ -104,12 +89,7 @@ export const useTransactionStore = defineStore('transaction', () => {
 
   // 获取单条详情
   const fetchById = async (id: number) => {
-    try {
-      loading.value = true
-      return await getTransaction(id)
-    } finally {
-      loading.value = false
-    }
+    return await getTransaction(id)
   }
 
   // 创建交易
@@ -121,20 +101,15 @@ export const useTransactionStore = defineStore('transaction', () => {
     transactionTime?: string
     remark?: string
   }) => {
-    try {
-      loading.value = true
-      const created = await apiCreateTransaction(data)
-      // 新增记录插入到列表头部
-      transactions.value.unshift(created)
-      recentTransactions.value.unshift(created)
-      if (recentTransactions.value.length > 5) {
-        recentTransactions.value.pop()
-      }
-      total.value++
-      return created
-    } finally {
-      loading.value = false
+    const created = await apiCreateTransaction(data)
+    // 新增记录插入到列表头部
+    transactions.value.unshift(created)
+    recentTransactions.value.unshift(created)
+    if (recentTransactions.value.length > 5) {
+      recentTransactions.value.pop()
     }
+    total.value++
+    return created
   }
 
   // 更新交易
@@ -146,15 +121,10 @@ export const useTransactionStore = defineStore('transaction', () => {
     transactionTime?: string
     remark?: string
   }>) => {
-    try {
-      loading.value = true
-      const updated = await apiUpdateTransaction({ id, ...data })
-      const idx = transactions.value.findIndex(t => t.id === id)
-      if (idx !== -1) transactions.value[idx] = updated
-      return updated
-    } finally {
-      loading.value = false
-    }
+    const updated = await apiUpdateTransaction({ id, ...data })
+    const idx = transactions.value.findIndex(t => t.id === id)
+    if (idx !== -1) transactions.value[idx] = updated
+    return updated
   }
 
   // 更新交易（兼容页面调用方式）
@@ -172,15 +142,10 @@ export const useTransactionStore = defineStore('transaction', () => {
 
   // 删除交易
   const remove = async (id: number) => {
-    try {
-      loading.value = true
-      await apiDeleteTransaction(id)
-      transactions.value = transactions.value.filter(t => t.id !== id)
-      recentTransactions.value = recentTransactions.value.filter(t => t.id !== id)
-      total.value = Math.max(0, total.value - 1)
-    } finally {
-      loading.value = false
-    }
+    await apiDeleteTransaction(id)
+    transactions.value = transactions.value.filter(t => t.id !== id)
+    recentTransactions.value = recentTransactions.value.filter(t => t.id !== id)
+    total.value = Math.max(0, total.value - 1)
   }
 
   // 重置分页状态

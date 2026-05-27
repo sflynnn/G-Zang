@@ -1,4 +1,9 @@
 <template>
+  <!-- 自定义组件 -->
+  <CustomToast />
+  <CustomModal />
+  <CustomLoading />
+
   <view class="book-detail-page">
     <!-- 顶部导航 -->
     <view class="nav-bar">
@@ -112,6 +117,10 @@
 import { ref, computed, onMounted } from 'vue'
 import { useBookStore } from '@/stores/book'
 import { useAppStore } from '@/stores/app'
+import { modal } from '@/composables/useModal'
+import CustomToast from '@/components/common/CustomToast/index.vue'
+import CustomModal from '@/components/common/CustomModal/index.vue'
+import CustomLoading from '@/components/common/CustomLoading/index.vue'
 
 const bookStore = useBookStore()
 const appStore = useAppStore()
@@ -200,21 +209,22 @@ const handleSetDefault = async () => {
 }
 
 const handleDelete = () => {
-  uni.showModal({
+  modal.show({
     title: '确认删除',
-    content: '删除后账本数据将无法恢复，确定要删除吗？',
-    confirmColor: '#EF476F',
-    success: async (res) => {
-      if (res.confirm && bookId.value) {
-        try {
-          await bookStore.deleteBook(bookId.value)
-          appStore.showSuccess('账本已删除')
-          setTimeout(() => {
-            uni.navigateBack()
-          }, 1000)
-        } catch (error: any) {
-          appStore.showError(error.message || '删除失败')
-        }
+    message: '删除后账本数据将无法恢复，确定要删除吗？',
+    showCancel: true,
+    confirmText: '删除',
+    cancelText: '取消',
+    onConfirm: async () => {
+      if (!bookId.value) return
+      try {
+        await bookStore.deleteBook(bookId.value)
+        appStore.showSuccess('账本已删除')
+        setTimeout(() => {
+          uni.navigateBack()
+        }, 1000)
+      } catch (error: any) {
+        appStore.showError(error.message || '删除失败')
       }
     },
   })

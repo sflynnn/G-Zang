@@ -48,46 +48,32 @@ export const useAuthStore = defineStore('auth', () => {
 
   // 登录
   const login = async (params: LoginParams) => {
-    try {
-      loading.value = true
-      const response = await loginApi(params)
+    const response = await loginApi(params)
 
-      // 更新状态
-      user.value = response.user
-      token.value = response.token
-      refreshToken.value = (response as any).refreshToken || ''
+    // 更新状态
+    user.value = response.user
+    token.value = response.token
+    refreshToken.value = (response as any).refreshToken || ''
 
-      // 本地存储
-      saveToken(token.value, refreshToken.value)
-      uni.setStorageSync('user', JSON.stringify(user.value))
+    // 本地存储
+    saveToken(token.value, refreshToken.value)
+    uni.setStorageSync('user', JSON.stringify(user.value))
 
-      return response
-    } catch (error) {
-      throw error
-    } finally {
-      loading.value = false
-    }
+    return response
   }
 
   // 注册
   const register = async (params: any) => {
-    try {
-      loading.value = true
-      const { register: registerApi } = await import('@/api/auth')
-      await registerApi(params)
+    const { register: registerApi } = await import('@/api/auth')
+    await registerApi(params)
 
-      // 自动登录
-      await login({
-        username: params.username,
-        password: params.password
-      })
+    // 自动登录
+    await login({
+      username: params.username,
+      password: params.password
+    })
 
-      return true
-    } catch (error) {
-      throw error
-    } finally {
-      loading.value = false
-    }
+    return true
   }
 
   // 登出
@@ -97,20 +83,20 @@ export const useAuthStore = defineStore('auth', () => {
       await logoutApi()
     } catch (e) {
       // ignore logout API error
-    } finally {
-      user.value = null
-      token.value = ''
-      refreshToken.value = ''
-
-      // 清除本地存储
-      clearTokenLocal()
-      uni.removeStorageSync('user')
-
-      // 跳转到登录页
-      uni.reLaunch({
-        url: '/pages/login/index'
-      })
     }
+
+    user.value = null
+    token.value = ''
+    refreshToken.value = ''
+
+    // 清除本地存储
+    clearTokenLocal()
+    uni.removeStorageSync('user')
+
+    // 跳转到登录页
+    uni.reLaunch({
+      url: '/pages/login/index'
+    })
   }
 
   // 刷新token
@@ -132,20 +118,13 @@ export const useAuthStore = defineStore('auth', () => {
 
   // 获取用户信息
   const getUserInfo = async () => {
-    try {
-      loading.value = true
-      const response = await getCurrentUserApi()
-      user.value = response
+    const response = await getCurrentUserApi()
+    user.value = response
 
-      // 更新本地存储
-      uni.setStorageSync('user', JSON.stringify(user.value))
+    // 更新本地存储
+    uni.setStorageSync('user', JSON.stringify(user.value))
 
-      return response
-    } catch (error) {
-      throw error
-    } finally {
-      loading.value = false
-    }
+    return response
   }
 
   // 初始化（从本地存储恢复状态）

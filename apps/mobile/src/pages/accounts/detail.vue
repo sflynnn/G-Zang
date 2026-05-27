@@ -1,4 +1,9 @@
 <template>
+  <!-- 自定义组件 -->
+  <CustomToast />
+  <CustomModal />
+  <CustomLoading />
+
   <view class="account-detail-page">
     <uni-nav-bar left-icon="back" title="账户详情" @clickLeft="goBack" />
     
@@ -89,8 +94,14 @@
 import { ref, computed, onMounted } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { useAccountStore } from '@/stores/account'
+import { useToast } from '@/composables/useToast'
+import { modal } from '@/composables/useModal'
+import CustomToast from '@/components/common/CustomToast/index.vue'
+import CustomModal from '@/components/common/CustomModal/index.vue'
+import CustomLoading from '@/components/common/CustomLoading/index.vue'
 
 const accountStore = useAccountStore()
+const toast = useToast()
 
 const accountId = ref<number>(0)
 const loading = ref(true)
@@ -135,8 +146,9 @@ function getTypeLabel(type: number): string {
 }
 
 function formatAmount(amount: any): string {
-  if (!amount && amount !== 0) return '0.00'
+  if (amount === null || amount === undefined) return '0.00'
   const num = typeof amount === 'string' ? parseFloat(amount) : amount
+  if (isNaN(num)) return '0.00'
   return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 }
 
@@ -169,27 +181,27 @@ function goToTransactionDetail(id: number) {
 }
 
 function confirmDelete() {
-  uni.showModal({
+  modal.show({
     title: '确认删除',
-    content: `确定要删除账户"${account.value?.accountName}"吗？删除后无法恢复。`,
-    confirmColor: '#EF476F',
-    success: async (res) => {
-      if (res.confirm) {
-        await deleteAccount()
-      }
-    }
+    message: `确定要删除账户"${account.value?.accountName}"吗？删除后无法恢复。`,
+    showCancel: true,
+    confirmText: '删除',
+    cancelText: '取消',
+    onConfirm: async () => {
+      await deleteAccount()
+    },
   })
 }
 
 async function deleteAccount() {
   try {
     await accountStore.deleteAccount(accountId.value)
-    uni.showToast({ title: '删除成功', icon: 'success' })
+    toast.success('删除成功')
     setTimeout(() => {
       uni.navigateBack()
     }, 1500)
   } catch (error: any) {
-    uni.showToast({ title: error.message || '删除失败', icon: 'none' })
+    toast.error(error.message || '删除失败')
   }
 }
 </script>

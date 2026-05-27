@@ -1,4 +1,9 @@
 <template>
+  <!-- 自定义组件 -->
+  <CustomToast />
+  <CustomModal />
+  <CustomLoading />
+
   <view class="camera-page">
     <!-- 顶部导航 -->
     <view class="nav-bar">
@@ -363,13 +368,18 @@ import { useBookStore } from '@/stores/book'
 import { useTransactionStore } from '@/stores/transaction'
 import { useCategoryStore } from '@/stores/category'
 import { useAccountStore } from '@/stores/account'
+import { useToast } from '@/composables/useToast'
 import { formatDate as formatDateStr } from '@/utils/date'
+import CustomToast from '@/components/common/CustomToast/index.vue'
+import CustomModal from '@/components/common/CustomModal/index.vue'
+import CustomLoading from '@/components/common/CustomLoading/index.vue'
 
 // Store
 const bookStore = useBookStore()
 const transactionStore = useTransactionStore()
 const categoryStore = useCategoryStore()
 const accountStore = useAccountStore()
+const toast = useToast()
 
 // OCR composable
 const { isProcessing, lastResult, recognizeImage } = useOCR()
@@ -473,7 +483,7 @@ const takePhoto = () => {
     },
     fail: (err: any) => {
       console.error('Take photo failed:', err)
-      uni.showToast({ title: '拍照失败，请重试', icon: 'none' })
+      toast.error('拍照失败，请重试')
     }
   })
 }
@@ -510,16 +520,10 @@ const startOCR = async () => {
         formData.accountName = accounts.value[0].name || ''
       }
     } else {
-      uni.showToast({
-        title: '未识别到有效信息',
-        icon: 'none'
-      })
+      toast.warning('未识别到有效信息')
     }
   } catch (error) {
-    uni.showToast({
-      title: '识别失败，请重试',
-      icon: 'none'
-    })
+    toast.error('识别失败，请重试')
   }
 }
 
@@ -633,10 +637,7 @@ const closeDatePopup = () => {
 // 提交表单
 const handleSubmit = async () => {
   if (!canSubmit.value) {
-    uni.showToast({
-      title: '请完善记账信息',
-      icon: 'none'
-    })
+    toast.warning('请完善记账信息')
     return
   }
 
@@ -652,10 +653,7 @@ const handleSubmit = async () => {
       remark: formData.remark || `拍照记账: ${ocrResult.value?.merchant || ''}`
     })
 
-    uni.showToast({
-      title: '记账成功',
-      icon: 'success'
-    })
+    toast.success('记账成功')
 
     setTimeout(() => {
       uni.navigateBack()

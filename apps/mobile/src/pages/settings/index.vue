@@ -1,4 +1,9 @@
 <template>
+  <!-- 自定义组件 -->
+  <CustomToast />
+  <CustomModal />
+  <CustomLoading />
+
   <view class="settings-page apple-style">
     <!-- Large Title Navigation -->
     <view class="nav-large-title">
@@ -165,9 +170,13 @@
 <script setup lang="ts">
 import { reactive, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { modal } from '@/composables/useModal'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 import AppleIcon from '@/components/common/AppleIcon/index.vue'
+import CustomToast from '@/components/common/CustomToast/index.vue'
+import CustomModal from '@/components/common/CustomModal/index.vue'
+import CustomLoading from '@/components/common/CustomLoading/index.vue'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
@@ -232,27 +241,29 @@ const handleExport = () => {
 }
 
 const handleClearCache = () => {
-  uni.showModal({
+  modal.show({
     title: t('settings.clearCache'),
-    content: t('common.confirmAction'),
-    success: (res) => {
-      if (res.confirm) {
-        appStore.showSuccess(t('settings.cacheCleared'))
-      }
-    }
+    message: t('common.confirmAction'),
+    showCancel: true,
+    confirmText: t('common.confirm'),
+    cancelText: t('common.cancel'),
+    onConfirm: () => {
+      appStore.showSuccess(t('settings.cacheCleared'))
+    },
   })
 }
 
 const handleLogout = () => {
-  uni.showModal({
+  modal.show({
     title: t('auth.logout'),
-    content: t('auth.logoutConfirm'),
-    success: async (res) => {
-      if (res.confirm) {
-        await authStore.logout()
-        uni.reLaunch({ url: '/pages/login/index' })
-      }
-    }
+    message: t('auth.logoutConfirm'),
+    showCancel: true,
+    confirmText: t('common.confirm'),
+    cancelText: t('common.cancel'),
+    onConfirm: async () => {
+      await authStore.logout()
+      uni.reLaunch({ url: '/pages/login/index' })
+    },
   })
 }
 </script>

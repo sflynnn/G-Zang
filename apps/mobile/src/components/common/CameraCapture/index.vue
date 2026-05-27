@@ -103,6 +103,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner/index.vue'
+import { useToast } from '@/composables/useToast'
 
 interface OCRData {
   amount: string
@@ -123,7 +125,7 @@ const emit = defineEmits<{
   'cancel': []
 }>()
 
-import LoadingSpinner from '@/components/common/LoadingSpinner/index.vue'
+const toast = useToast()
 
 const resultPopup = ref<any>(null)
 const capturedImage = ref('')
@@ -155,7 +157,7 @@ const handleCapture = async () => {
       }
     })
   } catch (error) {
-    uni.showToast({ title: '拍照失败', icon: 'none' })
+    toast.warning('拍照失败')
   }
 }
 

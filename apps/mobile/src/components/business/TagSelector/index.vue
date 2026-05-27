@@ -85,6 +85,9 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useToast } from '@/composables/useToast'
+
+const toast = useToast()
 
 interface Props {
   modelValue: string[]
@@ -164,10 +167,7 @@ const toggleTag = (tag: string) => {
   } else {
     // 选中（检查上限）
     if (current.length >= props.maxTags) {
-      uni.showToast({
-        title: `最多添加${props.maxTags}个标签`,
-        icon: 'none'
-      })
+      toast.warning(`最多添加${props.maxTags}个标签`)
       return
     }
     current.push(tag)
@@ -194,17 +194,17 @@ const closeAddDialog = () => {
 const confirmAddTag = () => {
   const name = newTagName.value.trim()
   if (!name) {
-    uni.showToast({ title: '请输入标签名称', icon: 'none' })
+    toast.warning('请输入标签名称')
     return
   }
   
   if (selectedTags.value.includes(name)) {
-    uni.showToast({ title: '该标签已存在', icon: 'none' })
+    toast.warning('该标签已存在')
     return
   }
   
   if (selectedTags.value.length >= props.maxTags) {
-    uni.showToast({ title: `最多添加${props.maxTags}个标签`, icon: 'none' })
+    toast.warning(`最多添加${props.maxTags}个标签`)
     return
   }
   

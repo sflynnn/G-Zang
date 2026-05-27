@@ -47,7 +47,7 @@ export async function getBookStatistics(
   bookId: number,
   params?: { startDate?: string; endDate?: string }
 ): Promise<BookStatistics> {
-  const data = await api.get<any>(`/books/${bookId}/statistics`, params, { skipLoading: true });
+  const data = await api.get<any>(`/books/${bookId}/statistics`, params);
   return {
     bookId,
     totalIncome: data.totalIncome || 0,

@@ -6,6 +6,7 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { TransactionType } from '@/types/transaction';
 import * as reportApi from '@/api/report';
+import { toast } from '@/composables/useToast';
 
 // G-Zang 品牌色
 const BRAND_COLORS = {
@@ -103,33 +104,19 @@ export const useReportStore = defineStore('report', () => {
     startTime?: string;
     endTime?: string;
   }) => {
-    try {
-      loading.value = true;
-      if (params?.startTime && params?.endTime) {
-        dateRange.value = { startDate: params.startTime, endDate: params.endTime };
-      }
-      const data = await reportApi.getSummary(params);
-      summary.value = data;
-      return data;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
+    if (params?.startTime && params?.endTime) {
+      dateRange.value = { startDate: params.startTime, endDate: params.endTime };
     }
+    const data = await reportApi.getSummary(params);
+    summary.value = data;
+    return data;
   };
 
   // 获取月度趋势（后端需要 year 参数）
   const fetchMonthlyTrend = async (year: number) => {
-    try {
-      loading.value = true;
-      const data = await reportApi.getMonthlyTrend({ year });
-      monthlyTrend.value = data;
-      return data;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
-    }
+    const data = await reportApi.getMonthlyTrend({ year });
+    monthlyTrend.value = data;
+    return data;
   };
 
   // 获取分类报表
@@ -138,30 +125,16 @@ export const useReportStore = defineStore('report', () => {
     endTime?: string;
     type?: TransactionType;
   }) => {
-    try {
-      loading.value = true;
-      const data = await reportApi.getCategoryReport(params);
-      categoryReport.value = data;
-      return data;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
-    }
+    const data = await reportApi.getCategoryReport(params);
+    categoryReport.value = data;
+    return data;
   };
 
   // 获取账户余额报表
   const fetchAccountBalance = async () => {
-    try {
-      loading.value = true;
-      const data = await reportApi.getAccountBalance();
-      accountBalance.value = data;
-      return data;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
-    }
+    const data = await reportApi.getAccountBalance();
+    accountBalance.value = data;
+    return data;
   };
 
   // 设置日期范围
@@ -214,20 +187,20 @@ export const useReportStore = defineStore('report', () => {
             uni.share({
               title: '归藏财务报告',
               filePath: tempFilePath,
-              success: () => uni.showToast({ title: '导出成功', icon: 'success' }),
+              success: () => toast.success('导出成功'),
               fail: (e: any) => {
                 if (e.errMsg?.includes('cancel')) return
                 uni.share({
                   title: '归藏财务报告',
                   summary: `收入 ${s?.totalIncome || 0} | 支出 ${s?.totalExpense || 0} | 结余 ${s?.balance || 0}`,
-                  fail: () => uni.showToast({ title: '分享失败', icon: 'none' })
+                  fail: () => toast.error('分享失败')
                 })
               }
             })
           },
           fail: () => {
             uni.hideLoading()
-            uni.showToast({ title: '文件生成失败', icon: 'none' })
+            toast.error('文件生成失败')
           }
         })
       } else {
@@ -235,13 +208,13 @@ export const useReportStore = defineStore('report', () => {
         uni.share({
           title: '归藏财务报告',
           summary: `收入 ${s?.totalIncome || 0} | 支出 ${s?.totalExpense || 0} | 结余 ${s?.balance || 0}`,
-          success: () => uni.showToast({ title: '导出成功', icon: 'success' }),
-          fail: () => uni.showToast({ title: '分享失败', icon: 'none' })
+          success: () => toast.success('导出成功'),
+          fail: () => toast.error('分享失败')
         })
       }
     } catch (error) {
       uni.hideLoading()
-      uni.showToast({ title: '导出失败', icon: 'none' })
+      toast.error('导出失败')
       throw error
     }
   };

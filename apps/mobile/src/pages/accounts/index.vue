@@ -1,92 +1,98 @@
 <template>
   <PageTransition>
-  <view class="accounts-page apple-style">
-    <!-- Large Title Navigation -->
-    <view class="nav-large-title">
-      <view class="nav-header">
-        <text class="nav-title">{{ t('account.title') }}</text>
-        <view class="nav-add" @click="goToCreate">
-          <AppleIcon name="plus" :size="20" color="var(--gzang-primary)" />
+    <!-- 自定义组件（使用 Teleport 穿透到 body） -->
+    <CustomToast />
+    <CustomModal />
+    <CustomLoading />
+
+    <view class="accounts-page apple-style">
+
+      <!-- Large Title Navigation -->
+      <view class="nav-large-title">
+        <view class="nav-header">
+          <text class="nav-title">{{ t('account.title') }}</text>
+          <view class="nav-add" @click="goToCreate">
+            <AppleIcon name="plus" :size="20" color="var(--gzang-primary)" />
+          </view>
         </view>
       </view>
+
+      <scroll-view class="main-content" scroll-y="true">
+        <!-- Net Assets Card -->
+        <view class="net-assets-card">
+          <view class="card-header">
+            <text class="card-label">{{ t('account.totalBalance') }}</text>
+            <view class="card-trend" :class="trend >= 0 ? 'trend-up' : 'trend-down'">
+              <AppleIcon :name="trend >= 0 ? 'trend-up' : 'trend-down'" :size="12" :color="trend >= 0 ? 'var(--gzang-success)' : 'var(--gzang-danger)'" />
+              <text>{{ Math.abs(trendPercent) }}%</text>
+            </view>
+          </view>
+          <view class="card-amount">
+            <text class="currency">{{ currencySymbol }}</text>
+            <text class="amount-value amount">{{ formatAmount(netAssets) }}</text>
+          </view>
+          <view class="card-sub">
+            <view class="sub-item">
+              <text class="sub-label">资产</text>
+              <text class="sub-value income">{{ currencySymbol }}{{ formatAmount(totalAssets) }}</text>
+            </view>
+            <view class="sub-divider"></view>
+            <view class="sub-item">
+              <text class="sub-label">负债</text>
+              <text class="sub-value expense">{{ currencySymbol }}{{ formatAmount(totalLiabilities) }}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- Account Groups -->
+        <view v-for="group in accountGroups" :key="group.type" class="account-group">
+          <view class="group-header">
+            <text class="group-title">{{ group.label }}</text>
+            <text class="group-total">{{ currencySymbol }}{{ formatAmount(group.total) }}</text>
+          </view>
+          <view class="group-list">
+            <view
+              v-for="account in group.accounts"
+              :key="account.id"
+              class="account-item"
+              @click="goToDetail(account)"
+            >
+              <view class="account-icon" :style="{ background: getAccountColor(account.type) + '20' }">
+                <AppleIcon :name="getAccountIcon(account.type)" :size="20" :color="getAccountColor(account.type)" />
+              </view>
+              <view class="account-info">
+                <text class="account-name">{{ account.name }}</text>
+                <text class="account-type">{{ getAccountTypeName(account.type) }}</text>
+              </view>
+              <text class="account-balance amount" :class="getBalanceClass(account)">
+                {{ formatBalance(account) }}
+              </text>
+            </view>
+          </view>
+        </view>
+
+        <!-- Empty State -->
+        <view v-if="accounts.length === 0 && !loading" class="empty-state">
+          <view class="empty-icon-wrapper">
+            <AppleIcon name="wallet" :size="48" color="var(--gzang-text-tertiary)" />
+          </view>
+          <text class="empty-title">还没有账户</text>
+          <text class="empty-desc">添加你的第一个账户开始管理资金</text>
+          <button class="create-btn" @click="goToCreate">
+            <AppleIcon name="plus" :size="16" color="white" />
+            <text>添加账户</text>
+          </button>
+        </view>
+
+        <!-- Add Account Button -->
+        <view v-if="accounts.length > 0" class="add-account-btn" @click="goToCreate">
+          <AppleIcon name="plus" :size="18" color="var(--gzang-primary)" />
+          <text class="btn-text">添加账户</text>
+        </view>
+
+        <view class="bottom-safe-area"></view>
+      </scroll-view>
     </view>
-
-    <scroll-view class="main-content" scroll-y="true">
-      <!-- Net Assets Card -->
-      <view class="net-assets-card">
-        <view class="card-header">
-          <text class="card-label">{{ t('account.totalBalance') }}</text>
-          <view class="card-trend" :class="trend >= 0 ? 'trend-up' : 'trend-down'">
-            <AppleIcon :name="trend >= 0 ? 'trend-up' : 'trend-down'" :size="12" :color="trend >= 0 ? 'var(--gzang-success)' : 'var(--gzang-danger)'" />
-            <text>{{ Math.abs(trendPercent) }}%</text>
-          </view>
-        </view>
-        <view class="card-amount">
-          <text class="currency">{{ currencySymbol }}</text>
-          <text class="amount-value amount">{{ formatAmount(netAssets) }}</text>
-        </view>
-        <view class="card-sub">
-          <view class="sub-item">
-            <text class="sub-label">资产</text>
-            <text class="sub-value income">{{ currencySymbol }}{{ formatAmount(totalAssets) }}</text>
-          </view>
-          <view class="sub-divider"></view>
-          <view class="sub-item">
-            <text class="sub-label">负债</text>
-            <text class="sub-value expense">{{ currencySymbol }}{{ formatAmount(totalLiabilities) }}</text>
-          </view>
-        </view>
-      </view>
-
-      <!-- Account Groups -->
-      <view v-for="group in accountGroups" :key="group.type" class="account-group">
-        <view class="group-header">
-          <text class="group-title">{{ group.label }}</text>
-          <text class="group-total">{{ currencySymbol }}{{ formatAmount(group.total) }}</text>
-        </view>
-        <view class="group-list">
-          <view 
-            v-for="account in group.accounts" 
-            :key="account.id"
-            class="account-item"
-            @click="goToDetail(account)"
-          >
-            <view class="account-icon" :style="{ background: getAccountColor(account.type) + '20' }">
-              <AppleIcon :name="getAccountIcon(account.type)" :size="20" :color="getAccountColor(account.type)" />
-            </view>
-            <view class="account-info">
-              <text class="account-name">{{ account.name }}</text>
-              <text class="account-type">{{ getAccountTypeName(account.type) }}</text>
-            </view>
-            <text class="account-balance amount" :class="getBalanceClass(account)">
-              {{ formatBalance(account) }}
-            </text>
-          </view>
-        </view>
-      </view>
-
-      <!-- Empty State -->
-      <view v-if="accounts.length === 0 && !loading" class="empty-state">
-        <view class="empty-icon-wrapper">
-          <AppleIcon name="wallet" :size="48" color="var(--gzang-text-tertiary)" />
-        </view>
-        <text class="empty-title">还没有账户</text>
-        <text class="empty-desc">添加你的第一个账户开始管理资金</text>
-        <button class="create-btn" @click="goToCreate">
-          <AppleIcon name="plus" :size="16" color="white" />
-          <text>添加账户</text>
-        </button>
-      </view>
-
-      <!-- Add Account Button -->
-      <view v-if="accounts.length > 0" class="add-account-btn" @click="goToCreate">
-        <AppleIcon name="plus" :size="18" color="var(--gzang-primary)" />
-        <text class="btn-text">添加账户</text>
-      </view>
-
-      <view class="bottom-safe-area"></view>
-    </scroll-view>
-  </view>
   </PageTransition>
 </template>
 
@@ -99,6 +105,9 @@ import type { Account } from '@/types/account'
 import { AccountType } from '@/types/account'
 import PageTransition from '@/components/common/PageTransition/index.vue'
 import AppleIcon from '@/components/common/AppleIcon/index.vue'
+import CustomToast from '@/components/common/CustomToast/index.vue'
+import CustomModal from '@/components/common/CustomModal/index.vue'
+import CustomLoading from '@/components/common/CustomLoading/index.vue'
 
 const { t } = useI18n()
 
@@ -171,7 +180,7 @@ const formatAmount = (amount: number) => {
 const formatBalance = (account: Account) => {
   const balance = Number(account.balance) || 0
   const prefix = balance >= 0 ? '' : '-'
-  return `${prefix}${currencySymbol.value}${formatAmount(balance)}`
+  return `${prefix}${currencySymbol.value}${formatAmount(isNaN(balance) ? 0 : balance)}`
 }
 
 const getBalanceClass = (account: Account) => {
@@ -226,8 +235,11 @@ onMounted(async () => {
   loading.value = true
   try {
     await accountStore.fetchAccounts()
-  } catch (error) {
-    console.error('Failed to load accounts:', error)
+  } catch (error: any) {
+    // 401 未认证由 API 层统一弹框并跳转，这里不重复打印
+    if (!error?.__handled) {
+      console.error('Failed to load accounts:', error)
+    }
   } finally {
     loading.value = false
   }

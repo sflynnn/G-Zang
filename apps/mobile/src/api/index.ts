@@ -36,6 +36,21 @@ export {
   type CategoryBudgetItemVO,
 } from './categoryBudget';
 
+// 国际化
+import { getLocale } from '@/i18n';
+import zhCN from '@/locales/zh-CN';
+import enUS from '@/locales/en-US';
+import { toast } from '@/composables/useToast';
+import { modal as globalModal } from '@/composables/useModal';
+import { loadingManager } from '@/composables/loadingManager';
+
+const messages = { 'zh-CN': zhCN, 'en-US': enUS };
+
+function t(key: string): string {
+  const locale = getLocale();
+  return (messages as any)[locale]?.messages?.[key] || (messages['zh-CN'] as any)?.messages?.[key] || key;
+}
+
 /**
  * API Base Configuration
  */
@@ -72,9 +87,9 @@ async function request<T = any>(options: RequestOptions): Promise<T> {
     header['Authorization'] = `Bearer ${token}`;
   }
 
-  // 开始 loading
-  if (!options.skipLoading && typeof uni.showLoading === 'function') {
-    uni.showLoading({ title: options.loadingText || '加载中...', mask: true });
+  // 开始 loading（使用计数器避免闪烁）
+  if (!options.skipLoading) {
+    loadingManager.show(options.loadingText || '加载中...')
   }
 
   return new Promise((resolve, reject) => {
@@ -84,45 +99,61 @@ async function request<T = any>(options: RequestOptions): Promise<T> {
       data: options.data || options.params,
       header,
       success: (res) => {
-        // 结束 loading
-        if (!options.skipLoading && typeof uni.hideLoading === 'function') {
-          uni.hideLoading();
-        }
-
         if (res.statusCode === 200) {
           const response = res.data as Response<T>;
           if (response.code === 200 || response.code === 0) {
-            resolve(response.data);
+            // 结束 loading
+            if (!options.skipLoading) {
+              loadingManager.hide()
+            }
+            resolve(response.data)
           } else {
-            uni.showToast({
-              title: response.message || '请求失败',
-              icon: 'none',
-            });
+            // 结束 loading
+            if (!options.skipLoading) {
+              loadingManager.hide()
+            }
+            toast.error(response.message || '请求失败');
             reject(new Error(response.message || '请求失败'));
           }
         } else if (res.statusCode === 401) {
+          // 结束 loading
+          if (!options.skipLoading) {
+            loadingManager.hide()
+          }
           uni.removeStorageSync('token');
           uni.removeStorageSync('userInfo');
-          uni.reLaunch({ url: '/pages/login/index' });
-          reject(new Error('未授权，请重新登录'));
-        } else {
-          uni.showToast({
-            title: `请求错误: ${res.statusCode}`,
-            icon: 'none',
+
+          const response = res.data as Partial<Response<any>>;
+          const message = response.message || t('messages.sessionExpired');
+
+          // 使用 modal.show() 正确触发响应式更新
+          globalModal.show({
+            title: t('common.warning'),
+            message: message,
+            confirmText: t('messages.goToLogin'),
+            cancelText: t('common.cancel'),
+            showCancel: true,
           });
+
+          const err: any = new Error(message)
+          err.__handled = true
+          reject(err)
+        } else {
+          // 结束 loading
+          if (!options.skipLoading) {
+            loadingManager.hide()
+          }
+          toast.error(`请求错误: ${res.statusCode}`);
           reject(new Error(`请求错误: ${res.statusCode}`));
         }
       },
       fail: (err) => {
         // 结束 loading
-        if (!options.skipLoading && typeof uni.hideLoading === 'function') {
-          uni.hideLoading();
+        if (!options.skipLoading) {
+          loadingManager.hide()
         }
 
-        uni.showToast({
-          title: '网络请求失败',
-          icon: 'none',
-        });
+        toast.error('网络请求失败');
         reject(err);
       },
     });
@@ -185,9 +216,7 @@ interface UploadOptions {
 async function upload<T = any>(options: UploadOptions): Promise<T> {
   const token = uni.getStorageSync('token');
 
-  if (typeof uni.showLoading === 'function') {
-    uni.showLoading({ title: '上传中...', mask: true });
-  }
+  loadingManager.show('上传中...')
 
   return new Promise((resolve, reject) => {
     uni.uploadFile({
@@ -199,16 +228,14 @@ async function upload<T = any>(options: UploadOptions): Promise<T> {
         Authorization: token ? `Bearer ${token}` : '',
       },
       success: (res) => {
-        if (typeof uni.hideLoading === 'function') {
-          uni.hideLoading();
-        }
+        loadingManager.hide()
 
         if (res.statusCode === 200) {
           const data = JSON.parse(res.data) as Response<T>;
           if (data.code === 200 || data.code === 0) {
             resolve(data.data);
           } else {
-            uni.showToast({ title: data.message || '上传失败', icon: 'none' });
+            toast.error(data.message || '上传失败');
             reject(new Error(data.message || '上传失败'));
           }
         } else {
@@ -216,10 +243,8 @@ async function upload<T = any>(options: UploadOptions): Promise<T> {
         }
       },
       fail: (err) => {
-        if (typeof uni.hideLoading === 'function') {
-          uni.hideLoading();
-        }
-        uni.showToast({ title: '上传失败', icon: 'none' });
+        loadingManager.hide()
+        toast.error('上传失败');
         reject(err);
       },
     });

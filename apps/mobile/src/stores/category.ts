@@ -95,16 +95,9 @@ export const useCategoryStore = defineStore('category', () => {
 
   // 获取分类列表
   const fetchCategories = async (type?: TransactionType) => {
-    try {
-      loading.value = true;
-      const data = await categoryApi.getCategories(type);
-      categoryList.value = data.map(transformCategoryVO);
-      return categoryList.value;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
-    }
+    const data = await categoryApi.getCategories(type);
+    categoryList.value = data.map(transformCategoryVO);
+    return categoryList.value;
   };
 
   // 创建分类（后端不支持 icon 字段）
@@ -113,20 +106,13 @@ export const useCategoryStore = defineStore('category', () => {
     type: TransactionType;
     parentId?: number;
   }) => {
-    try {
-      loading.value = true;
-      const newCategory = await categoryApi.createCategory({
-        name: data.name,
-        type: data.type,
-        parentId: data.parentId,
-      });
-      categoryList.value.push(transformCategoryVO(newCategory));
-      return categoryList.value[categoryList.value.length - 1];
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
-    }
+    const newCategory = await categoryApi.createCategory({
+      name: data.name,
+      type: data.type,
+      parentId: data.parentId,
+    });
+    categoryList.value.push(transformCategoryVO(newCategory));
+    return categoryList.value[categoryList.value.length - 1];
   };
 
   // 更新分类（后端仅支持 categoryName 和 parentId）
@@ -137,51 +123,30 @@ export const useCategoryStore = defineStore('category', () => {
       parentId: number;
     }>
   ) => {
-    try {
-      loading.value = true;
-      const updatedCategory = await categoryApi.updateCategory({ id, ...data });
+    const updatedCategory = await categoryApi.updateCategory({ id, ...data });
 
-      const index = categoryList.value.findIndex((c: any) => c.id === id);
-      if (index !== -1) {
-        categoryList.value[index] = {
-          ...categoryList.value[index],
-          ...transformCategoryVO(updatedCategory),
-        };
-      }
-
-      return updatedCategory;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
+    const index = categoryList.value.findIndex((c: any) => c.id === id);
+    if (index !== -1) {
+      categoryList.value[index] = {
+        ...categoryList.value[index],
+        ...transformCategoryVO(updatedCategory),
+      };
     }
+
+    return updatedCategory;
   };
 
   // 删除分类
   const deleteCategory = async (id: number) => {
-    try {
-      loading.value = true;
-      await categoryApi.deleteCategory(id);
-      categoryList.value = categoryList.value.filter((c) => c.id !== id);
-      return true;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
-    }
+    await categoryApi.deleteCategory(id);
+    categoryList.value = categoryList.value.filter((c) => c.id !== id);
+    return true;
   };
 
   // 重置默认分类
   const resetDefaultCategories = async () => {
-    try {
-      loading.value = true;
-      await categoryApi.initUserCategories();
-      await fetchCategories();
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
-    }
+    await categoryApi.initUserCategories();
+    await fetchCategories();
   };
 
   // 清空状态

@@ -51,109 +51,60 @@ export const useBudgetStore = defineStore('budget', () => {
 
   // 获取预算列表
   const fetchBudgets = async (params?: { bookId?: number; periodType?: number }) => {
-    try {
-      loading.value = true;
-      const data = await budgetApi.getBudgets(params);
-      budgetList.value = data;
-      return data;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
-    }
+    const data = await budgetApi.getBudgets(params);
+    budgetList.value = data;
+    return data;
   };
 
   // 获取预算详情
   const fetchBudget = async (id: number) => {
-    try {
-      loading.value = true;
-      const data = await budgetApi.getBudget(id);
-      currentBudget.value = data;
-      return data;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
-    }
+    const data = await budgetApi.getBudget(id);
+    currentBudget.value = data;
+    return data;
   };
 
   // 创建预算
   const createBudget = async (data: CreateBudgetRequest) => {
-    try {
-      loading.value = true;
-      const newBudget = await budgetApi.createBudget(data);
-      budgetList.value.push(newBudget);
-      return newBudget;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
-    }
+    const newBudget = await budgetApi.createBudget(data);
+    budgetList.value.push(newBudget);
+    return newBudget;
   };
 
   // 更新预算
   const updateBudget = async (id: number, data: UpdateBudgetRequest) => {
-    try {
-      loading.value = true;
-      const updatedBudget = await budgetApi.updateBudget(id, data);
-      const index = budgetList.value.findIndex(b => b.id === id);
-      if (index !== -1) {
-        budgetList.value[index] = updatedBudget;
-      }
-      if (currentBudget.value?.id === id) {
-        currentBudget.value = updatedBudget;
-      }
-      return updatedBudget;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
+    const updatedBudget = await budgetApi.updateBudget(id, data);
+    const index = budgetList.value.findIndex(b => b.id === id);
+    if (index !== -1) {
+      budgetList.value[index] = updatedBudget;
     }
+    if (currentBudget.value?.id === id) {
+      currentBudget.value = updatedBudget;
+    }
+    return updatedBudget;
   };
 
   // 删除预算
   const deleteBudget = async (id: number) => {
-    try {
-      loading.value = true;
-      await budgetApi.deleteBudget(id);
-      budgetList.value = budgetList.value.filter(b => b.id !== id);
-      if (currentBudget.value?.id === id) {
-        currentBudget.value = null;
-      }
-      return true;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
+    await budgetApi.deleteBudget(id);
+    budgetList.value = budgetList.value.filter(b => b.id !== id);
+    if (currentBudget.value?.id === id) {
+      currentBudget.value = null;
     }
+    return true;
   };
 
   // 获取预警预算
   const fetchWarningBudgets = async () => {
-    try {
-      loading.value = true;
-      const data = await budgetApi.getWarningBudgets();
-      warningBudgets.value = data;
-      return data;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
-    }
+    const data = await budgetApi.getWarningBudgets();
+    warningBudgets.value = data;
+    return data;
   };
 
   // 刷新预算使用金额
   const refreshUsedAmount = async (id: number) => {
-    try {
-      loading.value = true;
-      await budgetApi.refreshBudgetUsedAmount(id);
-      // 重新获取预算详情
-      await fetchBudget(id);
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
-    }
+    await budgetApi.refreshBudgetUsedAmount(id);
+    // 重新获取预算详情
+    await fetchBudget(id);
   };
 
   // 清空状态

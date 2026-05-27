@@ -64,6 +64,5 @@ const onStartupExit = () => {
   height: 100vh;
   background-color: var(--gzang-bg);
   position: relative;
-  overflow: hidden;
 }
 </style>

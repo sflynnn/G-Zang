@@ -1,4 +1,9 @@
 <template>
+  <!-- 自定义组件 -->
+  <CustomToast />
+  <CustomModal />
+  <CustomLoading />
+
   <view class="create-budget-page">
     <uni-nav-bar left-icon="back" title="创建预算" @clickLeft="goBack" />
     
@@ -99,9 +104,14 @@ import { ref, computed } from 'vue'
 import { useBookStore } from '@/stores/book'
 import { useCategoryStore } from '@/stores/category'
 import { createBudget } from '@/api/budget'
+import { useToast } from '@/composables/useToast'
+import CustomToast from '@/components/common/CustomToast/index.vue'
+import CustomModal from '@/components/common/CustomModal/index.vue'
+import CustomLoading from '@/components/common/CustomLoading/index.vue'
 
 const bookStore = useBookStore()
 const categoryStore = useCategoryStore()
+const toast = useToast()
 
 const submitting = ref(false)
 
@@ -146,12 +156,12 @@ function clampWarning() {
 
 async function handleSubmit() {
   if (!formData.value.categoryId) {
-    uni.showToast({ title: '请选择分类', icon: 'none' })
+    toast.warning('请选择分类')
     return
   }
   
   if (!formData.value.amount) {
-    uni.showToast({ title: '请输入预算金额', icon: 'none' })
+    toast.warning('请输入预算金额')
     return
   }
 
@@ -169,12 +179,12 @@ async function handleSubmit() {
       warningThreshold: formData.value.warningPercent,
       warningEnabled: true,
     })
-    uni.showToast({ title: '创建成功', icon: 'success' })
+    toast.success('创建成功')
     setTimeout(() => {
       goBack()
     }, 1500)
   } catch (error: any) {
-    uni.showToast({ title: error.message || '创建失败', icon: 'none' })
+    toast.warning(error.message || '创建失败')
   } finally {
     submitting.value = false
   }

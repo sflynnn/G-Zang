@@ -1,6 +1,10 @@
 <template>
-  <PageTransition>
-    <view class="help-page apple-style">
+  <!-- 自定义组件 -->
+  <CustomToast />
+  <CustomModal />
+  <CustomLoading />
+
+  <view class="help-page apple-style">
       <view class="nav-large-title">
         <view class="nav-header">
           <view class="nav-back" @click="goBack">
@@ -91,8 +95,13 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PageTransition from '@/components/common/PageTransition/index.vue'
 import AppleIcon from '@/components/common/AppleIcon/index.vue'
+import { useToast } from '@/composables/useToast'
+import CustomToast from '@/components/common/CustomToast/index.vue'
+import CustomModal from '@/components/common/CustomModal/index.vue'
+import CustomLoading from '@/components/common/CustomLoading/index.vue'
 
 const { t } = useI18n()
+const toast = useToast()
 
 const expandedIndex = ref<number | null>(null)
 
@@ -132,19 +141,19 @@ function goBack() { uni.navigateBack() }
 function handleEmail() {
   uni.setClipboardData({
     data: 'support@gzang.app',
-    success: () => uni.showToast({ title: '邮箱已复制', icon: 'success' })
+    success: () => toast.success('邮箱已复制')
   })
 }
 
 function handleWechat() {
   uni.setClipboardData({
     data: 'G-Zang-Financial',
-    success: () => uni.showToast({ title: '微信号已复制', icon: 'success' })
+    success: () => toast.success('微信号已复制')
   })
 }
 
 function handleFeedback() {
-  uni.showToast({ title: '意见反馈功能即将上线', icon: 'none' })
+  toast.info('意见反馈功能即将上线')
 }
 </script>
 

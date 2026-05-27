@@ -1,4 +1,9 @@
 <template>
+  <!-- 自定义组件 -->
+  <CustomToast />
+  <CustomModal />
+  <CustomLoading />
+
   <view class="categories-page apple-style">
     <!-- Large Title Navigation -->
     <view class="nav-large-title">
@@ -69,6 +74,9 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useCategoryStore } from '@/stores/category'
 import AppleIcon from '@/components/common/AppleIcon/index.vue'
+import CustomToast from '@/components/common/CustomToast/index.vue'
+import CustomModal from '@/components/common/CustomModal/index.vue'
+import CustomLoading from '@/components/common/CustomLoading/index.vue'
 
 const { t } = useI18n()
 const categoryStore = useCategoryStore()

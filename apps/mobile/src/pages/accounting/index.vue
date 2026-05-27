@@ -6,15 +6,17 @@
       <view class="header-row">
         <view class="book-selector" @click="showBookPicker">
           <text class="book-icon">{{ currentBook?.icon || '📒' }}</text>
-          <text class="book-name">{{ currentBook?.name || '选择账本' }}</text>
+          <text class="book-name">{{ currentBook?.name || t('accounting.selectBook') }}</text>
           <text class="book-arrow">›</text>
         </view>
-        <MonthPicker
-          :currentMonth="currentMonth"
-          @prev="onMonthChange('prev')"
-          @next="onMonthChange('next')"
-          @change="onMonthSelect"
-        />
+        <view class="month-wrapper">
+          <MonthPicker
+            :currentMonth="currentMonth"
+            @prev="onMonthChange('prev')"
+            @next="onMonthChange('next')"
+            @change="onMonthSelect"
+          />
+        </view>
       </view>
     </view>
 
@@ -23,7 +25,7 @@
       <!-- 支出分类区域 -->
       <view class="category-section expense-section">
         <view class="section-header">
-          <text class="section-title">支出</text>
+          <text class="section-title">{{ t('accounting.expense') }}</text>
           <text class="section-stat">{{ currentMonthExpense.toFixed(2) }}</text>
         </view>
         <view class="category-grid">
@@ -51,7 +53,7 @@
       <!-- 收入分类区域 -->
       <view class="category-section income-section">
         <view class="section-header">
-          <text class="section-title">收入</text>
+          <text class="section-title">{{ t('accounting.income') }}</text>
           <text class="section-stat income">{{ currentMonthIncome.toFixed(2) }}</text>
         </view>
         <view class="category-grid">
@@ -81,9 +83,9 @@
     <uni-popup ref="bookPopup" type="bottom">
       <view class="picker-container">
         <view class="picker-header">
-          <text class="picker-cancel" @click="closeBookPicker">取消</text>
-          <text class="picker-title">选择账本</text>
-          <text class="picker-confirm" @click="confirmBook">确定</text>
+          <text class="picker-cancel" @click="closeBookPicker">{{ t('common.cancel') }}</text>
+          <text class="picker-title">{{ t('accounting.selectBook') }}</text>
+          <text class="picker-confirm" @click="confirmBook">{{ t('common.confirm') }}</text>
         </view>
         <picker-view :value="bookPickerValue" @change="onBookChange" class="picker-view">
           <picker-view-column>
@@ -102,10 +104,13 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useBookStore } from '@/stores/book'
 import { useAccountingStore } from '@/stores/accounting'
 import MonthPicker from '@/components/business/MonthPicker/index.vue'
 import CustomTabBar from '@/components/CustomTabBar/index.vue'
+
+const { t } = useI18n()
 
 // 类型定义
 interface Category {
@@ -280,6 +285,7 @@ onMounted(async () => {
 
 // 顶部导航
 .page-header {
+  position: relative;
   background: var(--gzang-surface);
   padding: 16rpx 24rpx;
   padding-top: calc(env(safe-area-inset-top) + 12rpx);
@@ -289,6 +295,12 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.month-wrapper {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .book-selector {
@@ -421,17 +433,17 @@ onMounted(async () => {
   font-weight: var(--apple-font-medium);
 
   &.normal {
-    background: rgba(6, 214, 160, 0.1);
+    background: color-mix(in srgb, var(--gzang-success) 14%, transparent);
     color: var(--gzang-success);
   }
 
   &.warning {
-    background: rgba(255, 193, 7, 0.1);
-    color: #ffc107;
+    background: color-mix(in srgb, var(--gzang-warning) 14%, transparent);
+    color: var(--gzang-warning);
   }
 
   &.danger {
-    background: rgba(239, 71, 111, 0.1);
+    background: color-mix(in srgb, var(--gzang-danger) 14%, transparent);
     color: var(--gzang-danger);
   }
 }

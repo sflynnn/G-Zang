@@ -1,4 +1,9 @@
 <template>
+  <!-- 自定义组件 -->
+  <CustomToast />
+  <CustomModal />
+  <CustomLoading />
+
   <view class="voice-page">
     <!-- 自定义导航栏 -->
     <view class="nav-bar">
@@ -113,6 +118,9 @@ import { useTransactionStore } from '@/stores/transaction'
 import { useBookStore } from '@/stores/book'
 import { useCategoryStore } from '@/stores/category'
 import { uploadVoice, type VoiceIntentResult } from '@/api/voice'
+import CustomToast from '@/components/common/CustomToast/index.vue'
+import CustomModal from '@/components/common/CustomModal/index.vue'
+import CustomLoading from '@/components/common/CustomLoading/index.vue'
 
 // 状态管理
 const appStore = useAppStore()

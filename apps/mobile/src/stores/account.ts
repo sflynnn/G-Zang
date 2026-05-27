@@ -92,91 +92,74 @@ export const useAccountStore = defineStore('account', () => {
 
   // 获取账户列表
   const fetchAccounts = async () => {
-    try {
-      loading.value = true;
-      const data = await accountApi.getAccounts({ skipLoading: true });
-      accountList.value = data;
-      return data;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
-    }
+    const data = await accountApi.getAccounts();
+    accountList.value = data;
+    return data;
   };
 
   // 创建账户
   const createAccount = async (form: AccountForm) => {
-    try {
-      loading.value = true;
-      const newAccount = await accountApi.createAccount({
-        name: form.name,
-        type: form.type,
-        initialBalance: form.initialBalance,
-      });
+    const newAccount = await accountApi.createAccount({
+      name: form.name,
+      type: form.type,
+      initialBalance: form.initialBalance,
+      icon: form.icon,
+      color: form.color,
+      bankCode: form.bankCode,
+      bankName: form.bankName,
+      cardBrand: form.cardBrand,
+      cardNumber: form.cardNumber,
+      currency: form.currency,
+      remark: form.remark,
+    });
 
-      accountList.value.push(newAccount);
-      return newAccount;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
-    }
+    accountList.value.push(newAccount);
+    return newAccount;
   };
 
   // 更新账户
   const updateAccount = async (id: number, form: Partial<AccountForm>) => {
-    try {
-      loading.value = true;
-      const updatedAccount = await accountApi.updateAccount({
-        id,
-        ...form,
-      });
+    const updatedAccount = await accountApi.updateAccount({
+      id,
+      name: form.name,
+      type: form.type,
+      initialBalance: form.initialBalance,
+      icon: form.icon,
+      color: form.color,
+      bankCode: form.bankCode,
+      bankName: form.bankName,
+      cardBrand: form.cardBrand,
+      cardNumber: form.cardNumber,
+      currency: form.currency,
+      remark: form.remark,
+    });
 
-      const index = accountList.value.findIndex((a) => a.id === id);
-      if (index !== -1) {
-        accountList.value[index] = updatedAccount;
-      }
-
-      return updatedAccount;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
+    const index = accountList.value.findIndex((a) => a.id === id);
+    if (index !== -1) {
+      accountList.value[index] = updatedAccount;
     }
+
+    return updatedAccount;
   };
 
   // 删除账户
   const deleteAccount = async (id: number) => {
-    try {
-      loading.value = true;
-      await accountApi.deleteAccount(id);
-      accountList.value = accountList.value.filter((a) => a.id !== id);
-      return true;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
-    }
+    await accountApi.deleteAccount(id);
+    accountList.value = accountList.value.filter((a) => a.id !== id);
+    return true;
   };
 
   // 获取账户总余额
   const fetchTotalBalance = async () => {
-    try {
-      loading.value = true;
-      const total = await accountApi.getTotalBalance();
-      // 后端直接返回 BigDecimal number，构造 Summary 对象
-      totalBalance.value = {
-        totalAssets: total,
-        totalLiabilities: 0,
-        netAssets: total,
-        accountCount: accountList.value.length,
-      };
-      return total;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
-    }
+    const total = await accountApi.getTotalBalance();
+    // 后端直接返回 BigDecimal number，构造 Summary 对象
+    totalBalance.value = {
+      totalAssets: total,
+      totalLiabilities: 0,
+      netAssets: total,
+      accountCount: accountList.value.length,
+    };
+    return total;
   };
 
   // 获取账户信息

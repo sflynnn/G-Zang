@@ -1,5 +1,9 @@
 <template>
-  <PageTransition>
+  <!-- 自定义组件 -->
+  <CustomToast />
+  <CustomModal />
+  <CustomLoading />
+
   <view class="login-page">
     <!-- 动态渐变背景 -->
     <view class="gradient-bg">
@@ -150,6 +154,9 @@ import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 import { Storage } from '@/utils/storage'
 import PageTransition from '@/components/common/PageTransition/index.vue'
+import CustomToast from '@/components/common/CustomToast/index.vue'
+import CustomModal from '@/components/common/CustomModal/index.vue'
+import CustomLoading from '@/components/common/CustomLoading/index.vue'
 
 // 存储键
 const SAVED_CREDENTIALS_KEY = 'saved_credentials'

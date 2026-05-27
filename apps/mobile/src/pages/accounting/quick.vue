@@ -1,4 +1,9 @@
 <template>
+  <!-- 自定义组件 -->
+  <CustomToast />
+  <CustomModal />
+  <CustomLoading />
+
   <view class="quick-record-page apple-style">
     <!-- Top Navigation -->
     <view class="nav-bar">
@@ -205,12 +210,17 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAccountingStore } from '@/stores/accounting'
 import { useBookStore } from '@/stores/book'
+import { useToast } from '@/composables/useToast'
 import AppleIcon from '@/components/common/AppleIcon/index.vue'
+import CustomToast from '@/components/common/CustomToast/index.vue'
+import CustomModal from '@/components/common/CustomModal/index.vue'
+import CustomLoading from '@/components/common/CustomLoading/index.vue'
 import TransactionTypeSelector from '@/components/business/TransactionTypeSelector/index.vue'
 import CategoryGrid from '@/components/business/CategoryGrid/index.vue'
 import type { Category } from '@/components/business/CategoryGrid/index.vue'
 
 const { t } = useI18n()
+const toast = useToast()
 
 // Stores
 const accountingStore = useAccountingStore()
@@ -470,10 +480,7 @@ const handleSubmit = async () => {
 
     await accountingStore.createTransaction(transactionData as any)
 
-    uni.showToast({
-      title: t('accounting.recordSuccess'),
-      icon: 'success'
-    })
+    toast.success(t('accounting.recordSuccess'))
 
     // Reset form
     form.amount = ''

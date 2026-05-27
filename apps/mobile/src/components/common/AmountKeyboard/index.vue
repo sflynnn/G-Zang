@@ -54,6 +54,9 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import AppleIcon from '@/components/common/AppleIcon/index.vue'
+import { useToast } from '@/composables/useToast'
+
+const toast = useToast()
 
 interface Props {
   modelValue?: string | number
@@ -189,7 +192,7 @@ const handleConfirm = () => {
     emit('confirm', inputValue.value)
     showKeyboard.value = false
   } else {
-    uni.showToast({ title: '请输入金额', icon: 'none' })
+    toast.warning('请输入金额')
   }
 }
 </script>

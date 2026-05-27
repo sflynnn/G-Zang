@@ -198,11 +198,13 @@ import { useAnalysisStore } from '@/stores/analysis'
 import PageTransition from '@/components/common/PageTransition/index.vue'
 import AppleIcon from '@/components/common/AppleIcon/index.vue'
 import CustomTabBar from '@/components/CustomTabBar/index.vue'
+import { useToast } from '@/composables/useToast'
 
 const { t } = useI18n()
 
 // Store
 const analysisStore = useAnalysisStore()
+const toast = useToast()
 
 // State
 const activePeriod = ref<'week' | 'month' | 'year'>('month')
@@ -291,8 +293,8 @@ const handleExport = () => {
         uni.share({
           title: '归藏财务报告',
           summary: `收入 ${overview.value.totalIncome.toFixed(2)} | 支出 ${overview.value.totalExpense.toFixed(2)} | 结余 ${overview.value.balance.toFixed(2)}`,
-          success: () => uni.showToast({ title: '分享成功', icon: 'success' }),
-          fail: () => uni.showToast({ title: '分享失败', icon: 'none' })
+          success: () => toast.success('分享成功'),
+          fail: () => toast.warning('分享失败')
         })
       }
     }

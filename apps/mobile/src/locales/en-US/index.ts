@@ -186,6 +186,42 @@ export default {
     thisWeek: 'This Week',
     thisMonth: 'This Month',
     customDate: 'Custom Date',
+
+    categoryRecord: {
+      selectCategory: 'Select Category',
+      selectCurrency: 'Select Currency',
+      tags: 'Tags',
+      addTags: 'Add tags',
+      tagInputPlaceholder: 'Enter a tag and press Enter',
+      quickAdd: 'Quick add:',
+      remark: 'Note',
+      addRemark: 'Add note',
+      remarkPlaceholder: 'Add details...',
+      paymentMethod: 'Payment',
+      selectPaymentMethod: 'Select payment method',
+      allTags: 'All tags',
+      searchTags: 'Search tags',
+      noTagsFound: 'No matching tags',
+      createTag: 'Create tag',
+      date: 'Date',
+      selectDate: 'Select date',
+      recordChar: 'R',
+      record: 'Record',
+      today: 'Today',
+      yesterday: 'Yesterday',
+      pleaseEnterAmount: 'Please enter amount',
+      pleaseAddAccount: 'Please add an account first',
+      recordSuccess: 'Recorded successfully',
+      recordFailed: 'Recording failed',
+      payment: {
+        cash: 'Cash',
+        wechat: 'WeChat Pay',
+        alipay: 'Alipay',
+        bankCard: 'Bank Card',
+        creditCard: 'Credit Card',
+        other: 'Other'
+      }
+    }
   },
 
   // ================== Bills ==================
@@ -276,12 +312,22 @@ export default {
     selectType: 'Please select account type',
     balance: 'Balance',
     initialBalance: 'Initial Balance',
-    cardNumber: 'Card Number',
-    cardNumberPlaceholder: 'Please enter card number (optional)',
+    cardNumber: 'Last 4 Digits',
+    cardNumberPlaceholder: 'Please enter last 4 digits (optional)',
     bank: 'Bank Name',
     bankPlaceholder: 'Please enter bank name (optional)',
+    bankCode: 'Bank',
+    selectBank: 'Select Bank',
+    cardBrand: 'Card Brand',
+    selectCardBrand: 'Select Card Brand',
+    currency: 'Currency',
+    selectCurrency: 'Select Currency',
     remark: 'Remark',
     remarkPlaceholder: 'Add a remark (optional)',
+    icon: 'Icon',
+    selectIcon: 'Select Icon',
+    color: 'Color',
+    selectColor: 'Select Color',
     types: {
       cash: 'Cash',
       bankCard: 'Bank Card',
@@ -289,6 +335,13 @@ export default {
       alipay: 'Alipay',
       wechatPay: 'WeChat Pay',
       other: 'Other',
+    },
+    typeGroups: {
+      fund: 'Fund Accounts',
+      credit: 'Credit Accounts',
+      receivable: 'Receivable/Payable',
+      investment: 'Investment Accounts',
+      recharge: 'Recharge Accounts',
     },
     createSuccess: 'Account created successfully',
     createFailed: 'Failed to create account',
@@ -470,6 +523,7 @@ export default {
   // ================== Messages ==================
   messages: {
     unauthorized: 'Unauthorized, please log in again',
+    sessionExpired: 'Session expired, please log in again',
     forbidden: 'Access denied',
     notFound: 'Resource not found',
     serverError: 'Server error, please try again later',
@@ -479,6 +533,7 @@ export default {
     loginRequired: 'Please log in first',
     formInvalid: 'Please complete the form',
     confirmRequired: 'Please confirm the operation',
+    goToLogin: 'Go to Login',
   },
 
   // ================== DateTime ==================

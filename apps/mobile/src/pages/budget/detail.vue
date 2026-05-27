@@ -1,5 +1,10 @@
 <template>
   <PageTransition>
+    <!-- 自定义组件 -->
+    <CustomToast />
+    <CustomModal />
+    <CustomLoading />
+
     <view class="budget-detail-page apple-style">
       <!-- Navigation -->
       <view class="nav-large-title">
@@ -131,8 +136,14 @@ import PageTransition from '@/components/common/PageTransition/index.vue'
 import AppleIcon from '@/components/common/AppleIcon/index.vue'
 import { getBudget, deleteBudget, type Budget } from '@/api/budget'
 import { useBookStore } from '@/stores/book'
+import { useToast } from '@/composables/useToast'
+import { modal } from '@/composables/useModal'
+import CustomToast from '@/components/common/CustomToast/index.vue'
+import CustomModal from '@/components/common/CustomModal/index.vue'
+import CustomLoading from '@/components/common/CustomLoading/index.vue'
 
 const bookStore = useBookStore()
+const toast = useToast()
 
 const loading = ref(false)
 const budget = ref<Budget | null>(null)
@@ -170,21 +181,21 @@ function handleEdit() {
 }
 
 async function handleDelete() {
-  uni.showModal({
+  modal.show({
     title: '确认删除',
-    content: '确定要删除这个预算吗？此操作不可恢复。',
-    confirmColor: '#EF476F',
-    success: async (res) => {
-      if (res.confirm) {
-        try {
-          await deleteBudget(budgetId.value)
-          uni.showToast({ title: '删除成功', icon: 'success' })
-          setTimeout(() => uni.navigateBack(), 1500)
-        } catch (e) {
-          uni.showToast({ title: '删除失败', icon: 'none' })
-        }
+    message: '确定要删除这个预算吗？此操作不可恢复。',
+    showCancel: true,
+    confirmText: '删除',
+    cancelText: '取消',
+    onConfirm: async () => {
+      try {
+        await deleteBudget(budgetId.value)
+        toast.success('删除成功')
+        setTimeout(() => uni.navigateBack(), 1500)
+      } catch (e) {
+        toast.warning('删除失败')
       }
-    }
+    },
   })
 }
 
@@ -193,7 +204,7 @@ async function loadBudget() {
   try {
     budget.value = await getBudget(budgetId.value)
   } catch (e) {
-    uni.showToast({ title: '加载失败', icon: 'none' })
+    toast.warning('加载失败')
   } finally {
     loading.value = false
   }

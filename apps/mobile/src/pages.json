@@ -46,14 +46,6 @@
       }
     },
     {
-      "path": "pages/accounting/category-record",
-      "style": {
-        "navigationBarTitleText": "记账",
-        "navigationStyle": "custom",
-        "backgroundColor": "#F8F9FA"
-      }
-    },
-    {
       "path": "pages/bills/index",
       "style": {
         "navigationBarTitleText": "账单",
@@ -122,6 +114,7 @@
       "path": "pages/accounts/create",
       "style": {
         "navigationBarTitleText": "新增账户",
+        "navigationStyle": "custom",
         "backgroundColor": "#F8F9FA"
       }
     },
@@ -129,6 +122,7 @@
       "path": "pages/accounts/detail",
       "style": {
         "navigationBarTitleText": "账户详情",
+        "navigationStyle": "custom",
         "backgroundColor": "#F8F9FA"
       }
     },
@@ -157,13 +151,6 @@
       "path": "pages/budget/create",
       "style": {
         "navigationBarTitleText": "新增预算",
-        "backgroundColor": "#F8F9FA"
-      }
-    },
-    {
-      "path": "pages/budget/detail",
-      "style": {
-        "navigationBarTitleText": "预算详情",
         "backgroundColor": "#F8F9FA"
       }
     },
@@ -204,18 +191,9 @@
       }
     },
     {
-      "path": "pages/profile/bind-phone",
-      "style": {
-        "navigationBarTitleText": "绑定手机号",
-        "navigationStyle": "custom",
-        "backgroundColor": "#F8F9FA"
-      }
-    },
-    {
       "path": "pages/settings/index",
       "style": {
         "navigationBarTitleText": "设置",
-        "navigationStyle": "custom",
         "backgroundColor": "#F8F9FA"
       }
     },
@@ -223,44 +201,7 @@
       "path": "pages/settings/theme",
       "style": {
         "navigationBarTitleText": "主题设置",
-        "navigationStyle": "custom",
         "backgroundColor": "#F8F9FA"
-      }
-    },
-    {
-      "path": "pages/settings/change-password",
-      "style": {
-        "navigationBarTitleText": "修改密码",
-        "backgroundColor": "#F8F9FA"
-      }
-    },
-    {
-      "path": "pages/settings/help",
-      "style": {
-        "navigationBarTitleText": "帮助与反馈",
-        "backgroundColor": "#F8F9FA"
-      }
-    },
-    {
-      "path": "pages/privacy/index",
-      "style": {
-        "navigationBarTitleText": "隐私政策",
-        "backgroundColor": "#F8F9FA"
-      }
-    },
-    {
-      "path": "pages/terms/index",
-      "style": {
-        "navigationBarTitleText": "用户协议",
-        "backgroundColor": "#F8F9FA"
-      }
-    },
-    {
-      "path": "pages/register/index",
-      "style": {
-        "navigationBarTitleText": "注册",
-        "navigationStyle": "custom",
-        "backgroundColor": "#ffffff"
       }
     },
     {
@@ -269,21 +210,6 @@
         "navigationBarTitleText": "登录",
         "navigationStyle": "custom",
         "backgroundColor": "#ffffff"
-      }
-    },
-    {
-      "path": "pages/login/forgot-password",
-      "style": {
-        "navigationBarTitleText": "忘记密码",
-        "navigationStyle": "custom",
-        "backgroundColor": "#F8F9FA"
-      }
-    },
-    {
-      "path": "pages/date-picker/index",
-      "style": {
-        "navigationBarTitleText": "选择日期",
-        "backgroundColor": "#F8F9FA"
       }
     }
   ],
@@ -294,9 +220,7 @@
     "backgroundColor": "#F8F9FA",
     "backgroundTextStyle": "dark",
     "enablePullDownRefresh": false,
-    "onReachBottomDistance": 50,
-    "animationType": "fade",
-    "animationDuration": 280
+    "onReachBottomDistance": 50
   },
   "tabBar": {
     "custom": true,

@@ -1,4 +1,9 @@
 <template>
+  <!-- 自定义组件 -->
+  <CustomToast />
+  <CustomModal />
+  <CustomLoading />
+
   <view class="register-page">
     <!-- 动态渐变背景 -->
     <view class="gradient-bg">
@@ -197,8 +202,13 @@ import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { register as registerApi } from '@/api/auth'
 import { i18n } from '@/i18n'
+import { useToast } from '@/composables/useToast'
+import CustomToast from '@/components/common/CustomToast/index.vue'
+import CustomModal from '@/components/common/CustomModal/index.vue'
+import CustomLoading from '@/components/common/CustomLoading/index.vue'
 
 const appStore = useAppStore()
+const toast = useToast()
 
 const form = reactive({
   username: '',
@@ -272,7 +282,7 @@ const handleRegister = async () => {
   if (!isFormValid.value || loading.value) return
 
   if (form.password !== form.confirmPassword) {
-    uni.showToast({ title: i18n.global.t('auth.passwordsNotMatch'), icon: 'none' })
+    toast.warning(i18n.global.t('auth.passwordsNotMatch'))
     return
   }
 

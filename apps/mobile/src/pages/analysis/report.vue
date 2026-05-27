@@ -1,4 +1,9 @@
 <template>
+  <!-- 自定义组件 -->
+  <CustomToast />
+  <CustomModal />
+  <CustomLoading />
+
   <view class="report-page">
     <uni-nav-bar left-icon="back" title="财务报告" @clickLeft="goBack" />
     
@@ -150,9 +155,14 @@
 import { ref, computed, onMounted } from 'vue'
 import { useReportStore } from '@/stores/report'
 import { useBookStore } from '@/stores/book'
+import { useToast } from '@/composables/useToast'
+import CustomToast from '@/components/common/CustomToast/index.vue'
+import CustomModal from '@/components/common/CustomModal/index.vue'
+import CustomLoading from '@/components/common/CustomLoading/index.vue'
 
 const reportStore = useReportStore()
 const bookStore = useBookStore()
+const toast = useToast()
 
 const currentPeriod = ref('month')
 const timeTabs = [
@@ -279,8 +289,8 @@ function exportReport() {
         uni.share({
           title: '归藏财务报告',
           summary: `收入 ${currentCurrency}${formatAmount(summary.value.totalIncome)} | 支出 ${currentCurrency}${formatAmount(summary.value.totalExpense)} | 结余 ${currentCurrency}${formatAmount(summary.value.balance)}`,
-          success: () => uni.showToast({ title: '分享成功', icon: 'success' }),
-          fail: () => uni.showToast({ title: '分享失败', icon: 'none' })
+          success: () => toast.success('分享成功'),
+          fail: () => toast.warning('分享失败')
         })
       }
     }

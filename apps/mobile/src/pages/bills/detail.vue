@@ -1,5 +1,9 @@
 <template>
-  <PageTransition>
+  <!-- 自定义组件 -->
+  <CustomToast />
+  <CustomModal />
+  <CustomLoading />
+
   <view class="bills-detail-page">
     <uni-nav-bar left-icon="back" title="账单详情" @clickLeft="goBack" />
     
@@ -102,8 +106,14 @@ import { ref, onMounted } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { useTransactionStore } from '@/stores/transaction'
 import PageTransition from '@/components/common/PageTransition/index.vue'
+import { useToast } from '@/composables/useToast'
+import { modal } from '@/composables/useModal'
+import CustomToast from '@/components/common/CustomToast/index.vue'
+import CustomModal from '@/components/common/CustomModal/index.vue'
+import CustomLoading from '@/components/common/CustomLoading/index.vue'
 
 const transactionStore = useTransactionStore()
+const toast = useToast()
 
 const transactionId = ref<number>(0)
 const loading = ref(true)
@@ -165,27 +175,27 @@ function goToEdit() {
 }
 
 function confirmDelete() {
-  uni.showModal({
+  modal.show({
     title: '确认删除',
-    content: '确定要删除这条交易记录吗？删除后无法恢复。',
-    confirmColor: '#EF476F',
-    success: async (res) => {
-      if (res.confirm) {
-        await deleteTransaction()
-      }
-    }
+    message: '确定要删除这条交易记录吗？删除后无法恢复。',
+    showCancel: true,
+    confirmText: '删除',
+    cancelText: '取消',
+    onConfirm: async () => {
+      await deleteTransaction()
+    },
   })
 }
 
 async function deleteTransaction() {
   try {
     await transactionStore.deleteTransaction(transactionId.value)
-    uni.showToast({ title: '删除成功', icon: 'success' })
+    toast.success('删除成功')
     setTimeout(() => {
       uni.navigateBack()
     }, 1500)
   } catch (error: any) {
-    uni.showToast({ title: error.message || '删除失败', icon: 'none' })
+    toast.warning(error.message || '删除失败')
   }
 }
 </script>

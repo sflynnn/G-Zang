@@ -1,6 +1,11 @@
 <template>
   <PageTransition>
-  <view class="books-page apple-style">
+    <!-- 自定义组件 -->
+    <CustomToast />
+    <CustomModal />
+    <CustomLoading />
+
+    <view class="books-page apple-style">
     <!-- Large Title Navigation -->
     <view class="nav-large-title">
       <view class="nav-header">
@@ -103,6 +108,9 @@ import { useBookStore } from '@/stores/book'
 import type { Book } from '@/types/book'
 import PageTransition from '@/components/common/PageTransition/index.vue'
 import AppleIcon from '@/components/common/AppleIcon/index.vue'
+import CustomToast from '@/components/common/CustomToast/index.vue'
+import CustomModal from '@/components/common/CustomModal/index.vue'
+import CustomLoading from '@/components/common/CustomLoading/index.vue'
 
 const { t } = useI18n()
 const bookStore = useBookStore()

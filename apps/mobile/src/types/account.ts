@@ -42,6 +42,14 @@ export interface Account {
   isActive?: boolean;
   initialBalance?: number;
   currency?: string;
+  /** 银行编码 */
+  bankCode?: string;
+  /** 银行名称 */
+  bankName?: string;
+  /** 信用卡品牌 */
+  cardBrand?: string;
+  /** 卡号后 4 位 */
+  cardNumber?: string;
 }
 
 // 账户表单
@@ -50,9 +58,30 @@ export interface AccountForm {
   type: AccountType | number;
   initialBalance?: number;
   currency?: string;
+  /** SVG 图标名称或路径 */
   icon?: string;
+  /** 自定义颜色 */
   color?: string;
+  /** 银行编码（如 ICBC） */
+  bankCode?: string;
+  /** 银行名称 */
+  bankName?: string;
+  /** 信用卡品牌（如 UNIONPAY, VISA） */
+  cardBrand?: string;
+  /** 卡号后 4 位 */
+  cardNumber?: string;
   remark?: string;
+}
+
+// 账户类型分组（用于选择器展示）
+export interface AccountTypeGroup {
+  label: string;
+  types: Array<{
+    value: AccountType | number;
+    name: string;
+    icon: string; // AppleIcon name
+    description?: string;
+  }>;
 }
 
 // 账户统计

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { toast } from '@/composables/useToast'
 
 // 类型定义
 export interface AppState {
@@ -79,6 +80,9 @@ export const useAppStore = defineStore('app', () => {
 
   // 应用主题
   const applyTheme = () => {
+    // 非 H5 环境没有 document，避免运行时报错
+    if (typeof document === 'undefined') return
+
     const root = document.documentElement
     if (isDark.value) {
       root.setAttribute('data-theme', 'dark')
@@ -117,12 +121,9 @@ export const useAppStore = defineStore('app', () => {
     }
 
     // 显示Toast提示
-    uni.showToast({
-      title: notification.message,
-      icon: notification.type === 'success' ? 'success' :
-            notification.type === 'error' ? 'error' : 'none',
-      duration: 2000
-    })
+    const typeMap = { success: 'success', error: 'error', warning: 'warning', info: 'info' } as const
+    const toastFn = toast[typeMap[notification.type]] || toast.info
+    toastFn(notification.message, 2000)
   }
 
   // 移除通知

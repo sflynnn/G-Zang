@@ -1,6 +1,11 @@
 <template>
   <PageTransition>
-  <view class="transactions-page">
+    <!-- 自定义组件 -->
+    <CustomToast />
+    <CustomModal />
+    <CustomLoading />
+
+    <view class="transactions-page">
     <uni-nav-bar 
       left-icon="back" 
       title="交易记录" 
@@ -117,6 +122,9 @@ import { ref, computed, onMounted } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { useTransactionStore } from '@/stores/transaction'
 import PageTransition from '@/components/common/PageTransition/index.vue'
+import CustomToast from '@/components/common/CustomToast/index.vue'
+import CustomModal from '@/components/common/CustomModal/index.vue'
+import CustomLoading from '@/components/common/CustomLoading/index.vue'
 
 const transactionStore = useTransactionStore()
 

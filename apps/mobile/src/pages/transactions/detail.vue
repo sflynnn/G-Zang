@@ -1,4 +1,9 @@
 <template>
+  <!-- 自定义组件 -->
+  <CustomToast />
+  <CustomModal />
+  <CustomLoading />
+
   <view class="transaction-edit-page">
     <uni-nav-bar left-icon="back" title="编辑交易" @clickLeft="goBack" />
     
@@ -103,10 +108,15 @@ import { onLoad } from '@dcloudio/uni-app'
 import { useTransactionStore } from '@/stores/transaction'
 import { useCategoryStore } from '@/stores/category'
 import { useAccountStore } from '@/stores/account'
+import { useToast } from '@/composables/useToast'
+import CustomToast from '@/components/common/CustomToast/index.vue'
+import CustomModal from '@/components/common/CustomModal/index.vue'
+import CustomLoading from '@/components/common/CustomLoading/index.vue'
 
 const transactionStore = useTransactionStore()
 const categoryStore = useCategoryStore()
 const accountStore = useAccountStore()
+const toast = useToast()
 
 const transactionId = ref<number>(0)
 const loading = ref(false)
@@ -262,15 +272,15 @@ function goBack() {
 
 async function handleSubmit() {
   if (!formData.value.amount) {
-    uni.showToast({ title: '请输入金额', icon: 'none' })
+    toast.warning('请输入金额')
     return
   }
   if (!formData.value.categoryId) {
-    uni.showToast({ title: '请选择分类', icon: 'none' })
+    toast.warning('请选择分类')
     return
   }
   if (!formData.value.accountId) {
-    uni.showToast({ title: '请选择账户', icon: 'none' })
+    toast.warning('请选择账户')
     return
   }
 
@@ -286,12 +296,12 @@ async function handleSubmit() {
       remark: formData.value.remark
     })
     
-    uni.showToast({ title: '保存成功', icon: 'success' })
+    toast.success('保存成功')
     setTimeout(() => {
       goBack()
     }, 1500)
   } catch (error: any) {
-    uni.showToast({ title: error.message || '保存失败', icon: 'none' })
+    toast.error(error.message || '保存失败')
   } finally {
     submitting.value = false
   }

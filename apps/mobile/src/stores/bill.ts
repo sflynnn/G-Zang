@@ -87,42 +87,34 @@ export const useBillStore = defineStore('bill', () => {
 
   // 加载交易记录
   const loadTransactions = async (loadMore = false) => {
-    try {
-      loading.value = true
-
-      if (!loadMore) {
-        page.value = 1
-        transactions.value = []
-        finished.value = false
-      }
-
-      const params = {
-        page: page.value,
-        size: size.value,
-        ...filters.value
-      }
-
-      const data = await transactionApi.getTransactions(params)
-
-      if (loadMore) {
-        transactions.value.push(...data.records as Transaction[])
-      } else {
-        transactions.value = data.records as Transaction[]
-      }
-
-      total.value = data.total
-      finished.value = transactions.value.length >= total.value
-
-      if (!finished.value) {
-        page.value++
-      }
-
-      return data
-    } catch (error) {
-      throw error
-    } finally {
-      loading.value = false
+    if (!loadMore) {
+      page.value = 1
+      transactions.value = []
+      finished.value = false
     }
+
+    const params = {
+      page: page.value,
+      size: size.value,
+      ...filters.value
+    }
+
+    const data = await transactionApi.getTransactions(params)
+
+    if (loadMore) {
+      transactions.value.push(...data.records as Transaction[])
+    } else {
+      transactions.value = data.records as Transaction[]
+    }
+
+    total.value = data.total
+    finished.value = transactions.value.length >= total.value
+
+    if (!finished.value) {
+      page.value++
+    }
+
+    return data
   }
 
   // 刷新数据
@@ -156,51 +148,30 @@ export const useBillStore = defineStore('bill', () => {
 
   // 删除交易记录
   const deleteTransaction = async (id: number) => {
-    try {
-      loading.value = true
-      await transactionApi.deleteTransaction(id)
+    await transactionApi.deleteTransaction(id)
 
-      // 从列表中移除
-      transactions.value = transactions.value.filter(t => t.id !== id)
-      total.value--
+    // 从列表中移除
+    transactions.value = transactions.value.filter(t => t.id !== id)
+    total.value--
 
-      return true
-    } catch (error) {
-      throw error
-    } finally {
-      loading.value = false
-    }
+    return true
   }
 
   // 批量删除
   const batchDelete = async (ids: number[]) => {
-    try {
-      loading.value = true
-      await Promise.all(ids.map(id => transactionApi.deleteTransaction(id)))
+    await Promise.all(ids.map(id => transactionApi.deleteTransaction(id)))
 
-      // 从列表中移除
-      transactions.value = transactions.value.filter(t => !ids.includes(t.id))
-      total.value -= ids.length
+    // 从列表中移除
+    transactions.value = transactions.value.filter(t => !ids.includes(t.id))
+    total.value -= ids.length
 
-      return true
-    } catch (error) {
-      throw error
-    } finally {
-      loading.value = false
-    }
+    return true
   }
 
   // 获取交易详情
   const getTransactionDetail = async (id: number) => {
-    try {
-      loading.value = true
-      const data = await transactionApi.getTransaction(id)
-      return data
-    } catch (error) {
-      throw error
-    } finally {
-      loading.value = false
-    }
+    const data = await transactionApi.getTransaction(id)
+    return data
   }
 
   // 清空状态

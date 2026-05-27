@@ -1,4 +1,9 @@
 <template>
+  <!-- 自定义组件 -->
+  <CustomToast />
+  <CustomModal />
+  <CustomLoading />
+
   <view class="theme-settings-page">
     <uni-nav-bar left-icon="left" :title="t('theme.title')" @clickLeft="goBack" />
     
@@ -91,9 +96,14 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
+import { useToast } from '@/composables/useToast'
+import CustomToast from '@/components/common/CustomToast/index.vue'
+import CustomModal from '@/components/common/CustomModal/index.vue'
+import CustomLoading from '@/components/common/CustomLoading/index.vue'
 
 const { t } = useI18n()
 const appStore = useAppStore()
+const toast = useToast()
 
 // 从 appStore 同步状态
 const currentMode = ref<'light' | 'dark' | 'auto'>(appStore.theme)
@@ -149,7 +159,7 @@ function goBack() {
 function setThemeMode(mode: string) {
   currentMode.value = mode as 'light' | 'dark' | 'auto'
   appStore.setTheme(mode as 'light' | 'dark' | 'auto')
-  uni.showToast({ title: t('theme.themeUpdated'), icon: 'success' })
+  toast.success(t('theme.themeUpdated'))
 }
 
 function setPrimaryColor(color: string) {

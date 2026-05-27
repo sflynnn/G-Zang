@@ -1,6 +1,10 @@
 <template>
-  <PageTransition>
-    <view class="forgot-password-page apple-style">
+  <!-- 自定义组件 -->
+  <CustomToast />
+  <CustomModal />
+  <CustomLoading />
+
+  <view class="forgot-password-page apple-style">
       <view class="nav-large-title">
         <view class="nav-header">
           <view class="nav-back" @click="goBack">
@@ -125,12 +129,17 @@ import { ref, computed } from 'vue'
 import { sendResetCode, verifyResetCode, resetPassword } from '@/api/auth'
 import PageTransition from '@/components/common/PageTransition/index.vue'
 import AppleIcon from '@/components/common/AppleIcon/index.vue'
+import { useToast } from '@/composables/useToast'
+import CustomToast from '@/components/common/CustomToast/index.vue'
+import CustomModal from '@/components/common/CustomModal/index.vue'
+import CustomLoading from '@/components/common/CustomLoading/index.vue'
 
 const step = ref(1)
 const sendingCode = ref(false)
 const resetting = ref(false)
 const countdown = ref(0)
 const verifiedPhone = ref('')
+const toast = useToast()
 
 const form = ref({
   phone: '',
@@ -140,6 +149,7 @@ const form = ref({
 })
 
 let countdownTimer: ReturnType<typeof setInterval> | null = null
+const toast = useToast()
 
 const passwordsMatch = computed(() =>
   form.value.newPassword === form.value.confirmPassword && form.value.confirmPassword.length > 0
@@ -159,13 +169,13 @@ function goBack() { uni.navigateBack() }
 
 async function sendCode() {
   if (!/^1\d{10}$/.test(form.value.phone)) {
-    uni.showToast({ title: '请输入正确的手机号', icon: 'none' })
+    toast.warning('请输入正确的手机号')
     return
   }
   sendingCode.value = true
   try {
     await sendResetCode(form.value.phone)
-    uni.showToast({ title: '验证码已发送', icon: 'success' })
+    toast.success('验证码已发送')
     countdown.value = 60
     if (countdownTimer) clearInterval(countdownTimer)
     countdownTimer = setInterval(() => {
@@ -175,7 +185,7 @@ async function sendCode() {
       }
     }, 1000)
   } catch (e: any) {
-    uni.showToast({ title: e.message || '发送失败', icon: 'none' })
+    toast.warning(e.message || '发送失败')
   } finally {
     sendingCode.value = false
   }
@@ -183,7 +193,7 @@ async function sendCode() {
 
 async function verifyCode() {
   if (form.value.code.length < 4) {
-    uni.showToast({ title: '请输入完整验证码', icon: 'none' })
+    toast.warning('请输入完整验证码')
     return
   }
   try {
@@ -191,24 +201,24 @@ async function verifyCode() {
     verifiedPhone.value = form.value.phone
     step.value = 2
   } catch (e: any) {
-    uni.showToast({ title: e.message || '验证码错误', icon: 'none' })
+    toast.warning(e.message || '验证码错误')
   }
 }
 
 async function resetPwd() {
   if (form.value.newPassword !== form.value.confirmPassword) {
-    uni.showToast({ title: '两次密码不一致', icon: 'none' })
+    toast.warning('两次密码不一致')
     return
   }
   resetting.value = true
   try {
     await resetPassword(verifiedPhone.value, form.value.code, form.value.newPassword)
-    uni.showToast({ title: '密码重置成功', icon: 'success' })
+    toast.success('密码重置成功')
     setTimeout(() => {
       uni.navigateBack()
     }, 1500)
   } catch (e: any) {
-    uni.showToast({ title: e.message || '重置失败', icon: 'none' })
+    toast.warning(e.message || '重置失败')
   } finally {
     resetting.value = false
   }

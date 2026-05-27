@@ -3,7 +3,11 @@ import { ref, computed } from 'vue'
 import { getAccounts as apiGetAccounts } from '@/api/account'
 import { getCategories as apiGetCategories, getCategoriesWithChildren as apiGetCategoriesWithChildren } from '@/api/category'
 import { createTransaction as apiCreateTransaction } from '@/api/transaction'
+import { getTags as apiGetTags, getFrequentTags as apiGetFrequentTags, createTag as apiCreateTag, useTag as apiUseTag } from '@/api/tag'
+import { getPaymentMethods as apiGetPaymentMethods } from '@/api/paymentMethod'
 import type { Account, Category, TransactionType } from '@/types'
+import type { TagVO } from '@/api/tag'
+import type { PaymentMethodVO } from '@/api/paymentMethod'
 
 // 类型定义
 export type { Category, Account, TransactionType }
@@ -48,6 +52,9 @@ export interface AccountingState {
   categories: Category[]
   categoriesWithChildren: CategoryWithChildren[]
   accounts: Account[]
+  tags: TagVO[]
+  frequentTags: TagVO[]
+  paymentMethods: PaymentMethodVO[]
   recentCategories: Category[]
   recentAccounts: Account[]
   currentMonthStats: MonthStats | null
@@ -97,7 +104,8 @@ function transformAccount(account: Account): Account {
     ...account,
     name: account.accountName, // 前端用 name 方便展示
     type: String(account.accountType), // 前端用 string 类型
-    currency: account.currency || 'CNY', // 默认货币
+    // 过滤掉后端返回的 currency 对象，防止 JSON 形式显示
+    currency: typeof account.currency === 'string' ? account.currency : 'CNY',
   }
 }
 
@@ -107,6 +115,9 @@ export const useAccountingStore = defineStore('accounting', () => {
   const categories = ref<Category[]>([])
   const categoriesWithChildren = ref<CategoryWithChildren[]>([])
   const accounts = ref<Account[]>([])
+  const tags = ref<TagVO[]>([])
+  const frequentTags = ref<TagVO[]>([])
+  const paymentMethods = ref<PaymentMethodVO[]>([])
   const recentCategories = ref<Category[]>([])
   const recentAccounts = ref<Account[]>([])
   const currentMonthStats = ref<MonthStats | null>(null)
@@ -208,18 +219,59 @@ export const useAccountingStore = defineStore('accounting', () => {
 
   // 加载账户
   const loadAccounts = async () => {
-    try {
-      loading.value = true
-      const data = await apiGetAccounts({ skipLoading: true })
-      accounts.value = data.map(transformAccount)
+    const data = await apiGetAccounts()
+    accounts.value = data.map(transformAccount)
 
-      // 缓存最近使用的账户
-      loadRecentAccounts()
+    // 缓存最近使用的账户
+    loadRecentAccounts()
+  }
+
+  // 加载标签
+  const loadTags = async () => {
+    try {
+      const data = await apiGetTags()
+      tags.value = data
     } catch (error) {
-      throw error
-    } finally {
-      loading.value = false
+      console.warn('加载标签失败:', error)
+      tags.value = []
     }
+  }
+
+  // 加载常用标签
+  const loadFrequentTags = async (limit: number = 8) => {
+    try {
+      const data = await apiGetFrequentTags(limit)
+      frequentTags.value = data
+    } catch (error) {
+      console.warn('加载常用标签失败:', error)
+      frequentTags.value = []
+    }
+  }
+
+  // 加载支付方式
+  const loadPaymentMethods = async () => {
+    try {
+      const data = await apiGetPaymentMethods()
+      paymentMethods.value = data.filter(pm => pm.isEnabled === 1)
+    } catch (error) {
+      console.warn('加载支付方式失败:', error)
+      paymentMethods.value = []
+    }
+  }
+
+  // 创建标签
+  const createTag = async (tagName: string, tagColor?: string) => {
+    const created = await apiCreateTag({ tagName, tagColor })
+    // 立即刷新列表（也可直接 push，但刷新能拿到后端排序/字段）
+    await Promise.all([loadTags(), loadFrequentTags(8)])
+    return created
+  }
+
+  // 记录标签使用
+  const useTag = async (tagId: number) => {
+    await apiUseTag(tagId)
+    // 使用后常用列表可能变化，轻量刷新
+    await loadFrequentTags(8)
   }
 
   // 创建交易
@@ -331,6 +383,9 @@ export const useAccountingStore = defineStore('accounting', () => {
   const clearState = () => {
     categories.value = []
     accounts.value = []
+    tags.value = []
+    frequentTags.value = []
+    paymentMethods.value = []
     recentCategories.value = []
     recentAccounts.value = []
   }
@@ -345,6 +400,9 @@ export const useAccountingStore = defineStore('accounting', () => {
     categories: computed(() => categories.value),
     categoriesWithChildren: computed(() => categoriesWithChildren.value),
     accounts: computed(() => accounts.value),
+    tags: computed(() => tags.value),
+    frequentTags: computed(() => frequentTags.value),
+    paymentMethods: computed(() => paymentMethods.value),
     recentCategories: computed(() => recentCategories.value),
     recentAccounts: computed(() => recentAccounts.value),
     currentMonthStats: computed(() => currentMonthStats.value),
@@ -360,6 +418,11 @@ export const useAccountingStore = defineStore('accounting', () => {
     loadCategoriesWithChildren,
     loadMonthStats,
     loadAccounts,
+    loadTags,
+    loadFrequentTags,
+    loadPaymentMethods,
+    createTag,
+    useTag,
     createTransaction,
     loadRecentCategories,
     loadRecentAccounts,

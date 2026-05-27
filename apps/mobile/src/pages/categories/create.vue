@@ -1,4 +1,9 @@
 <template>
+  <!-- 自定义组件 -->
+  <CustomToast />
+  <CustomModal />
+  <CustomLoading />
+
   <view class="create-category-page">
     <uni-nav-bar left-icon="back" :title="isEdit ? '编辑分类' : '创建分类'" @clickLeft="goBack" />
     
@@ -81,8 +86,13 @@ import { ref, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { useCategoryStore } from '@/stores/category'
 import { getCategory } from '@/api/category'
+import { useToast } from '@/composables/useToast'
+import CustomToast from '@/components/common/CustomToast/index.vue'
+import CustomModal from '@/components/common/CustomModal/index.vue'
+import CustomLoading from '@/components/common/CustomLoading/index.vue'
 
 const categoryStore = useCategoryStore()
+const toast = useToast()
 
 const submitting = ref(false)
 const isEdit = ref(false)
@@ -137,7 +147,7 @@ function goBack() {
 
 async function handleSubmit() {
   if (!formData.value.name.trim()) {
-    uni.showToast({ title: '请输入分类名称', icon: 'none' })
+    toast.warning('请输入分类名称')
     return
   }
 
@@ -154,12 +164,12 @@ async function handleSubmit() {
       })
     }
 
-    uni.showToast({ title: '保存成功', icon: 'success' })
+    toast.success('保存成功')
     setTimeout(() => {
       goBack()
     }, 1500)
   } catch (error: any) {
-    uni.showToast({ title: error.message || '保存失败', icon: 'none' })
+    toast.warning(error.message || '保存失败')
   } finally {
     submitting.value = false
   }

@@ -11,6 +11,14 @@ export interface CreateAccountDTO {
   accountName: string;
   accountType: number;
   balance?: number;
+  icon?: string;
+  color?: string;
+  bankCode?: string;
+  bankName?: string;
+  cardBrand?: string;
+  cardNumber?: string;
+  currency?: string;
+  remark?: string;
 }
 
 /** 后端 UpdateAccountDTO 字段 */
@@ -45,12 +53,25 @@ export async function createAccount(data: {
   initialBalance?: number;
   icon?: string;
   color?: string;
+  bankCode?: string;
+  bankName?: string;
+  cardBrand?: string;
+  cardNumber?: string;
+  currency?: string;
   remark?: string;
 }): Promise<Account> {
   return api.post<Account>('/accounts', {
     accountName: data.name,
     accountType: data.type,
     balance: data.initialBalance ?? 0,
+    icon: data.icon,
+    color: data.color,
+    bankCode: data.bankCode,
+    bankName: data.bankName,
+    cardBrand: data.cardBrand,
+    cardNumber: data.cardNumber,
+    currency: data.currency,
+    remark: data.remark,
   });
 }
 
@@ -63,10 +84,28 @@ export async function updateAccount(data: {
   id: number;
   name?: string;
   type?: AccountType | number;
+  initialBalance?: number;
+  icon?: string;
+  color?: string;
+  bankCode?: string;
+  bankName?: string;
+  cardBrand?: string;
+  cardNumber?: string;
+  currency?: string;
+  remark?: string;
 }): Promise<Account> {
   const payload: Record<string, any> = { id: data.id };
   if (data.name !== undefined) payload.accountName = data.name;
   if (data.type !== undefined) payload.accountType = data.type;
+  if (data.initialBalance !== undefined) payload.balance = data.initialBalance;
+  if (data.icon !== undefined) payload.icon = data.icon;
+  if (data.color !== undefined) payload.color = data.color;
+  if (data.bankCode !== undefined) payload.bankCode = data.bankCode;
+  if (data.bankName !== undefined) payload.bankName = data.bankName;
+  if (data.cardBrand !== undefined) payload.cardBrand = data.cardBrand;
+  if (data.cardNumber !== undefined) payload.cardNumber = data.cardNumber;
+  if (data.currency !== undefined) payload.currency = data.currency;
+  if (data.remark !== undefined) payload.remark = data.remark;
   return api.put<Account>(`/accounts/${data.id}`, payload);
 }
 
@@ -83,7 +122,7 @@ export async function deleteAccount(id: number): Promise<void> {
  * GET /api/mobile/accounts/total-balance
  */
 export async function getTotalBalance(): Promise<number> {
-  return api.get('/accounts/total-balance', undefined, { skipLoading: true });
+  return api.get('/accounts/total-balance');
 }
 
 /**

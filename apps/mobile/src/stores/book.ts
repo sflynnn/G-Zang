@@ -59,22 +59,15 @@ export const useBookStore = defineStore('book', () => {
 
   // 获取账本列表
   const fetchBooks = async (filters?: BookFilters) => {
-    try {
-      loading.value = true;
-      const data = await bookApi.getBooks({ skipLoading: true });
-      bookList.value = data;
+    const data = await bookApi.getBooks();
+    bookList.value = data;
 
-      // 如果没有设置当前账本，默认选择第一个
-      if (!currentBook.value && bookList.value.length > 0) {
-        currentBook.value = defaultBook.value || bookList.value[0];
-      }
-
-      return data;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
+    // 如果没有设置当前账本，默认选择第一个
+    if (!currentBook.value && bookList.value.length > 0) {
+      currentBook.value = defaultBook.value || bookList.value[0];
     }
+
+    return data;
   };
 
   // 切换账本
@@ -90,60 +83,46 @@ export const useBookStore = defineStore('book', () => {
 
   // 创建账本
   const createBook = async (form: BookForm) => {
-    try {
-      loading.value = true;
-      const newBook = await bookApi.createBook({
-        name: form.name,
-        icon: form.icon,
-        color: form.color,
-        currency: form.currency,
-        currencySymbol: form.currencySymbol,
-        type: form.type,
-        isDefault: form.isDefault,
+    const newBook = await bookApi.createBook({
+      name: form.name,
+      icon: form.icon,
+      color: form.color,
+      currency: form.currency,
+      currencySymbol: form.currencySymbol,
+      type: form.type,
+      isDefault: form.isDefault,
+    });
+
+    bookList.value.push(newBook);
+
+    // 如果设为默认账本
+    if (newBook.isDefault) {
+      bookList.value.forEach((b) => {
+        if (b.id !== newBook.id) {
+          b.isDefault = false;
+        }
       });
-
-      bookList.value.push(newBook);
-
-      // 如果设为默认账本
-      if (newBook.isDefault) {
-        bookList.value.forEach((b) => {
-          if (b.id !== newBook.id) {
-            b.isDefault = false;
-          }
-        });
-      }
-
-      return newBook;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
     }
+
+    return newBook;
   };
 
   // 删除账本
   const deleteBook = async (id: number) => {
-    try {
-      loading.value = true;
-      await bookApi.deleteBook(id);
+    await bookApi.deleteBook(id);
 
-      bookList.value = bookList.value.filter((b) => b.id !== id);
-      delete statistics.value[id];
+    bookList.value = bookList.value.filter((b) => b.id !== id);
+    delete statistics.value[id];
 
-      // 如果删除的是当前账本，切换到默认账本
-      if (currentBook.value?.id === id) {
-        currentBook.value = defaultBook.value || bookList.value[0] || null;
-        if (currentBook.value) {
-          uni.setStorageSync('currentBookId', currentBook.value.id);
-        }
+    // 如果删除的是当前账本，切换到默认账本
+    if (currentBook.value?.id === id) {
+      currentBook.value = defaultBook.value || bookList.value[0] || null;
+      if (currentBook.value) {
+        uni.setStorageSync('currentBookId', currentBook.value.id);
       }
-
-      return true;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
     }
+
+    return true;
   };
 
   // 获取账本统计
@@ -174,26 +153,19 @@ export const useBookStore = defineStore('book', () => {
 
   // 更新账本
   const updateBook = async (id: number, form: Partial<BookForm>) => {
-    try {
-      loading.value = true;
-      const updatedBook = await bookApi.updateBook(id, form);
+    const updatedBook = await bookApi.updateBook(id, form);
 
-      const index = bookList.value.findIndex((b) => b.id === id);
-      if (index !== -1) {
-        bookList.value[index] = updatedBook;
-      }
-
-      // 如果更新的是当前账本
-      if (currentBook.value?.id === id) {
-        currentBook.value = updatedBook;
-      }
-
-      return updatedBook;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
+    const index = bookList.value.findIndex((b) => b.id === id);
+    if (index !== -1) {
+      bookList.value[index] = updatedBook;
     }
+
+    // 如果更新的是当前账本
+    if (currentBook.value?.id === id) {
+      currentBook.value = updatedBook;
+    }
+
+    return updatedBook;
   };
 
   // 设置默认账本

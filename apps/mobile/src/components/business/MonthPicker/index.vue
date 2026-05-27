@@ -21,6 +21,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { modal } from '@/composables/useModal'
 
 interface Props {
   currentMonth: string  // 格式: 'YYYY-MM'
@@ -104,10 +105,11 @@ const showPicker = () => {
   const months = generateMonthList()
   const currentIndex = getCurrentIndex()
   
-  uni.showModal({
+  modal.show({
     title: '选择月份',
-    content: '功能开发中，请使用左右箭头切换月份',
-    showCancel: false
+    message: '功能开发中，请使用左右箭头切换月份',
+    showCancel: false,
+    confirmText: '我知道了',
   })
 }
 

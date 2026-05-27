@@ -1,6 +1,10 @@
 <template>
-  <PageTransition>
-    <view class="change-password-page apple-style">
+  <!-- 自定义组件 -->
+  <CustomToast />
+  <CustomModal />
+  <CustomLoading />
+
+  <view class="change-password-page apple-style">
       <view class="nav-large-title">
         <view class="nav-header">
           <view class="nav-back" @click="goBack">
@@ -92,8 +96,13 @@ import { useI18n } from 'vue-i18n'
 import { changePassword } from '@/api/user'
 import PageTransition from '@/components/common/PageTransition/index.vue'
 import AppleIcon from '@/components/common/AppleIcon/index.vue'
+import { useToast } from '@/composables/useToast'
+import CustomToast from '@/components/common/CustomToast/index.vue'
+import CustomModal from '@/components/common/CustomModal/index.vue'
+import CustomLoading from '@/components/common/CustomLoading/index.vue'
 
 const { t } = useI18n()
+const toast = useToast()
 
 const submitting = ref(false)
 const showOld = ref(false)
@@ -124,16 +133,16 @@ function goBack() { uni.navigateBack() }
 
 async function handleSubmit() {
   if (form.value.newPassword !== form.value.confirmPassword) {
-    uni.showToast({ title: '两次密码输入不一致', icon: 'none' })
+    toast.warning('两次密码输入不一致')
     return
   }
   submitting.value = true
   try {
     await changePassword(form.value.oldPassword, form.value.newPassword)
-    uni.showToast({ title: '密码修改成功', icon: 'success' })
+    toast.success('密码修改成功')
     setTimeout(() => uni.navigateBack(), 1500)
   } catch (e: any) {
-    uni.showToast({ title: e.message || '修改失败', icon: 'none' })
+    toast.error(e.message || '修改失败')
   } finally {
     submitting.value = false
   }
